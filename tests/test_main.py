@@ -5,12 +5,12 @@ from pathlib import Path
 import main
 
 
-def test_run_cli_prompts_and_saves_state(tmp_path: Path, monkeypatch) -> None:
+def test_run_phases_orchestrates_workflow(tmp_path: Path, monkeypatch) -> None:
 	evidence_dir = tmp_path / "evidence"
 	evidence_dir.mkdir()
 	(evidence_dir / "sample.zip").write_bytes(b"PK\x05\x06" + b"\x00" * 18)
 
-	answers = iter(["Floris", "CASE-CLI", str(evidence_dir), "yes"])
+	answers = iter(["Floris", "CASE-PHASES", str(evidence_dir), "yes"])
 	monkeypatch.setattr("builtins.input", lambda _prompt: next(answers))
 
 	def fake_run_phase_1(state, confirm_all=False):
@@ -18,12 +18,12 @@ def test_run_cli_prompts_and_saves_state(tmp_path: Path, monkeypatch) -> None:
 			"sources": [
 				{
 					"path": str(evidence_dir / "sample.zip"),
-					"classification": {
-						"status": "auto",
-						"auto_classification": "android_controller",
-						"ranked": [("android_controller", 10), ("ios_controller", 0)],
-					},
-					"operator_confirmation": {"confirmed": False},
+					"sha256": "abcd1234",
+					"acquisition_method": "logical",
+					"enumeration_method": "zip_namelist",
+					"classification": "android_controller",
+					"status": "classified",
+					"operator_confirmation": {"confirmed": False, "confirmed_classification": "android_controller", "timestamp": None},
 				}
 			]
 		}
@@ -33,9 +33,10 @@ def test_run_cli_prompts_and_saves_state(tmp_path: Path, monkeypatch) -> None:
 	monkeypatch.setattr("main.run_phase_1", fake_run_phase_1)
 
 	state_path = tmp_path / "state.json"
-	state = main.run_cli(None, None, None, state_path)
+	state = main.run_phases(None, None, None, state_path)
 
-	assert state.case_id == "CASE-CLI"
+	assert state.case_id == "CASE-PHASES"
 	assert state.operator == "Floris"
 	assert state.evidence_directory == str(evidence_dir.resolve())
 	assert state_path.exists()
+	assert "p1_provenance" in state.completed_phases

@@ -1,7 +1,6 @@
-"""TSK-based mounting and extraction helpers for DFDOF.
+"""DFDOF TSK based mounter for physical images.
 
-This stays intentionally small: identify the offset, enumerate files, and
-extract matching targets into a working directory.
+Identifies offset and enumarates files using mmls and fls.
 """
 
 from __future__ import annotations

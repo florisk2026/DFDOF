@@ -1,7 +1,7 @@
-"""Pipeline state and persistence helpers for DFDOF.
+"""DFDOF State Management.
 
-The state file is part of the forensic audit trail, so persistence is atomic
-and every entry is stored in a serialisable form.
+The state class captures all mutable informatiom about the case
+maintaining the digital chain of custody.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ def _utc_now_iso() -> str:
 	return datetime.now(timezone.utc).isoformat()
 
 
-def _summarise_text(value: str, limit: int = 1000) -> str:
+def _summarise_text(value: str, limit: int = 500) -> str:
 	if len(value) <= limit:
 		return value
 	return value[: limit - 3] + "..."

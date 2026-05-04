@@ -1,7 +1,6 @@
-"""Central configuration for DFDOF prototype 1.
+"""DFDOF Central Configuration.
 
-Keep the forensic decisions in one place so the rest of the pipeline stays
-deterministic, portable, and easy to audit.
+Stores global variables and functions centrally.
 """
 
 from __future__ import annotations
@@ -10,75 +9,14 @@ import os
 from pathlib import Path
 
 
-def _env_path(name: str, default: str) -> Path:
-	"""Resolve a tool path from the environment, falling back to a default."""
-
-	return Path(os.environ.get(name, default))
-
-
-SAMPLE_RATE_HZ = 30
 HASH_ALGORITHMS = ["sha256", "sha1"]
-
 SUPPORTED_IMAGE_EXTENSIONS = (".E01", ".001", ".zip")
 
-# Source classification signals used in Phase 1 (Provenance and Integrity).
-# Each tuple is (regex_pattern, score_weight). Scores are capped per class.
-CLASSIFICATION_SIGNALS = {
-	"ios_controller": [
-		(r"[A-F0-9-]{36}/com\.dji\.", 10),
-		(r"Library/Preferences/.*\.plist", 5),
-		(r"Documents/FlightRecord/.*\.txt", 5),
-		(r"Manifest\.db", 5),
-		(r"(?:^|/)Manifest(?:/|$)", 1),
-		(r"(?:^|/)Info(?:/|$)", 1),
-		(r"(?:^|/)Status(?:/|$)", 1),
-	],
-	"android_controller": [
-		(r"sdcard/DJI/dji\.go", 10),
-		(r"data/data/dji\.go\.v4", 10),
-		(r"FlightRecord/.*\.txt", 3),
-	],
-	"drone_sd": [
-		(r"DCIM/100MEDIA/.*\.MP4", 10),
-		(r"MISC/THM/", 5),
-		(r"DCIM/.*\.JPG", 3),
-	],
-	"drone_flight_storage": [
-		(r"FLY\d+\.DAT", 10),
-		(r"DJI_ASSISTANT_EXPORT_FILE_.*\.DAT", 10),
-	],
-}
-
-CLASSIFICATION_SCORE_CAP = 10
-AUTO_CLASSIFY_MIN_SCORE = 10
-AUTO_CLASSIFY_SECONDARY_MAX = 3
-AMBIGUOUS_MIN_SCORE = 10
-IOS_LOGICAL_HEX_FOLDER_THRESHOLD = 128
-IOS_LOGICAL_BACKUP_BONUS = 5
-
-IOS_APP_DOMAINS = {
-	"DJI GO": "com.dji.pilot",
-	"DJI GO 4": "com.dji.go",
-	"DJI Pilot": "dji.pilot",
-}
-
-ANDROID_PACKAGES = {
-	"DJI GO": "com.dji.go",
-	"DJI GO 4": "dji.go.v4",
-	"DJI Pilot": "dji.pilot",
-}
-
-# Treat these as searchable prefixes, not strict filesystem roots.
-ANDROID_EXTERNAL_ROOTS = (
-	"/sdcard/Android/data/",
-	"/sdcard/DJI/",
-	"/userdata/media/0/DJI/",
-)
-
-TXTLOG_VARIANTS = {
-	"default": "TXTlogToCSVtool.exe",
-	"exp": "TXTlogToCSVtool-exp.exe",
-	"mm": "TXTlogToCSVtoolMM.exe",
+SOURCE_CLASSIFICATION_TYPES = {
+	"ios_controller",
+	"android_controller",
+	"drone_sd",
+	"drone_flight_storage",
 }
 
 ARTEFACT_CATEGORIES = (
@@ -93,7 +31,15 @@ ARTEFACT_CATEGORIES = (
 
 ARTEFACT_CATEGORY_SET = frozenset(ARTEFACT_CATEGORIES)
 
-# Tool locations are kept as defaults here, but should be configured manually according to the environment.
+
+# Default functions
+def _env_path(name: str, default: str) -> Path:
+	"""Resolve a tool path from the environment, falling back to a default."""
+
+	return Path(os.environ.get(name, default))
+
+
+# Default tool locations, always adjust to environment
 SLEUTH_KIT_BIN = _env_path(
 	"DFDOF_SLEUTH_KIT_BIN",
 	r"C:\Users\Floris\Documents\sleuthkit\bin",
@@ -110,6 +56,7 @@ TSK_ICAT = _env_path(
 	"DFDOF_TSK_ICAT",
 	str(SLEUTH_KIT_BIN / "icat.exe"),
 )
+
 TXTLOG_TO_CSV_DEFAULT = _env_path(
 	"DFDOF_TXTLOG_TO_CSV_DEFAULT",
 	r"C:\Users\Floris\Documents\txtlogtocsv\TXTlogToCSVtool.exe",
@@ -135,27 +82,8 @@ EXIFTOOL_EXE = _env_path(
 	r"C:\Users\Floris\Documents\exiftool\exiftool.exe",
 )
 
-# DatCon is GUI-based, so this paths are launch references rather than CLI invocations.
+# DatCon is GUI-based, so not CLI invocable
 DATCON_DISPLAY_PATH = _env_path(
 	"DFDOF_DATCON_DISPLAY_PATH",
 	r"C:\Program Files (x86)\DatCon\DatCon.4.3.0.exe",
 )
-
-
-def is_supported_image_extension(path: str | Path) -> bool:
-	"""Return True when the path uses one of the supported image extensions."""
-
-	return Path(path).suffix.lower() in {extension.lower() for extension in SUPPORTED_IMAGE_EXTENSIONS}
-
-
-def get_txtlog_variant(name: str = "default") -> Path:
-	"""Return the configured TXTlogToCSVtool executable for the requested variant."""
-
-	variant = name.lower()
-	return {
-		"default": TXTLOG_TO_CSV_DEFAULT,
-		"exp": TXTLOG_TO_CSV_EXP,
-		"mm": TXTLOG_TO_CSV_MM,
-	}.get(variant, TXTLOG_TO_CSV_DEFAULT)
-
-

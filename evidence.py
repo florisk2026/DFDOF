@@ -1,7 +1,7 @@
-"""Evidence model for DFDOF.
+"""DFDOF Evidence Management.
 
 Each file that enters the pipeline is wrapped in an Evidence object so that
-hashing, provenance, and derived relationships remain explicit.
+hashing, provenance and derived relationships remain explicit.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ def _hash_file(path: Path) -> tuple[str, str]:
 	sha1_hasher = sha1()
 	with path.open("rb") as file_handle:
 		while True:
-			chunk = file_handle.read(64 * 1024)
+			chunk = file_handle.read(1024 * 1024)
 			if not chunk:
 				break
 			sha256_hasher.update(chunk)
