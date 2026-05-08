@@ -16,9 +16,11 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from typing import cast
 
 from phases.p0_input import run_phase_0
 from phases.p1_provenance import prompt_phase_1_summary_and_confirm, run_phase_1
+from phases.p2_image_parsing import run_phase_2
 from state import State
 
 
@@ -40,8 +42,8 @@ def _compute_evidence_hashes(state: State) -> None:
 
 	print("Computing evidence hashes...")
 	for evidence in state.input_evidence:
-		size_gb = evidence.file_size / (1024**3)
-		print(f"  Hashing {evidence.path.name}... ({size_gb:.1f} GB)")
+		size_gb = evidence.size / (1024**3)
+		print(f"  Hashing {cast(Path, evidence.stored_path).name}... ({size_gb:.1f} GB)")
 		evidence.compute_hash()
 	print()
 
@@ -60,13 +62,18 @@ def run_phases(
 	print(f"  Case: {state.case_id} | Operator: {state.operator}")
 	print(f"  Evidence: {state.evidence_directory}\n")
 
-
 	# Phase 1: Provenance and Integrity
 	print("[Phase 1] Provenance and integrity:")
 	state = run_phase_1(state, confirm_all=False)
 	_compute_evidence_hashes(state)
 	if not prompt_phase_1_summary_and_confirm(state):
 		raise SystemExit("Phase 1 aborted by operator.")
+	state.save(state_path)
+	print()
+
+	# Phase 2: Image Parsing
+	print("[Phase 2] Image parsing:")
+	state = run_phase_2(state)
 	state.save(state_path)
 	print()
 

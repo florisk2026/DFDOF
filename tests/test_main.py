@@ -11,19 +11,17 @@ def test_run_phases_orchestrates_workflow(tmp_path: Path, monkeypatch) -> None:
 	(evidence_dir / "sample.zip").write_bytes(b"PK\x05\x06" + b"\x00" * 18)
 
 	answers = iter(["Floris", "CASE-PHASES", str(evidence_dir), "yes"])
-	monkeypatch.setattr("builtins.input", lambda _prompt: next(answers))
+	monkeypatch.setattr("builtins.input", lambda _: next(answers))
 
-	def fake_run_phase_1(state, confirm_all=False):
+	def fake_run_phase_1(state, **_kwargs):
 		state.phase_outputs["p1_provenance"] = {
-			"sources": [
+			"classified_evidence": [
 				{
-					"path": str(evidence_dir / "sample.zip"),
-					"sha256": "abcd1234",
-					"acquisition_method": "logical",
-					"enumeration_method": "zip_namelist",
-					"classification": "android_controller",
-					"status": "classified",
-					"operator_confirmation": {"confirmed": False, "confirmed_classification": "android_controller", "timestamp": None},
+					"source_path": str(evidence_dir / "sample.zip"),
+					"classified": True,
+					"classification": "controller_android",
+					"operator_confirmed": False,
+					"operator_classification": None,
 				}
 			]
 		}

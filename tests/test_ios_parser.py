@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import hashlib
-import io
 import plistlib
 import sqlite3
 import zipfile
 from pathlib import Path
 
-from parsing.ios_converter import convert_ios_backup
+from parsing.ios_parser import convert_ios_backup
 
 
 def _build_manifest_db(path: Path, file_id: str) -> None:

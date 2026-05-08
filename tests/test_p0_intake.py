@@ -10,7 +10,7 @@ def test_phase_0_intake_prompts_and_initializes_state(tmp_path: Path, monkeypatc
 	evidence_dir.mkdir()
 
 	answers = iter(["Alice", "CASE-P0", str(evidence_dir)])
-	monkeypatch.setattr("builtins.input", lambda _prompt: next(answers))
+	monkeypatch.setattr("builtins.input", lambda _: next(answers))
 
 	state = run_phase_0(None, None, None)
 

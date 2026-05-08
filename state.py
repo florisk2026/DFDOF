@@ -8,21 +8,12 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from config import summarise_text, utc_now_iso
 from evidence import Evidence
-
-
-def _utc_now_iso() -> str:
-	return datetime.now(timezone.utc).isoformat()
-
-
-def _summarise_text(value: str, limit: int = 500) -> str:
-	if len(value) <= limit:
-		return value
-	return value[: limit - 3] + "..."
+import subprocess
 
 
 @dataclass(slots=True)
@@ -32,7 +23,7 @@ class State:
 	case_id: str
 	operator: str
 	evidence_directory: str | None = None
-	start_time: str = field(default_factory=_utc_now_iso)
+	start_time: str = field(default_factory=utc_now_iso)
 	input_evidence: list[Evidence] = field(default_factory=list)
 	phase_outputs: dict[str, Any] = field(default_factory=dict)
 	tool_invocation_log: list[dict[str, Any]] = field(default_factory=list)
@@ -40,16 +31,18 @@ class State:
 	completed_phases: list[str] = field(default_factory=list)
 
 	def to_dict(self) -> dict[str, Any]:
+		# Preserve a human-friendly, stable ordering for the serialized state
+		# to make case-level metadata appear at the top of the file.
 		return {
-			"case_id": self.case_id,
 			"operator": self.operator,
-			"evidence_directory": self.evidence_directory,
+			"case_id": self.case_id,
 			"start_time": self.start_time,
+			"evidence_directory": self.evidence_directory,
+			"completed_phases": self.completed_phases,
+			"anomaly_flags": self.anomaly_flags,
 			"input_evidence": [evidence.to_dict() for evidence in self.input_evidence],
 			"phase_outputs": self.phase_outputs,
 			"tool_invocation_log": self.tool_invocation_log,
-			"anomaly_flags": self.anomaly_flags,
-			"completed_phases": self.completed_phases,
 		}
 
 	@classmethod
@@ -58,7 +51,7 @@ class State:
 			case_id=data["case_id"],
 			operator=data["operator"],
 			evidence_directory=data.get("evidence_directory"),
-			start_time=data.get("start_time", _utc_now_iso()),
+			start_time=data.get("start_time", utc_now_iso()),
 			input_evidence=[Evidence.from_dict(item) for item in data.get("input_evidence", [])],
 			phase_outputs=data.get("phase_outputs", {}),
 			tool_invocation_log=data.get("tool_invocation_log", []),
@@ -73,7 +66,9 @@ class State:
 		target_path = Path(path)
 		temp_path = target_path.with_suffix(target_path.suffix + ".tmp")
 		with temp_path.open("w", encoding="utf-8") as file_handle:
-			json.dump(self.to_dict(), file_handle, indent=2, sort_keys=True)
+			# Keep the key order produced by `to_dict()` rather than sorting
+			# alphabetically so top-level case metadata remains prominent.
+			json.dump(self.to_dict(), file_handle, indent=2)
 			file_handle.write("\n")
 		temp_path.replace(target_path)
 
@@ -94,28 +89,50 @@ class State:
 		version: str | None = None,
 		args: list[str] | None = None,
 		return_code: int | None = None,
-		stdout: str = "",
-		stderr: str = "",
-		duration_seconds: float | None = None,
+		stdout: str | None = None,
+		stderr: str | None = None,
 		output_paths: list[str] | None = None,
-		output_hashes: dict[str, str] | None = None,
-		input_hashes: dict[str, str] | None = None,
 	) -> None:
 		"""Record a tool run in a compact but auditable form."""
 
-		self.tool_invocation_log.append(
-			{
-				"timestamp": _utc_now_iso(),
-				"tool_name": tool_name,
-				"version": version,
-				"args": args or [],
-				"return_code": return_code,
-				"stdout_summary": _summarise_text(stdout),
-				"stderr_summary": _summarise_text(stderr),
-				"duration_seconds": duration_seconds,
-				"output_paths": output_paths or [],
-				"output_hashes": output_hashes or {},
-				"input_hashes": input_hashes or {},
-			}
-		)
+		# Helper: probe common version flags for TSK tools if not provided
+		def _probe_version(exe: str) -> str | None:
+			# Minimal probe: try common version flags and return the first
+			# non-empty output line (trimmed). Keep logic small and direct.
+			for flag in ("-V", "--version"):
+				try:
+					res = subprocess.run([exe, flag], capture_output=True, text=True, check=False)
+					out = (res.stdout or res.stderr or "").strip()
+					if out:
+						return summarise_text(out.splitlines()[0], limit=200)
+				except Exception:
+					return None
+			return None
 
+		resolved_version = version
+		if resolved_version is None and args and len(args) > 0:
+			exe = args[0]
+			# Use the executable stem (filename without extension) so Windows
+			# paths like 'mmls.exe' are matched as 'mmls'.
+			base = Path(exe).stem.lower()
+			if base in ("mmls", "fls"):
+				resolved_version = _probe_version(exe)
+
+		# Normalise empty summaries to null for clarity
+		stdout_summary = summarise_text(stdout) if stdout else None
+		stderr_summary = summarise_text(stderr) if stderr else None
+
+		# Empty collections should be null to indicate absence rather than empty list/dict
+		output_paths_val = output_paths if output_paths else None
+
+		entry = {
+			"timestamp": utc_now_iso(),
+			"tool_name": tool_name,
+			"version": (resolved_version if resolved_version is not None else None),
+			"args": args or None,
+			"return_code": return_code,
+			"stdout_summary": stdout_summary,
+			"stderr_summary": stderr_summary,
+			"output_paths": output_paths_val,
+		}
+		self.tool_invocation_log.append(entry)

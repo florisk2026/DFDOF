@@ -7,17 +7,14 @@ hashing, provenance and derived relationships remain explicit.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from hashlib import sha1, sha256
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
+
+from config import EVIDENCE_TYPE_INPUT, utc_now_iso
 
 
-def _utc_now_iso() -> str:
-	return datetime.now(timezone.utc).isoformat()
-
-
-def _hash_file(path: Path) -> tuple[str, str]:
+def hash_file(path: Path) -> tuple[str, str]:
 	"""Hash a file in fixed-size chunks to stay memory-safe."""
 
 	sha256_hasher = sha256()
@@ -32,55 +29,79 @@ def _hash_file(path: Path) -> tuple[str, str]:
 	return sha256_hasher.hexdigest(), sha1_hasher.hexdigest()
 
 
+def _path_size(path: Path) -> int:
+	"""Return byte size for file evidence or recursive content size for directory evidence."""
+
+	if path.is_file():
+		return path.stat().st_size
+	if path.is_dir():
+		total = 0
+		for child in path.rglob("*"):
+			if child.is_file():
+				total += child.stat().st_size
+		return total
+	return path.stat().st_size
+
+
 @dataclass(slots=True)
 class Evidence:
 	"""A forensically tracked file or derived artefact."""
 
-	path: Path
-	provenance: str | None = None
+	source_path: Path | str
+	stored_path: Path | str | None = None
 	parent: Evidence | None = None
-	source_role: str = "input"
 	acquisition_method: str | None = None
+	type: str = EVIDENCE_TYPE_INPUT
 	artefact_category: str | None = None
+	values: dict[str, Any] | None = None
+	includes: list[Evidence] | None = None
 	skip_hash: bool = False
-	file_size: int = field(init=False)
-	sha256: str = field(init=False)
+	size: int = field(init=False)
 	sha1: str = field(init=False)
+	sha256: str = field(init=False)
 	hash_timestamp: str = field(init=False)
 	parent_sha256: str | None = field(init=False, default=None)
 
 	def __post_init__(self) -> None:
-		self.path = Path(self.path)
-		self.file_size = self.path.stat().st_size
+		if self.source_path is None:
+			raise ValueError("source_path is required for Evidence")
+		if self.stored_path is None:
+			stored_path = Path(self.source_path)
+		else:
+			stored_path = Path(self.stored_path)
+		self.stored_path = stored_path
+		self.size = _path_size(stored_path)
 		if self.skip_hash:
-			self.sha256 = ""
 			self.sha1 = ""
+			self.sha256 = ""
 			self.hash_timestamp = ""
 		else:
-			self.sha256, self.sha1 = _hash_file(self.path)
-			self.hash_timestamp = _utc_now_iso()
+			self.sha256, self.sha1 = hash_file(stored_path)
+			self.hash_timestamp = utc_now_iso()
 		self.parent_sha256 = self.parent.sha256 if self.parent is not None else None
 
 	def compute_hash(self) -> None:
 		"""Compute hash if it wasn't done during initialization."""
 		if not self.sha256:
-			self.sha256, self.sha1 = _hash_file(self.path)
-			self.hash_timestamp = _utc_now_iso()
+			self.sha256, self.sha1 = hash_file(cast(Path, self.stored_path))
+			self.hash_timestamp = utc_now_iso()
 
 	def to_dict(self) -> dict[str, Any]:
 		"""Return a JSON-friendly representation of the evidence object."""
 
+		stored_path = cast(Path, self.stored_path)
 		return {
-			"path": str(self.path),
-			"provenance": self.provenance,
-			"parent_sha256": self.parent_sha256,
-			"source_role": self.source_role,
+			"source_path": str(self.source_path),
+			"stored_path": str(stored_path),
+			"parent_sha256": (self.parent_sha256 if self.parent_sha256 else None),
 			"acquisition_method": self.acquisition_method,
+			"type": self.type,
 			"artefact_category": self.artefact_category,
-			"file_size": self.file_size,
-			"sha256": self.sha256,
-			"sha1": self.sha1,
-			"hash_timestamp": self.hash_timestamp,
+			"values": self.values,
+			"size": self.size,
+			"sha1": (self.sha1 if self.sha1 else None),
+			"sha256": (self.sha256 if self.sha256 else None),
+			"hash_timestamp": (self.hash_timestamp if self.hash_timestamp else None),
 		}
 
 	@classmethod
@@ -88,16 +109,22 @@ class Evidence:
 		"""Reconstruct an Evidence object without rehashing the file."""
 
 		instance = cls.__new__(cls)
-		instance.path = Path(data["path"])
-		instance.provenance = data.get("provenance")
+		instance.source_path = data["source_path"]
 		instance.parent = None
-		instance.source_role = data.get("source_role", "input")
 		instance.acquisition_method = data.get("acquisition_method")
+		instance.type = data.get("type", EVIDENCE_TYPE_INPUT)
 		instance.artefact_category = data.get("artefact_category")
-		instance.file_size = int(data.get("file_size", 0))
-		instance.sha256 = data["sha256"]
-		instance.sha1 = data["sha1"]
-		instance.hash_timestamp = data["hash_timestamp"]
+		instance.values = data.get("values")
+		instance.includes = None
+		instance.size = int(data["size"])
+		instance.sha1 = data.get("sha1") or ""
+		instance.sha256 = data.get("sha256") or ""
+		instance.hash_timestamp = data.get("hash_timestamp") or ""
+		raw_stored_path = data.get("stored_path")
+		if raw_stored_path is not None:
+			instance.stored_path = Path(raw_stored_path)
+		else:
+			instance.stored_path = Path(instance.source_path)
 		instance.parent_sha256 = data.get("parent_sha256")
 		return instance
 

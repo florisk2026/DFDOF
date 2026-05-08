@@ -6,40 +6,88 @@ Stores global variables and functions centrally.
 from __future__ import annotations
 
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 
-
-HASH_ALGORITHMS = ["sha256", "sha1"]
-SUPPORTED_IMAGE_EXTENSIONS = (".E01", ".001", ".zip")
+DJI_APP_DOMAINS = {
+	"ios": {
+		"com.dji.pilot": "DJI GO",
+		"com.dji.go": "DJI GO 4",
+		"dji.pilot": "DJI Pilot",
+	},
+	"android": {
+		"com.dji.go": "DJI GO",
+		"dji.go.v4": "DJI GO 4",
+		"dji.pilot": "DJI Pilot",
+	},
+}
 
 SOURCE_CLASSIFICATION_TYPES = {
-	"ios_controller",
-	"android_controller",
+	"controller_ios",
+	"controller_android",
 	"drone_sd",
 	"drone_flight_storage",
 }
 
+DRONE_LOGS = "drone_logs"
+FLIGHT_RECORDS = "flight_records"
+FLIGHT_LOGS = "flight_logs"
+MEDIA = "media"
+DATABASES = "databases"
+ACCOUNT_DATA = "account_data"
+DEVICE_AND_BACKUP_INFO = "device_and_backup_info"
+
 ARTEFACT_CATEGORIES = (
-	"drone_logs",
-	"flight_records",
-	"flight_logs",
-	"media",
-	"databases",
-	"account_data",
-	"camera_logs",
+	DRONE_LOGS,
+	FLIGHT_RECORDS,
+	FLIGHT_LOGS,
+	MEDIA,
+	DATABASES,
+	ACCOUNT_DATA,
+	DEVICE_AND_BACKUP_INFO,
 )
 
 ARTEFACT_CATEGORY_SET = frozenset(ARTEFACT_CATEGORIES)
+EVIDENCE_TYPE_INPUT = "input"
+EVIDENCE_TYPE_PARSED = "parsed"
+EVIDENCE_TYPE_EXTRACTED = "extracted"
+
+EVIDENCE_TYPES = (
+	EVIDENCE_TYPE_INPUT,
+	EVIDENCE_TYPE_PARSED,
+	EVIDENCE_TYPE_EXTRACTED,
+)
+
+EVIDENCE_TYPE_SET = frozenset(EVIDENCE_TYPES)
+HASH_ALGORITHMS = ["sha1", "sha256"]
+SUPPORTED_IMAGE_EXTENSIONS = (".E01", ".001", ".zip")
+MAX_SUMMARY_LENGTH = 125
 
 
 # Default functions
 def _env_path(name: str, default: str) -> Path:
-	"""Resolve a tool path from the environment, falling back to a default."""
-
 	return Path(os.environ.get(name, default))
 
 
-# Default tool locations, always adjust to environment
+def summarise_text(value: str, limit: int = MAX_SUMMARY_LENGTH) -> str:
+	if len(value) <= limit:
+		return value
+	return value[: limit - 3] + "..."
+
+
+def utc_now_iso() -> str:
+	return datetime.now(timezone.utc).isoformat()
+
+
+def output_dir() -> Path:
+	documents = Path.home() / "Documents"
+	if documents.exists():
+		return documents / "dfdof_output"
+	else:
+		return Path.home() / "dfdof_output"
+
+
+# Default tool locations, always adjust to local environment
 SLEUTH_KIT_BIN = _env_path(
 	"DFDOF_SLEUTH_KIT_BIN",
 	r"C:\Users\Floris\Documents\sleuthkit\bin",

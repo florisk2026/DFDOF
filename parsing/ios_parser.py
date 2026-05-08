@@ -1,16 +1,14 @@
-"""DFDOF iOS Backup Converter
+"""DFDOF iOS Backup Parser.
 
 Converts an iTunes backup via:
 - mappings between hashes and domains are derived from `Manifest.db`,
 - the hashed payload files live in the 00-ff directory fan-out inside the zip,
-- files are exported into `dfdof_results` under the Windows Documents folder by default.
+- files are exported into the case directory under `Documents/dfdof_output`.
 """
 
 from __future__ import annotations
 
-import argparse
 import csv
-import datetime as dt
 import hashlib
 import json
 import plistlib
@@ -21,6 +19,8 @@ import zipfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
+from config import output_dir
+from evidence import hash_file
 
 
 BACKUP_METADATA_NAMES = {"manifest.db", "manifest.plist", "info.plist", "status.plist"}
@@ -54,20 +54,6 @@ class ConversionResult:
             "metadata_files": [str(path) for path in self.metadata_files],
             "records": [asdict(record) for record in self.records],
         }
-
-
-def _documents_dir() -> Path:
-    home = Path.home()
-    documents = home / "Documents"
-    return documents if documents.exists() else home
-
-
-def _default_results_root() -> Path:
-    return _documents_dir() / "dfdof_results"
-
-
-def _timestamp() -> str:
-    return dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d_%H%M%S")
 
 
 def _safe_segment(value: str) -> str:
@@ -116,7 +102,25 @@ def _copy_metadata(zip_file: zipfile.ZipFile, metadata_root: Path) -> list[Path]
     copied: list[Path] = []
     for member in _metadata_members(zip_file):
         output_path = metadata_root / _safe_segment(Path(member).name)
-        _extract_zip_member(zip_file, member, output_path)
+        # Extract while computing SHA-256 of the archive member
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        archive_hasher = hashlib.sha256()
+        with zip_file.open(member) as source_handle, output_path.open("wb") as target_handle:
+            while True:
+                chunk = source_handle.read(1024 * 1024)
+                if not chunk:
+                    break
+                archive_hasher.update(chunk)
+                target_handle.write(chunk)
+
+        archive_hash = archive_hasher.hexdigest()
+
+        # Re-hash the written file and compare to ensure the write matched the archive bytes
+        file_hash = hash_file(output_path)[0]
+
+        if archive_hash != file_hash:
+            raise RuntimeError(f"Metadata verification failed for {member}: archive_sha256={archive_hash} file_sha256={file_hash}")
+
         copied.append(output_path)
     return copied
 
@@ -250,8 +254,8 @@ def convert_ios_backup(archive_path: Path | str, output_root: Path | str | None 
     if archive_path.suffix.lower() != ".zip":
         raise ValueError("This converter expects a zipped iTunes backup")
 
-    base_results_root = Path(output_root) if output_root is not None else _default_results_root()
-    result_root = base_results_root / f"{_safe_segment(archive_path.stem)}_{_timestamp()}"
+    result_root = Path(output_root) if output_root is not None else output_dir() / "controller_ios_parsed"
+    result_root = Path(result_root)
     metadata_root = result_root / "_metadata"
     domains_root = result_root / "domains"
     metadata_root.mkdir(parents=True, exist_ok=True)
@@ -294,23 +298,3 @@ def convert_ios_backup(archive_path: Path | str, output_root: Path | str | None 
         )
 
     return result
-
-
-def build_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Convert a zipped iTunes backup into readable domain folders.")
-    parser.add_argument("archive", help="Path to the zipped iTunes backup")
-    parser.add_argument(
-        "--output-root",
-        help="Optional output root. Defaults to %USERPROFILE%\\Documents\\dfdof_results on Windows.",
-    )
-    return parser
-
-
-def main() -> None:
-    args = build_arg_parser().parse_args()
-    result = convert_ios_backup(args.archive, output_root=args.output_root)
-    print(str(result.output_root))
-
-
-if __name__ == "__main__":
-    main()

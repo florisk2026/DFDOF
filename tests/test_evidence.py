@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from config import MEDIA
 from evidence import Evidence
 from state import State
 
@@ -10,18 +11,17 @@ def test_evidence_round_trip(tmp_path: Path) -> None:
 	sample_file = tmp_path / "mavic_air_sample.bin"
 	sample_file.write_bytes(b"DFDOF evidence test fixture\n")
 
-	parent = Evidence(sample_file, provenance="unit-test-parent", source_role="input")
+	parent = Evidence(sample_file, type="input")
 	child = Evidence(
 		sample_file,
-		provenance="unit-test-child",
 		parent=parent,
-		source_role="derived",
 		acquisition_method="zip",
-		artefact_category="media",
+		type="extracted",
+		artefact_category=MEDIA,
 	)
 
 	assert len(child.sha256) == 64
-	assert child.file_size == sample_file.stat().st_size
+	assert child.size == sample_file.stat().st_size
 
 	round_tripped = Evidence.from_dict(child.to_dict())
 
@@ -29,14 +29,27 @@ def test_evidence_round_trip(tmp_path: Path) -> None:
 	assert round_tripped.sha256 == child.sha256
 	assert round_tripped.sha1 == child.sha1
 	assert round_tripped.parent_sha256 == child.parent_sha256
-	assert round_tripped.file_size == child.file_size
+	assert str(round_tripped.source_path) == str(child.source_path)
+	assert round_tripped.stored_path == child.stored_path
+	assert round_tripped.size == child.size
+
+
+def test_evidence_directory_size_uses_recursive_content(tmp_path: Path) -> None:
+	parsed_root = tmp_path / "ios_logical_parsed"
+	(parsed_root / "domains" / "app").mkdir(parents=True)
+	(parsed_root / "domains" / "app" / "a.bin").write_bytes(b"12345")
+	(parsed_root / "domains" / "app" / "b.bin").write_bytes(b"12")
+
+	evidence = Evidence(parsed_root, type="parsed", skip_hash=True)
+
+	assert evidence.size == 7
 
 
 def test_state_save_load_round_trip(tmp_path: Path) -> None:
 	sample_file = tmp_path / "state_fixture.bin"
 	sample_file.write_bytes(b"state fixture")
 
-	evidence = Evidence(sample_file, provenance="state-test")
+	evidence = Evidence(sample_file, type="input")
 	state = State(case_id="CASE-001", operator="Floris", evidence_directory=str(tmp_path), input_evidence=[evidence])
 	state.completed_phases.append("p1_provenance")
 	state.log_tool_invocation(tool_name="mmls", version="TSK 4.15.0", args=["mmls", "image.E01"], return_code=0)
@@ -50,5 +63,6 @@ def test_state_save_load_round_trip(tmp_path: Path) -> None:
 	assert loaded.evidence_directory == str(tmp_path)
 	assert loaded.completed_phases == ["p1_provenance"]
 	assert loaded.input_evidence[0].to_dict() == evidence.to_dict()
+	assert loaded.input_evidence[0].to_dict()["stored_path"] == str(sample_file)
 	assert loaded.tool_invocation_log[0]["tool_name"] == "mmls"
 
