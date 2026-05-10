@@ -15,13 +15,13 @@ def test_run_phases_orchestrates_workflow(tmp_path: Path, monkeypatch) -> None:
 
 	def fake_run_phase_1(state, **_kwargs):
 		state.phase_outputs["p1_provenance"] = {
-			"classified_evidence": [
+			"identified_evidence": [
 				{
 					"source_path": str(evidence_dir / "sample.zip"),
-					"classified": True,
-					"classification": "controller_android",
+					"identified": True,
+					"identified_as": "controller_android",
 					"operator_confirmed": False,
-					"operator_classification": None,
+					"identified_by_operator_as": None,
 				}
 			]
 		}

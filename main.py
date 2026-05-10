@@ -18,7 +18,6 @@ import argparse
 from pathlib import Path
 from typing import cast
 
-from phases.p0_input import run_phase_0
 from phases.p1_provenance import prompt_phase_1_summary_and_confirm, run_phase_1
 from phases.p2_image_parsing import run_phase_2
 from state import State
@@ -28,11 +27,18 @@ def _build_parser() -> argparse.ArgumentParser:
 	parser = argparse.ArgumentParser(
 		description="DFDOF: Drone Forensics Decision and Orchestration Framework"
 	)
-	parser.add_argument("--operator", help="Operator name (Phase 0)")
-	parser.add_argument("--case-id", help="Case identifier (Phase 0)")
-	parser.add_argument("--evidence-dir", help="Evidence directory path (Phase 0)")
+	parser.add_argument("--operator", help="Operator name")
+	parser.add_argument("--case-id", help="Case identifier")
+	parser.add_argument("--evidence-dir", help="Evidence directory path")
 	parser.add_argument("--state-path", default="state.json", help="Output state file")
 	return parser
+
+
+def _prompt_if_missing(value: str | None, prompt_text: str) -> str:
+	"""Prompt for value only if not provided or empty."""
+	if value is not None and value.strip():
+		return value.strip()
+	return input(prompt_text).strip()
 
 
 def _compute_evidence_hashes(state: State) -> None:
@@ -56,16 +62,28 @@ def run_phases(
 ) -> State:
 	"""Orchestrate the forensic analysis phases."""
 	
-	# Phase 0: Case Intake
-	print("[Phase 0] Case intake:")
-	state = run_phase_0(operator, case_id, evidence_dir)
+	# Case Intake
+	print("Case intake:")
+	operator_value = _prompt_if_missing(operator, "Operator name: ")
+	case_value = _prompt_if_missing(case_id, "Case identifier: ")
+	evidence_value = _prompt_if_missing(evidence_dir, "Evidence directory path: ")
+	
+	evidence_path = Path(evidence_value).resolve()
+	if not evidence_path.exists() or not evidence_path.is_dir():
+		raise FileNotFoundError(f"Evidence directory not found: {evidence_path}")
+	
+	state = State(
+		case_id=case_value,
+		operator=operator_value,
+		evidence_directory=str(evidence_path),
+	)
 	print(f"  Case: {state.case_id} | Operator: {state.operator}")
 	print(f"  Evidence: {state.evidence_directory}\n")
 
 	# Phase 1: Provenance and Integrity
 	print("[Phase 1] Provenance and integrity:")
 	state = run_phase_1(state, confirm_all=False)
-	_compute_evidence_hashes(state)
+	#_compute_evidence_hashes(state)
 	if not prompt_phase_1_summary_and_confirm(state):
 		raise SystemExit("Phase 1 aborted by operator.")
 	state.save(state_path)

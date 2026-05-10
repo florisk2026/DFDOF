@@ -1,7 +1,26 @@
 """DFDOF Evidence Management.
 
-Each file that enters the pipeline is wrapped in an Evidence object so that
+Each file that enters the pipeline is wrapped in an `Evidence` object so that
 hashing, provenance and derived relationships remain explicit.
+
+Construction contract:
+
+- `source_path` (required): the original forensic identifier for the item
+	(file path, archive member name, or similar). This must be provided.
+- `stored_path` (optional): path on disk where the evidence is stored. If
+	omitted the `source_path` is used as the stored location. The constructor
+	will normalise this to a `Path` object.
+- `parent` (optional): an `Evidence` instance representing the parent artefact
+	(for derived files). If provided, the child's `parent_sha256` will be set to
+	the parent's SHA-256 hash to preserve provenance.
+- `skip_hash` (optional): when `True` the evidence object will not compute
+	file hashes immediately (useful for large files or temporary fixtures). Tests
+	and production code should explicitly set `skip_hash=True` only when
+	appropriate and later call `compute_hash()` if persistent integrity is
+	required.
+
+This contract aims to make `Evidence` construction explicit and consistent
+across phases and tools.
 """
 
 from __future__ import annotations
@@ -54,7 +73,6 @@ class Evidence:
 	type: str = EVIDENCE_TYPE_INPUT
 	artefact_category: str | None = None
 	values: dict[str, Any] | None = None
-	includes: list[Evidence] | None = None
 	skip_hash: bool = False
 	size: int = field(init=False)
 	sha1: str = field(init=False)
@@ -115,7 +133,6 @@ class Evidence:
 		instance.type = data.get("type", EVIDENCE_TYPE_INPUT)
 		instance.artefact_category = data.get("artefact_category")
 		instance.values = data.get("values")
-		instance.includes = None
 		instance.size = int(data["size"])
 		instance.sha1 = data.get("sha1") or ""
 		instance.sha256 = data.get("sha256") or ""

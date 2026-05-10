@@ -16,6 +16,20 @@ from evidence import Evidence
 import subprocess
 
 
+def _get_tsk_tool_version(tool_path: str) -> str | None:
+	"""Probe a TSK binary (mmls, fls, icat) for its version string."""
+	try:
+		result = subprocess.run([tool_path, "-V"], capture_output=True, text=True, timeout=5)
+		combined = "\n".join(filter(None, [result.stdout or "", result.stderr or ""]))
+		for line in combined.splitlines():
+			line = line.strip()
+			if line:
+				return line
+	except Exception:
+		pass
+	return None
+
+
 @dataclass(slots=True)
 class State:
 	"""Mutable pipeline state used to resume the multi-phase workflow."""
@@ -45,20 +59,6 @@ class State:
 			"tool_invocation_log": self.tool_invocation_log,
 		}
 
-	@classmethod
-	def from_dict(cls, data: dict[str, Any]) -> State:
-		state = cls(
-			case_id=data["case_id"],
-			operator=data["operator"],
-			evidence_directory=data.get("evidence_directory"),
-			start_time=data.get("start_time", utc_now_iso()),
-			input_evidence=[Evidence.from_dict(item) for item in data.get("input_evidence", [])],
-			phase_outputs=data.get("phase_outputs", {}),
-			tool_invocation_log=data.get("tool_invocation_log", []),
-			anomaly_flags=data.get("anomaly_flags", []),
-			completed_phases=data.get("completed_phases", []),
-		)
-		return state
 
 	def save(self, path: Path | str) -> None:
 		"""Persist state atomically so a crash cannot leave a partial file."""
@@ -71,16 +71,6 @@ class State:
 			json.dump(self.to_dict(), file_handle, indent=2)
 			file_handle.write("\n")
 		temp_path.replace(target_path)
-
-	@classmethod
-	def load(cls, path: Path | str) -> State:
-		target_path = Path(path)
-		with target_path.open("r", encoding="utf-8") as file_handle:
-			data = json.load(file_handle)
-		state = cls.from_dict(data)
-		# Keep the resume metadata explicit for downstream phase control.
-		state.completed_phases = list(state.completed_phases)
-		return state
 
 	def log_tool_invocation(
 		self,
@@ -95,40 +85,15 @@ class State:
 	) -> None:
 		"""Record a tool run in a compact but auditable form."""
 
-		# Helper: probe common version flags for TSK tools if not provided
-		def _probe_version(exe: str) -> str | None:
-			# Minimal probe: try common version flags and return the first
-			# non-empty output line (trimmed). Keep logic small and direct.
-			for flag in ("-V", "--version"):
-				try:
-					res = subprocess.run([exe, flag], capture_output=True, text=True, check=False)
-					out = (res.stdout or res.stderr or "").strip()
-					if out:
-						return summarise_text(out.splitlines()[0], limit=200)
-				except Exception:
-					return None
-			return None
-
-		resolved_version = version
-		if resolved_version is None and args and len(args) > 0:
-			exe = args[0]
-			# Use the executable stem (filename without extension) so Windows
-			# paths like 'mmls.exe' are matched as 'mmls'.
-			base = Path(exe).stem.lower()
-			if base in ("mmls", "fls"):
-				resolved_version = _probe_version(exe)
-
 		# Normalise empty summaries to null for clarity
 		stdout_summary = summarise_text(stdout) if stdout else None
 		stderr_summary = summarise_text(stderr) if stderr else None
-
-		# Empty collections should be null to indicate absence rather than empty list/dict
 		output_paths_val = output_paths if output_paths else None
 
 		entry = {
 			"timestamp": utc_now_iso(),
 			"tool_name": tool_name,
-			"version": (resolved_version if resolved_version is not None else None),
+			"version": version,
 			"args": args or None,
 			"return_code": return_code,
 			"stdout_summary": stdout_summary,
@@ -136,3 +101,32 @@ class State:
 			"output_paths": output_paths_val,
 		}
 		self.tool_invocation_log.append(entry)
+
+	def log_command_result(
+		self,
+		*,
+		tool_name: str,
+		result: subprocess.CompletedProcess[str],
+		output_paths: list[str] | None = None,
+	) -> None:
+		"""Convenience method to log a completed subprocess result directly."""
+		# Attempt to capture a tool version for known CLI tools when possible.
+		version_val: str | None = None
+		try:
+			if isinstance(result.args, list) and result.args:
+				cmd0 = str(result.args[0])
+				base = Path(cmd0).name.lower()
+				if base in {"mmls", "mmls.exe", "fls", "fls.exe", "icat", "icat.exe"}:
+					version_val = _get_tsk_tool_version(cmd0)
+		except Exception:
+			version_val = None
+
+		self.log_tool_invocation(
+			tool_name=tool_name,
+			version=version_val,
+			args=result.args if isinstance(result.args, list) else None,
+			return_code=result.returncode,
+			stdout=result.stdout or None,
+			stderr=result.stderr or None,
+			output_paths=output_paths,
+		)

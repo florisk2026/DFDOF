@@ -10,23 +10,14 @@ import zipfile
 from pathlib import Path, PurePosixPath
 from typing import Any, Iterable, cast
 
-from config import DEVICE_AND_BACKUP_INFO
+from config import (
+	DEVICE_AND_BACKUP_INFO,
+	ACQUISITION_LOGICAL_READER,
+	EVIDENCE_TYPE_EXTRACTED,
+	EXTENSION_ZIP,
+)
 from evidence import Evidence, hash_file
-
-
-def _normalise_member_name(value: str) -> str:
-	return PurePosixPath(value.replace("\\", "/")).as_posix().lstrip("./").lower()
-
-
-def _safe_relative_path(value: str) -> Path:
-	parts: list[str] = []
-	for raw_part in PurePosixPath(value.replace("\\", "/")).parts:
-		if raw_part in {"", ".", "/", ".."}:
-			continue
-		cleaned = "".join(ch if ch.isalnum() or ch in {".", "_", "-"} else "_" for ch in raw_part).strip("._")
-		if cleaned:
-			parts.append(cleaned)
-	return Path(*parts) if parts else Path("unnamed_file")
+from parsing.path_utils import normalise_path, sanitise_path
 
 
 def _copy_zip_member(zip_file: zipfile.ZipFile, member: str, output_path: Path) -> str:
@@ -42,43 +33,12 @@ def _copy_zip_member(zip_file: zipfile.ZipFile, member: str, output_path: Path) 
 	return hasher.hexdigest()
 
 
-def _build_extracted_evidence(
-	source_path: Path | str,
-	stored_path: Path,
-	parent: Evidence,
-	*,
-	artefact_category: str = DEVICE_AND_BACKUP_INFO,
-) -> Evidence:
-	return Evidence(
-		source_path=source_path,
-		stored_path=stored_path,
-		parent=parent,
-		acquisition_method="logical_reader",
-		type="extracted",
-		artefact_category=artefact_category,
-	)
-
-
-def _finalise_extracted_artifact(
-	source_path: Path | str,
-	stored_path: Path,
-	parent: Evidence,
-	extracted_evidence: list[Evidence],
-	*,
-	artefact_category: str = DEVICE_AND_BACKUP_INFO,
-) -> bool:
-	extracted_evidence.append(
-		_build_extracted_evidence(source_path, stored_path, parent, artefact_category=artefact_category)
-	)
-	return True
-
-
 def _resolve_member_name(archive_names: list[str], requested: str) -> str:
-	requested_normalised = _normalise_member_name(requested)
+	requested_normalised = normalise_path(requested, to_lower=True)
 	exact_lookup: dict[str, str] = {}
 	basename_lookup: dict[str, list[str]] = {}
 	for name in archive_names:
-		normalised = _normalise_member_name(name)
+		normalised = normalise_path(name, to_lower=True)
 		exact_lookup.setdefault(normalised, name)
 		basename_lookup.setdefault(Path(normalised).name, []).append(name)
 
@@ -134,7 +94,7 @@ def extract_logical_files(
 	"""Extract a batch of files from a ZIP-backed logical source and return derived Evidence objects."""
 
 	archive_path = cast(Path, source_evidence.stored_path)
-	if archive_path.suffix.lower() != ".zip":
+	if archive_path.suffix.lower() != EXTENSION_ZIP[0]:
 		raise ValueError(f"Logical extraction expects a ZIP archive: {archive_path}")
 
 	output_dir = Path(output_dir)
@@ -151,21 +111,21 @@ def extract_logical_files(
 				if missing_ok:
 					continue
 				raise
-			copied_path = output_dir / _safe_relative_path(member_name)
+			copied_path = output_dir / sanitise_path(member_name)
 			archive_hash = _copy_zip_member(archive, member_name, copied_path)
 			file_hash = hash_file(copied_path)[0]
 			if archive_hash != file_hash:
 				raise RuntimeError(
 					f"Verification failed for {member_name}: archive_sha256={archive_hash} file_sha256={file_hash}"
 				)
-			if not _finalise_extracted_artifact(
-				member_name,
-				copied_path,
-				source_evidence,
-				extracted,
+			extracted.append(Evidence(
+				source_path=member_name,
+				stored_path=copied_path,
+				parent=source_evidence,
+			acquisition_method=ACQUISITION_LOGICAL_READER,
+			type=EVIDENCE_TYPE_EXTRACTED,
 				artefact_category=artefact_category,
-			):
-				raise RuntimeError(f"Failed to finalise extracted file: {copied_path}")
+			))
 
 	return extracted
 
@@ -182,7 +142,7 @@ def extract_logical_member(
 	"""Extract one ZIP member into the destination directory and return derived Evidence."""
 
 	archive_path = cast(Path, source_evidence.stored_path)
-	if archive_path.suffix.lower() != ".zip":
+	if archive_path.suffix.lower() != EXTENSION_ZIP[0]:
 		raise ValueError(f"Logical extraction expects a ZIP archive: {archive_path}")
 
 	output_dir = Path(output_dir)
@@ -199,7 +159,13 @@ def extract_logical_member(
 				f"Verification failed for {resolved_member}: archive_sha256={archive_hash} file_sha256={file_hash}"
 			)
 
-	evidence = _build_extracted_evidence(resolved_member, copied_path, source_evidence, artefact_category=artefact_category)
-	if values is not None:
-		evidence.values = values
+	evidence = Evidence(
+		source_path=resolved_member,
+		stored_path=copied_path,
+		parent=source_evidence,
+		acquisition_method=ACQUISITION_LOGICAL_READER,
+		type=EVIDENCE_TYPE_EXTRACTED,
+		artefact_category=artefact_category,
+		values=values,
+	)
 	return evidence

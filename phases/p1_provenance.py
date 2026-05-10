@@ -1,7 +1,7 @@
 """DFDOF Phase 1: Provenance and Integrity.
 
 This phase: 
-- builds evidence objects for supported inputs (.E01, .001, .zip),
+- builds evidence objects for supported inputs (see SUPPORTED_IMAGE_EXTENSIONS in config),
 - classifies each source using rules,
 - records operator confirmation in state.
 """
@@ -14,42 +14,50 @@ from pathlib import Path
 from typing import TypedDict, cast
 
 from config import (
-    SOURCE_CLASSIFICATION_TYPES, 
-	SUPPORTED_IMAGE_EXTENSIONS, 
-	TSK_FLS, 
-	TSK_MMLS, 
-	utc_now_iso
+	SOURCE_IDENTIFICATION_TYPES,
+	SUPPORTED_IMAGE_EXTENSIONS,
+	TSK_FLS,
+	TSK_MMLS,
+	IDENTIFICATION_CONTROLLER_IOS,
+	IDENTIFICATION_CONTROLLER_ANDROID,
+	IDENTIFICATION_DRONE_SD,
+	IDENTIFICATION_DRONE_FLIGHT_STORAGE,
+	IDENTIFICATION_UNCLASSIFIED,
+	ACQUISITION_LOGICAL,
+	ACQUISITION_PHYSICAL,
+	EVIDENCE_TYPE_INPUT,
+	EXTENSION_ZIP,
+	utc_now_iso,
 )
 from evidence import Evidence
-from parsing.phyiscal_reader import list_fls_entries, parse_mmls_offset, run_command
+from parsing.path_utils import normalise_path
+from parsing.physical_reader import list_fls_entries, parse_mmls_offset, run_command
 from state import State
+
+
+_SUPPORTED_INPUT_EXTS = {ext.lower() for ext in SUPPORTED_IMAGE_EXTENSIONS}
 
 
 class SourceRecord(TypedDict):
 	source_path: str
-	classified: bool
-	classification: str
+	identified: bool
+	identified_as: str
 	operator_confirmed: bool
-	operator_classification: str | None
+	identified_by_operator_as: str | None
 
 
 def _record_source_path(record: dict[str, object]) -> str:
-	"""Return the preserved source path, tolerating legacy phase-1 state."""
-
-	return str(record.get("source_path") or record.get("path") or "")
+	"""Return the preserved source path."""
+	return str(record.get("source_path") or "")
 
 
 def _supported_input(path: Path) -> bool:
-	return path.suffix.lower() in {ext.lower() for ext in SUPPORTED_IMAGE_EXTENSIONS}
-
-
-def _normalise_listing_path(path_value: str) -> str:
-	return path_value.replace("\\", "/")
+	return path.suffix.lower() in _SUPPORTED_INPUT_EXTS
 
 
 def _is_ios_logical_backup(listing: list[str]) -> bool:
 	"""Detect iTunes logical backup: Manifest.db + Info.plist + 50+ hex/hex folders."""
-	norm = [_normalise_listing_path(p) for p in listing]
+	norm = [normalise_path(p) for p in listing]
 	return (
 		any("Manifest.db" in p for p in norm) and
 		any("Info.plist" in p for p in norm) and
@@ -59,14 +67,14 @@ def _is_ios_logical_backup(listing: list[str]) -> bool:
 
 def _is_controller_android(listing: list[str]) -> bool:
 	"""Detect Android controller: (data/data/dji OR sdcard/dji) + FlightRecord."""
-	norm = [_normalise_listing_path(p) for p in listing]
+	norm = [normalise_path(p) for p in listing]
 	has_dji = any(s in p.lower() for p in norm for s in ('data/data/dji', 'data/data/com.dji', 'sdcard/dji', 'sdcard/DJI'))
 	return has_dji and any('FlightRecord' in p for p in norm)
 
 
 def _is_drone_sd(listing: list[str]) -> bool:
 	"""Detect drone SD card: DCIM with media files (MP4/JPG/MOV)."""
-	norm = [_normalise_listing_path(p) for p in listing]
+	norm = [normalise_path(p) for p in listing]
 	return (
 		any('DCIM/' in p for p in norm) and
 		any(p.endswith(('.MP4', '.JPG', '.mp4', '.jpg', '.MOV', '.mov', '.THM', '.thm')) 
@@ -76,25 +84,25 @@ def _is_drone_sd(listing: list[str]) -> bool:
 
 def _is_drone_flight_storage(listing: list[str]) -> bool:
 	"""Detect drone flight storage: FLY*.DAT or DJI_ASSISTANT_EXPORT_FILE*.DAT."""
-	norm = [_normalise_listing_path(p) for p in listing]
+	norm = [normalise_path(p) for p in listing]
 	return any(
 		re.search(r'(FLY\d+|DJI_ASSISTANT_EXPORT_FILE.*)', p, re.IGNORECASE) and p.upper().endswith('.DAT')
 		for p in norm
 	)
 
 
-def classify_source(listing: list[str]) -> str:
-	"""Deterministic structural classification."""
+def identify_source(listing: list[str]) -> str:
+	"""Deterministic structural identification."""
 	if _is_ios_logical_backup(listing):
-		return "controller_ios"
+		return IDENTIFICATION_CONTROLLER_IOS
 	if _is_controller_android(listing):
-		return "controller_android"
+		return IDENTIFICATION_CONTROLLER_ANDROID
 	if _is_drone_sd(listing):
-		return "drone_sd"
+		return IDENTIFICATION_DRONE_SD
 	if _is_drone_flight_storage(listing):
-		return "drone_flight_storage"
+		return IDENTIFICATION_DRONE_FLIGHT_STORAGE
 
-	return "unclassified"
+	return IDENTIFICATION_UNCLASSIFIED
 
 
 def _build_tsk_cmd(tool: Path, image_path: Path, image_type: str | None, offset: int | None, extra_flags: list[str] | None = None) -> list[str]:
@@ -118,13 +126,7 @@ def _enumerate_image_listing(image_path: Path, state: State) -> list[str]:
 	# Single mmls attempt - derive partition offset for disk-level images.
 	mmls_cmd = _build_tsk_cmd(TSK_MMLS, image_path, None, None)
 	mmls_result = run_command(mmls_cmd)
-	state.log_tool_invocation(
-		tool_name="mmls",
-		args=mmls_cmd,
-		return_code=mmls_result.returncode,
-		stdout=mmls_result.stdout or None,
-		stderr=mmls_result.stderr or None,
-	)
+	state.log_command_result(tool_name="mmls", result=mmls_result)
 
 	if mmls_result.returncode == 0:
 		try:
@@ -137,13 +139,7 @@ def _enumerate_image_listing(image_path: Path, state: State) -> list[str]:
 	# fls enumeration - with offset if available, without if not.
 	fls_cmd = _build_tsk_cmd(TSK_FLS, image_path, None, offset, ["-r", "-p"])
 	fls_result = run_command(fls_cmd)
-	state.log_tool_invocation(
-		tool_name="fls",
-		args=fls_cmd,
-		return_code=fls_result.returncode,
-		stdout=fls_result.stdout or None,
-		stderr=fls_result.stderr or None,
-	)
+	state.log_command_result(tool_name="fls", result=fls_result)
 
 	if fls_result.returncode != 0:
 		raise RuntimeError(
@@ -152,12 +148,23 @@ def _enumerate_image_listing(image_path: Path, state: State) -> list[str]:
 		)
 
 	entries = list_fls_entries(fls_result.stdout or "")
-	return [_normalise_listing_path(entry[2]) for entry in entries]
+
+	# Persist image metadata into state.phase_outputs for later phases to reuse
+	meta = {
+		"offset_sectors": offset,
+		"entries": [
+			{"kind": kind, "inode": inode, "path": normalise_path(path)}
+			for (kind, inode, path) in entries
+		],
+	}
+	state.phase_outputs.setdefault("p1_provenance", {}).setdefault("image_metadata", {})[image_path.name] = meta
+
+	return [normalise_path(entry[2]) for entry in entries]
 
 
 def _enumerate_zip_listing(zip_path: Path) -> list[str]:
 	with zipfile.ZipFile(zip_path) as archive:
-		return [_normalise_listing_path(name) for name in archive.namelist()]
+		return [normalise_path(name) for name in archive.namelist()]
 
 
 def run_phase_1(state: State, *, confirm_all: bool = True) -> State:
@@ -176,37 +183,37 @@ def run_phase_1(state: State, *, confirm_all: bool = True) -> State:
 		if not candidate.is_file() or not _supported_input(candidate):
 			continue
 
-		is_zip = candidate.suffix.lower() == ".zip"
+		is_zip = candidate.suffix.lower() == EXTENSION_ZIP[0].lower()
 		evidence = Evidence(
 			source_path=str(candidate),
 			stored_path=candidate.resolve(),
-			acquisition_method="logical" if is_zip else "physical",
-			type="input",
+			acquisition_method=ACQUISITION_LOGICAL if is_zip else ACQUISITION_PHYSICAL,
+			type=EVIDENCE_TYPE_INPUT,
 			skip_hash=True,
 		)
 		state.input_evidence.append(evidence)
 
 		listing = _enumerate_zip_listing(candidate) if is_zip else _enumerate_image_listing(candidate, state)
-		classification = classify_source(listing)
+		identified_as = identify_source(listing)
 		
 		p1_outputs.append(cast(SourceRecord, {
 			"source_path": str(evidence.source_path),
-			"classified": classification != "unclassified",
-			"classification": classification,
+			"identified": identified_as != IDENTIFICATION_UNCLASSIFIED,
+			"identified_as": identified_as,
 			"operator_confirmed": False,
-			"operator_classification": None,
+			"identified_by_operator_as": None,
 		}))
 
-	# Enforce no unclassified sources if confirm_all
+	# Enforce no unidentified sources if confirm_all
 	if confirm_all and p1_outputs:
 		for record in p1_outputs:
-			if not record["classified"]:
-				raise ValueError(f"Unclassified source: {_record_source_path(cast(dict[str, object], record))}. Classify all sources before proceeding.")
+			if not record["identified"]:
+				raise ValueError(f"Unidentified source: {_record_source_path(cast(dict[str, object], record))}. Identify all sources before proceeding.")
 			record["operator_confirmed"] = True
 
 	state.phase_outputs["p1_provenance"] = {
 		"completed_at": now,
-		"classified_evidence": p1_outputs,
+		"identified_evidence": p1_outputs,
 		"operator_final_confirmation": {"accepted": None, "timestamp": None},
 	}
 	if "p1_provenance" not in state.completed_phases:
@@ -216,50 +223,50 @@ def run_phase_1(state: State, *, confirm_all: bool = True) -> State:
 
 
 def _show_summary(sources: list[SourceRecord]) -> None:
-	"""Display a compact summary of all classifications."""
+	"""Display a compact summary of all identifications."""
 
 	print("Evidence sources detected:")
 	for idx, record in enumerate(sources, start=1):
-		classification = record["classification"]
-		classified = record["classified"]
-		print(f"  [{idx}] {Path(_record_source_path(cast(dict[str, object], record))).name} -> {classification} (classified: {classified})")
+		identified_as = record["identified_as"]
+		identified = record["identified"]
+		print(f"  [{idx}] {Path(_record_source_path(cast(dict[str, object], record))).name} -> {identified_as} (identified: {identified})")
 
 
-def _prompt_override_classifications(sources: list[SourceRecord]) -> None:
-	"""Allow operator to override classifications interactively."""
-	all_classes = sorted(SOURCE_CLASSIFICATION_TYPES)
+def _prompt_override_identifications(sources: list[SourceRecord]) -> None:
+	"""Allow operator to override identifications interactively."""
+	all_idents = sorted(SOURCE_IDENTIFICATION_TYPES)
 	for idx, record in enumerate(sources, start=1):
 		print(f"\nSource [{idx}] {Path(_record_source_path(cast(dict[str, object], record))).name}")
-		print(f"  Current: {record['classification']}")
-		for c_idx, cls in enumerate(all_classes, start=1):
-			marker = " *" if cls == record['classification'] else ""
-			print(f"    [{c_idx}] {cls}{marker}")
+		print(f"  Current: {record['identified_as']}")
+		for c_idx, ident in enumerate(all_idents, start=1):
+			marker = " *" if ident == record['identified_as'] else ""
+			print(f"    [{c_idx}] {ident}{marker}")
 		print(f"    [0] Keep current")
 		
 		try:
-			choice = input(f"  Select (0-{len(all_classes)}): ").strip()
+			choice = input(f"  Select (0-{len(all_idents)}): ").strip()
 			if choice and choice != "0":
 				c_idx = int(choice) - 1
-				if 0 <= c_idx < len(all_classes):
-					selected_classification = all_classes[c_idx]
-					if selected_classification != record["classification"]:
-						record["operator_classification"] = selected_classification
+				if 0 <= c_idx < len(all_idents):
+					selected_identification = all_idents[c_idx]
+					if selected_identification != record["identified_as"]:
+						record["identified_by_operator_as"] = selected_identification
 					else:
-						record["operator_classification"] = None
-					record["classified"] = True
-					print(f"  → Changed to: {all_classes[c_idx]}")
+						record["identified_by_operator_as"] = None
+					record["identified"] = True
+					print(f"  → Changed to: {all_idents[c_idx]}")
 		except (ValueError, IndexError):
 			pass
 
 
-def _has_unclassified_sources(sources: list[SourceRecord]) -> bool:
-	return any(not record["classified"] for record in sources)
+def _has_unidentified_sources(sources: list[SourceRecord]) -> bool:
+	return any(not record["identified"] for record in sources)
 
 
 def prompt_phase_1_summary_and_confirm(state: State) -> bool:
 	"""Print summary and request operator confirmation with override option."""
 	p1 = cast(dict[str, object], state.phase_outputs.get("p1_provenance", {}))
-	sources = cast(list[SourceRecord], p1.get("classified_evidence", []))
+	sources = cast(list[SourceRecord], p1.get("identified_evidence", []))
 	now = utc_now_iso()
 	
 	while True:
@@ -267,15 +274,15 @@ def prompt_phase_1_summary_and_confirm(state: State) -> bool:
 		answer = input("\nProceed? [yes/no]: ").strip().lower()
 		
 		if answer in {"y", "yes"}:
-			if _has_unclassified_sources(sources):
-				print("One or more sources are still unclassified. Please classify them or exit.")
+			if _has_unidentified_sources(sources):
+				print("One or more sources are still unidentified. Please identify them or exit.")
 				continue
 			accepted = True
 			break
 		elif answer in {"n", "no"}:
 			sub = input("  [change]/[exit]?: ").strip().lower()
 			if sub in {"c", "change"}:
-				_prompt_override_classifications(sources)
+				_prompt_override_identifications(sources)
 				continue
 			elif sub in {"e", "exit"}:
 				accepted = False

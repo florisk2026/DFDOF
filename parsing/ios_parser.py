@@ -11,6 +11,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import logging
 import plistlib
 import re
 import sqlite3
@@ -19,8 +20,10 @@ import zipfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
-from config import output_dir
+from config import EXTENSION_ZIP, output_dir
 from evidence import hash_file
+
+logger = logging.getLogger(__name__)
 
 
 BACKUP_METADATA_NAMES = {"manifest.db", "manifest.plist", "info.plist", "status.plist"}
@@ -73,7 +76,17 @@ def _safe_relative_path(value: str) -> Path:
 def _sha1_backup_key(domain: str, relative_path: str) -> str:
     """Derive the classic iTunes backup file identifier when the manifest lacks one."""
 
-    payload = f"{domain}-{relative_path}".encode("utf-8", errors="ignore")
+    # Encode defensively and warn if any characters are replaced during encoding.
+    raw = f"{domain}-{relative_path}"
+    payload = raw.encode("utf-8", errors="replace")
+    # Detect replacement by round-tripping and comparing
+    roundtrip = payload.decode("utf-8", errors="replace")
+    if roundtrip != raw:
+        logger.warning(
+            "Encoding replacement occurred while deriving backup key: domain=%s relative_path=%s",
+            domain,
+            relative_path,
+        )
     return hashlib.sha1(payload).hexdigest()
 
 
@@ -119,7 +132,17 @@ def _copy_metadata(zip_file: zipfile.ZipFile, metadata_root: Path) -> list[Path]
         file_hash = hash_file(output_path)[0]
 
         if archive_hash != file_hash:
-            raise RuntimeError(f"Metadata verification failed for {member}: archive_sha256={archive_hash} file_sha256={file_hash}")
+            output_str = str(output_path)
+            logger.warning(
+                "Metadata hash mismatch for %s -> written file %s: archive_sha256=%s file_sha256=%s",
+                member,
+                output_str,
+                archive_hash,
+                file_hash,
+            )
+            raise RuntimeError(
+                f"Metadata verification failed for {member} (written to {output_str}): archive_sha256={archive_hash} file_sha256={file_hash}"
+            )
 
         copied.append(output_path)
     return copied
@@ -251,7 +274,7 @@ def convert_ios_backup(archive_path: Path | str, output_root: Path | str | None 
     archive_path = Path(archive_path)
     if not archive_path.exists():
         raise FileNotFoundError(f"Archive not found: {archive_path}")
-    if archive_path.suffix.lower() != ".zip":
+    if archive_path.suffix.lower() != EXTENSION_ZIP[0]:
         raise ValueError("This converter expects a zipped iTunes backup")
 
     result_root = Path(output_root) if output_root is not None else output_dir() / "controller_ios_parsed"

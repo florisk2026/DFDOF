@@ -15,7 +15,7 @@ from phases import p2_image_parsing as p2_module
 from state import State
 
 
-@dataclass(slots=True)
+@dataclass
 class FakeConversionResult:
 	output_root: Path
 
@@ -60,13 +60,13 @@ def test_run_phase_2_convert_controller_ios_evidence(tmp_path: Path, monkeypatch
 	ios_evidence = Evidence(input_archive, type="input", skip_hash=True)
 	state.input_evidence.append(ios_evidence)
 	state.phase_outputs["p1_provenance"] = {
-		"classified_evidence": [
+		"identified_evidence": [
 			{
 				"source_path": str(input_archive),
-				"classified": True,
-				"classification": "controller_ios",
+				"identified": True,
+				"identified_as": "controller_ios",
 				"operator_confirmed": True,
-				"operator_classification": None,
+				"identified_by_operator_as": None,
 			},
 		]
 	}
@@ -166,13 +166,13 @@ def test_run_phase_2_processes_android_logical_source(tmp_path: Path, monkeypatc
 	android_evidence = Evidence(input_archive, acquisition_method="logical", type="input", skip_hash=True)
 	state.input_evidence.append(android_evidence)
 	state.phase_outputs["p1_provenance"] = {
-		"classified_evidence": [
+		"identified_evidence": [
 			{
 				"source_path": str(input_archive),
-				"classified": True,
-				"classification": "controller_android",
+				"identified": True,
+				"identified_as": "controller_android",
 				"operator_confirmed": True,
-				"operator_classification": None,
+				"identified_by_operator_as": None,
 			},
 		]
 	}
@@ -243,21 +243,21 @@ def test_run_phase_2_processes_android_physical_source(tmp_path: Path, monkeypat
 	android_evidence = Evidence(input_image, acquisition_method="physical", type="input", skip_hash=True)
 	state.input_evidence.append(android_evidence)
 	state.phase_outputs["p1_provenance"] = {
-		"classified_evidence": [
+		"identified_evidence": [
 			{
 				"source_path": str(input_image),
-				"classified": True,
-				"classification": "controller_android",
+				"identified": True,
+				"identified_as": "controller_android",
 				"operator_confirmed": True,
-				"operator_classification": None,
+				"identified_by_operator_as": None,
 			},
 		]
 	}
 
 	monkeypatch.setattr(Path, "home", lambda: project_root)
 
-	def fake_extract_tsk_image(image_path, working_dir, *, include_paths=None, provenance="tsk_mounter", parent=None, tool_log=None, artefact_category=None):
-		_ = (image_path, include_paths, provenance, parent, tool_log, artefact_category)
+	def fake_extract_tsk_image(image_path, working_dir, *, include_paths=None, acquisition_method="tsk_mounter", parent=None, tool_log=None, artefact_category=None):
+		_ = (image_path, include_paths, acquisition_method, parent, tool_log, artefact_category)
 		working_dir = Path(working_dir)
 		working_dir.mkdir(parents=True, exist_ok=True)
 		files = {

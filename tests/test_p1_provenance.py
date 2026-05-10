@@ -3,27 +3,29 @@ from __future__ import annotations
 import subprocess
 import zipfile
 from pathlib import Path
+from typing import cast
 
+from config import EXTENSION_PHYSICAL, EXTENSION_ZIP, SUPPORTED_IMAGE_EXTENSIONS
 from phases.p1_provenance import (
-	classify_source,
+	identify_source,
 	prompt_phase_1_summary_and_confirm,
 	run_phase_1,
 )
 from state import State
 
 
-def test_classify_source_controller_android() -> None:
+def test_identify_source_controller_android() -> None:
 	listing = [
 		"/sdcard/DJI/dji.go.v4/FlightRecord/abc.txt",
 		"/data/data/dji.go.v4/shared_prefs/dji.go.v4.xml",
 	]
-	classification = classify_source(listing)
-	assert classification == "controller_android"
+	identified_as = identify_source(listing)
+	assert identified_as == "controller_android"
 
 
-def test_classify_source_ios_logical_nested_structure() -> None:
+def test_identify_source_ios_logical_nested_structure() -> None:
 	"""Test iOS logical backup with nested root (e.g., MC 04 iOS/...)."""
-	# Simulates: ios_logical.zip/MC 04 iOS/7f05ad1235.../ab/cd/...
+	# Simulates: ios_logical.zip/MC 04 iOS/.../ab/cd/...
 	# Base structure
 	listing = [
 		"MC 04 iOS/7f05ad1235cea98920b1112ef14ddd9fdded744a/Info.plist",
@@ -35,10 +37,10 @@ def test_classify_source_ios_logical_nested_structure() -> None:
 	for i in range(10):  # First hex pair (00-09)
 		for j in range(10):  # Second hex pair (00-09)
 			# Generate paths like: MC 04 iOS/.../0a/0b/file_hash
-			listing.append(f"{prefix}{i:02x}/{j:02x}/{'abcd' * 16}")  # 64 entries
+			listing.append(f"{prefix}{i:02x}/{j:02x}/{('abcd' * 16)}")  # 64 entries
 
-	classification = classify_source(listing)
-	assert classification == "controller_ios"
+	identified_as = identify_source(listing)
+	assert identified_as == "controller_ios"
 
 
 def test_run_phase_1_only_supported_inputs(tmp_path: Path, monkeypatch) -> None:
@@ -74,14 +76,14 @@ r/r 1235: MISC/THM/100/DJI_0001.THM
 
 	assert len(state.input_evidence) == 2
 	assert all(item.to_dict()["stored_path"] is not None for item in state.input_evidence)
-	assert all(item.stored_path.suffix.lower() in {".zip", ".e01", ".001"} for item in state.input_evidence)
-	p1 = state.phase_outputs["p1_provenance"]["classified_evidence"]
+	assert all(cast(Path, item.stored_path).suffix.lower() in {ext.lower() for ext in SUPPORTED_IMAGE_EXTENSIONS} for item in state.input_evidence)
+	p1 = state.phase_outputs["p1_provenance"]["identified_evidence"]
 	assert len(p1) == 2
 	# Both should be drone_sd (sorted alphabetically: drone.E01, drone_logical.zip)
-	assert all(record["classification"] == "drone_sd" for record in p1)
-	assert all(record["classified"] is True for record in p1)
+	assert all(record["identified_as"] == "drone_sd" for record in p1)
+	assert all(record["identified"] is True for record in p1)
 	assert all(record["operator_confirmed"] is True for record in p1)
-	assert all(record["operator_classification"] is None for record in p1)
+	assert all(record["identified_by_operator_as"] is None for record in p1)
 	assert "p1_provenance" in state.completed_phases
 
 
@@ -111,10 +113,10 @@ r/r 1236: MISC/THM/100/DJI_0001.THM
 	state = State(case_id="CASE-2", operator="op", evidence_directory=str(tmp_path))
 	state = run_phase_1(state, confirm_all=True)
 
-	record = state.phase_outputs["p1_provenance"]["classified_evidence"][0]
+	record = state.phase_outputs["p1_provenance"]["identified_evidence"][0]
 	# Should match controller_ios first in the deterministic priority order
-	assert record["classification"] in ("controller_ios", "controller_android", "drone_sd")
-	assert record["classified"] is True
+	assert record["identified_as"] in ("controller_ios", "controller_android", "drone_sd")
+	assert record["identified"] is True
 	assert record["operator_confirmed"] is True
 
 
@@ -142,9 +144,9 @@ DOS Partition Table
 	state = State(case_id="CASE-3", operator="op", evidence_directory=str(tmp_path))
 	state = run_phase_1(state, confirm_all=True)
 
-	record = state.phase_outputs["p1_provenance"]["classified_evidence"][0]
-	assert record["classification"] == "drone_sd"
-	assert record["classified"] is True
+	record = state.phase_outputs["p1_provenance"]["identified_evidence"][0]
+	assert record["identified_as"] == "drone_sd"
+	assert record["identified"] is True
 	assert record["operator_confirmed"] is True
 	assert sum(1 for command in commands if Path(command[0]).name.lower().startswith("mmls")) == 1
 	assert all("-i" not in command for command in commands if Path(command[0]).name.lower().startswith("mmls"))
@@ -193,15 +195,15 @@ def test_run_phase_1_fallbacks_to_fls_without_mmls(tmp_path: Path, monkeypatch) 
 	state = State(case_id="CASE-5", operator="op", evidence_directory=str(tmp_path))
 	state = run_phase_1(state, confirm_all=True)
 
-	record = state.phase_outputs["p1_provenance"]["classified_evidence"][0]
-	assert record["classification"] == "drone_sd"
-	assert record["classified"] is True
+	record = state.phase_outputs["p1_provenance"]["identified_evidence"][0]
+	assert record["identified_as"] == "drone_sd"
+	assert record["identified"] is True
 	assert record["operator_confirmed"] is True
 	assert any(flag.startswith("p1_mmls_unavailable_fls_direct:") for flag in state.anomaly_flags)
 
 
-def test_run_phase_1_blocks_unclassified_sources(tmp_path: Path, monkeypatch) -> None:
-	"""Phase 1 raises error if any source remains unclassified and confirm_all=True."""
+def test_run_phase_1_blocks_unidentified_sources(tmp_path: Path, monkeypatch) -> None:
+	"""Phase 1 raises error if any source remains unidentified and confirm_all=True."""
 	image_path = tmp_path / "unknown.E01"
 	image_path.write_bytes(b"image fixture")
 
@@ -226,26 +228,26 @@ r/r 1235: other_data/file.bin
 	state = State(case_id="CASE-6", operator="op", evidence_directory=str(tmp_path))
 	try:
 		run_phase_1(state, confirm_all=True)
-		raise AssertionError("Expected ValueError for unclassified source")
+		raise AssertionError("Expected ValueError for unidentified source")
 	except ValueError as exc:
-		assert "unclassified" in str(exc).lower()
+		assert "unidentified" in str(exc).lower()
 
 
-def test_prompt_blocks_continuation_for_unclassified_sources(monkeypatch, capsys) -> None:
+def test_prompt_blocks_continuation_for_unidentified_sources(monkeypatch, capsys) -> None:
 	state = State(case_id="CASE-7", operator="op", evidence_directory=None)
 	state.phase_outputs["p1_provenance"] = {
-		"classified_evidence": [
-				{
-					"path": "sample.zip",
-				"classified": False,
-					"classification": "unclassified",
+		"identified_evidence": [
+			{
+				"source_path": "sample.zip",
+				"identified": False,
+				"identified_as": "unclassified",
 				"operator_confirmed": False,
-				"operator_classification": None,
-				},
+				"identified_by_operator_as": None,
+			},
 		]
 	}
 
-	# Sequence: yes (rejected due to unclassified) -> no -> exit
+	# Sequence: yes (rejected due to unidentified) -> no -> exit
 	answers = iter(["yes", "no", "exit"])
 	monkeypatch.setattr("builtins.input", lambda _: next(answers))
 
@@ -253,19 +255,19 @@ def test_prompt_blocks_continuation_for_unclassified_sources(monkeypatch, capsys
 
 	output = capsys.readouterr().out
 	assert accepted is False
-	assert "still unclassified" in output
+	assert "still unidentified" in output
 
 
-def test_prompt_records_operator_classification_when_not_confirmed(monkeypatch) -> None:
+def test_prompt_records_operator_identification_when_not_confirmed(monkeypatch) -> None:
 	state = State(case_id="CASE-8", operator="op", evidence_directory=None)
 	state.phase_outputs["p1_provenance"] = {
-		"classified_evidence": [
+		"identified_evidence": [
 			{
-				"path": "sample.zip",
-				"classified": True,
-				"classification": "controller_ios",
+				"source_path": "sample.zip",
+				"identified": True,
+				"identified_as": "controller_ios",
 				"operator_confirmed": False,
-				"operator_classification": None,
+				"identified_by_operator_as": None,
 			},
 		]
 	}
@@ -275,9 +277,9 @@ def test_prompt_records_operator_classification_when_not_confirmed(monkeypatch) 
 	monkeypatch.setattr("builtins.input", lambda _: next(answers))
 
 	accepted = prompt_phase_1_summary_and_confirm(state)
-	record = state.phase_outputs["p1_provenance"]["classified_evidence"][0]
+	record = state.phase_outputs["p1_provenance"]["identified_evidence"][0]
 
 	assert accepted is False
-	assert record["classification"] == "controller_ios"
+	assert record["identified_as"] == "controller_ios"
 	assert record["operator_confirmed"] is False
-	assert record["operator_classification"] == "controller_android"
+	assert record["identified_by_operator_as"] == "controller_android"

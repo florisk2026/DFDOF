@@ -22,13 +22,34 @@ DJI_APP_DOMAINS = {
 	},
 }
 
-SOURCE_CLASSIFICATION_TYPES = {
-	"controller_ios",
-	"controller_android",
-	"drone_sd",
-	"drone_flight_storage",
-}
+# Source identification types (P1)
+IDENTIFICATION_CONTROLLER_IOS = "controller_ios"
+IDENTIFICATION_CONTROLLER_ANDROID = "controller_android"
+IDENTIFICATION_DRONE_SD = "drone_sd"
+IDENTIFICATION_DRONE_FLIGHT_STORAGE = "drone_flight_storage"
+IDENTIFICATION_UNCLASSIFIED = "unclassified"
 
+SOURCE_IDENTIFICATION_TYPES = {
+	IDENTIFICATION_CONTROLLER_IOS,
+	IDENTIFICATION_CONTROLLER_ANDROID,
+	IDENTIFICATION_DRONE_SD,
+	IDENTIFICATION_DRONE_FLIGHT_STORAGE,
+}
+SOURCE_IDENTIFICATION_TYPES = frozenset(SOURCE_IDENTIFICATION_TYPES)
+
+# Acquisition method types
+ACQUISITION_LOGICAL = "logical"
+ACQUISITION_PHYSICAL = "physical"
+ACQUISITION_IOS_PARSER = "ios_parser"
+ACQUISITION_LOGICAL_READER = "logical_reader"
+ACQUISITION_TSK_MOUNTER = "tsk_mounter"
+
+# Evidence types (core)
+EVIDENCE_TYPE_INPUT = "input"
+EVIDENCE_TYPE_PARSED = "parsed"
+EVIDENCE_TYPE_EXTRACTED = "extracted"
+
+# Artefact categories
 DRONE_LOGS = "drone_logs"
 FLIGHT_RECORDS = "flight_records"
 FLIGHT_LOGS = "flight_logs"
@@ -37,30 +58,9 @@ DATABASES = "databases"
 ACCOUNT_DATA = "account_data"
 DEVICE_AND_BACKUP_INFO = "device_and_backup_info"
 
-ARTEFACT_CATEGORIES = (
-	DRONE_LOGS,
-	FLIGHT_RECORDS,
-	FLIGHT_LOGS,
-	MEDIA,
-	DATABASES,
-	ACCOUNT_DATA,
-	DEVICE_AND_BACKUP_INFO,
-)
-
-ARTEFACT_CATEGORY_SET = frozenset(ARTEFACT_CATEGORIES)
-EVIDENCE_TYPE_INPUT = "input"
-EVIDENCE_TYPE_PARSED = "parsed"
-EVIDENCE_TYPE_EXTRACTED = "extracted"
-
-EVIDENCE_TYPES = (
-	EVIDENCE_TYPE_INPUT,
-	EVIDENCE_TYPE_PARSED,
-	EVIDENCE_TYPE_EXTRACTED,
-)
-
-EVIDENCE_TYPE_SET = frozenset(EVIDENCE_TYPES)
-HASH_ALGORITHMS = ["sha1", "sha256"]
-SUPPORTED_IMAGE_EXTENSIONS = (".E01", ".001", ".zip")
+EXTENSION_ZIP = [".zip"]
+EXTENSION_PHYSICAL = [".E01", ".001"]
+SUPPORTED_IMAGE_EXTENSIONS = tuple(EXTENSION_PHYSICAL) + tuple(EXTENSION_ZIP)
 MAX_SUMMARY_LENGTH = 125
 
 
@@ -87,7 +87,7 @@ def output_dir() -> Path:
 		return Path.home() / "dfdof_output"
 
 
-# Default tool locations, always adjust to local environment
+# Default tool locations
 SLEUTH_KIT_BIN = _env_path(
 	"DFDOF_SLEUTH_KIT_BIN",
 	r"C:\Users\Floris\Documents\sleuthkit\bin",
@@ -103,35 +103,4 @@ TSK_FLS = _env_path(
 TSK_ICAT = _env_path(
 	"DFDOF_TSK_ICAT",
 	str(SLEUTH_KIT_BIN / "icat.exe"),
-)
-
-TXTLOG_TO_CSV_DEFAULT = _env_path(
-	"DFDOF_TXTLOG_TO_CSV_DEFAULT",
-	r"C:\Users\Floris\Documents\txtlogtocsv\TXTlogToCSVtool.exe",
-)
-TXTLOG_TO_CSV_EXP = _env_path(
-	"DFDOF_TXTLOG_TO_CSV_EXP",
-	r"C:\Users\Floris\Documents\txtlogtocsv\TXTlogToCSVtool-exp.exe",
-)
-TXTLOG_TO_CSV_MM = _env_path(
-	"DFDOF_TXTLOG_TO_CSV_MM",
-	r"C:\Users\Floris\Documents\txtlogtocsv\TXTlogToCSVtoolMM.exe",
-)
-DJI_LOG_PARSER_EXE = _env_path(
-	"DFDOF_DJI_LOG_PARSER_EXE",
-	r"C:\Users\Floris\Documents\dji-log-parser\dji-log-parser.exe",
-)
-DROP_SCRIPT = _env_path(
-	"DFDOF_DROP_SCRIPT",
-	r"C:\Users\Floris\Documents\drop\DROP.py",
-)
-EXIFTOOL_EXE = _env_path(
-	"DFDOF_EXIFTOOL_EXE",
-	r"C:\Users\Floris\Documents\exiftool\exiftool.exe",
-)
-
-# DatCon is GUI-based, so not CLI invocable
-DATCON_DISPLAY_PATH = _env_path(
-	"DFDOF_DATCON_DISPLAY_PATH",
-	r"C:\Program Files (x86)\DatCon\DatCon.4.3.0.exe",
 )

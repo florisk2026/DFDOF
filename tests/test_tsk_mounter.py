@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
+from typing import cast
 
 from evidence import Evidence
-from parsing.phyiscal_reader import extract_tsk_image, parse_mmls_offset, sanitise_path
+from parsing.physical_reader import extract_tsk_image, parse_mmls_offset
+from parsing.path_utils import sanitise_path
 
 
 def test_parse_mmls_offset_prefers_data_partition() -> None:
@@ -53,13 +55,14 @@ d/d 1236: FlightRecord/
 			return subprocess.CompletedProcess(command, 0, stdout="")
 		raise AssertionError(f"Unexpected command: {command}")
 
-	monkeypatch.setattr("parsing.phyiscal_reader.subprocess.run", fake_run)
+	monkeypatch.setattr("parsing.physical_reader.subprocess.run", fake_run)
 
 	extracted = extract_tsk_image(image_path, working_dir, include_paths=["FlightRecord/"], parent=parent, tool_log=tool_log.append)
 
 	assert len(extracted) == 1
-	assert extracted[0].stored_path.exists()
-	assert extracted[0].stored_path.name == "DJIFlightRecord_2024-01-01.txt"
+	extracted_path = cast(Path, extracted[0].stored_path)
+	assert extracted_path.exists()
+	assert extracted_path.name == "DJIFlightRecord_2024-01-01.txt"
 	assert extracted[0].parent_sha256 == parent.sha256
 	assert extracted[0].source_path == "FlightRecord/DJIFlightRecord_2024-01-01.txt"
 	assert tool_log
