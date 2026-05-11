@@ -1,7 +1,7 @@
 {
   "operator": "Floris",
   "case_id": "CASE-ZIP-01",
-  "start_time": "2026-05-10T17:29:07.366599+00:00",
+  "start_time": "2026-05-11T09:07:44.933564+00:00",
   "evidence_directory": "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df048\\2018_april",
   "completed_phases": [
     "p1_provenance",
@@ -20,9 +20,9 @@
       "artefact_category": null,
       "values": null,
       "size": 2521379428,
-      "sha1": null,
-      "sha256": null,
-      "hash_timestamp": null
+      "sha1": "a294c910a56a0b92716c510420599252f0cb5d27",
+      "sha256": "0c3bd75b0bd8cf8ddd2835dbe303996c3eb2ca6abb0ae8b179791f12e4069d0c",
+      "hash_timestamp": "2026-05-11T09:07:53.800025+00:00"
     },
     {
       "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df048\\2018_april\\df048_internal.E01",
@@ -33,9 +33,9 @@
       "artefact_category": null,
       "values": null,
       "size": 8418291378,
-      "sha1": null,
-      "sha256": null,
-      "hash_timestamp": null
+      "sha1": "b9bfc2d90b326950aea2121be9304692b298a288",
+      "sha256": "5664f81579a3558ed7fdf79b06e49cf0849b5f41999ae5a996e43041460ac8f3",
+      "hash_timestamp": "2026-05-11T09:08:19.572074+00:00"
     },
     {
       "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df048\\2018_april\\ios_logical.zip",
@@ -46,14 +46,14 @@
       "artefact_category": null,
       "values": null,
       "size": 172077545,
-      "sha1": null,
-      "sha256": null,
-      "hash_timestamp": null
+      "sha1": "94ab6d0ff0285bfe4de278ab8cc1a657aa10531d",
+      "sha256": "bfa6bf59fa10e999fc080b84ce13b108bd759e1d4bc9f2155caa48389070deea",
+      "hash_timestamp": "2026-05-11T09:08:20.206402+00:00"
     }
   ],
   "phase_outputs": {
     "p1_provenance": {
-      "completed_at": "2026-05-10T17:29:07.367340+00:00",
+      "completed_at": "2026-05-11T09:07:44.934214+00:00",
       "identified_evidence": [
         {
           "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df048\\2018_april\\android_logical.zip",
@@ -79,16 +79,16 @@
       ],
       "operator_final_confirmation": {
         "accepted": true,
-        "timestamp": "2026-05-10T17:29:08.137878+00:00"
+        "timestamp": "2026-05-11T09:08:20.206626+00:00"
       }
     },
     "p2_image_parsing": {
-      "completed_at": "2026-05-10T17:29:16.832615+00:00",
+      "completed_at": "2026-05-11T09:10:15.453383+00:00",
       "derived_evidence": [
         {
           "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df048\\2018_april\\ios_logical.zip",
           "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p2_image_parsing\\controller_ios_parsed",
-          "parent_sha256": null,
+          "parent_sha256": "bfa6bf59fa10e999fc080b84ce13b108bd759e1d4bc9f2155caa48389070deea",
           "acquisition_method": "ios_parser",
           "type": "parsed",
           "artefact_category": "device_and_backup_info",
@@ -101,7 +101,7 @@
         {
           "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df048\\2018_april\\ios_logical.zip",
           "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p2_image_parsing\\controller_ios_parsed\\backup_info.json",
-          "parent_sha256": null,
+          "parent_sha256": "bfa6bf59fa10e999fc080b84ce13b108bd759e1d4bc9f2155caa48389070deea",
           "acquisition_method": "ios_parser",
           "type": "parsed",
           "artefact_category": "device_and_backup_info",
@@ -120,12 +120,12 @@
           "size": 67923,
           "sha1": "95855909f108d10db7e7674d6b1eea838b8974ed",
           "sha256": "eaff5dbbbb6872e168724ec955a7e92b3362aeb9edd9ff66c5baf63c6c0e65ae",
-          "hash_timestamp": "2026-05-10T17:29:16.181445+00:00"
+          "hash_timestamp": "2026-05-11T09:10:15.006931+00:00"
         },
         {
-          "source_path": "MC 04/MC 04/MC 04_SM-T280.pdf",
+          "source_path": "MC 04\\MC 04\\MC 04_SM-T280.pdf",
           "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p2_image_parsing\\controller_android_parsed\\MC 04_SM-T280.pdf",
-          "parent_sha256": null,
+          "parent_sha256": "0c3bd75b0bd8cf8ddd2835dbe303996c3eb2ca6abb0ae8b179791f12e4069d0c",
           "acquisition_method": "logical_reader",
           "type": "extracted",
           "artefact_category": "device_and_backup_info",
@@ -136,14 +136,14 @@
           "size": 1395555,
           "sha1": "0eca46d75f54618261dcde9056fe3887a27444f8",
           "sha256": "4f579b879ce53f6d328588c69aff1e2fac55546c26a03309740c09d3bb7231fa",
-          "hash_timestamp": "2026-05-10T17:29:16.422710+00:00"
+          "hash_timestamp": "2026-05-11T09:10:15.147012+00:00"
         }
       ]
     }
   },
   "tool_invocation_log": [
     {
-      "timestamp": "2026-05-10T17:29:07.558107+00:00",
+      "timestamp": "2026-05-11T09:07:45.198192+00:00",
       "tool_name": "mmls",
       "version": "The Sleuth Kit ver 4.15.0",
       "args": [
@@ -156,7 +156,7 @@
       "output_paths": null
     },
     {
-      "timestamp": "2026-05-10T17:29:08.118435+00:00",
+      "timestamp": "2026-05-11T09:07:45.596210+00:00",
       "tool_name": "fls",
       "version": "The Sleuth Kit ver 4.15.0",
       "args": [
@@ -171,7 +171,7 @@
       "output_paths": null
     },
     {
-      "timestamp": "2026-05-10T17:29:16.181502+00:00",
+      "timestamp": "2026-05-11T09:10:15.006972+00:00",
       "tool_name": "ios_parser",
       "version": null,
       "args": [

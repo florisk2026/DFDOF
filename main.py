@@ -83,7 +83,7 @@ def run_phases(
 	# Phase 1: Provenance and Integrity
 	print("[Phase 1] Provenance and integrity:")
 	state = run_phase_1(state, confirm_all=False)
-	#_compute_evidence_hashes(state)
+	_compute_evidence_hashes(state)
 	if not prompt_phase_1_summary_and_confirm(state):
 		raise SystemExit("Phase 1 aborted by operator.")
 	state.save(state_path)

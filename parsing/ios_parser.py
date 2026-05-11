@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 from config import EXTENSION_ZIP, output_dir
 from evidence import hash_file
+from parsing.path_utils import safe_segment, sanitise_path
 
 logger = logging.getLogger(__name__)
 
@@ -59,38 +60,15 @@ class ConversionResult:
         }
 
 
-def _safe_segment(value: str) -> str:
-    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", value.strip()).strip("._")
-    return cleaned or "unnamed"
-
-
-def _safe_relative_path(value: str) -> Path:
-    parts: list[str] = []
-    for raw_part in Path(value.replace("\\", "/")).parts:
-        if raw_part in {"", ".", "/", ".."}:
-            continue
-        parts.append(_safe_segment(raw_part))
-    return Path(*parts) if parts else Path("unnamed_file")
-
-
 def _sha1_backup_key(domain: str, relative_path: str) -> str:
     """Derive the classic iTunes backup file identifier when the manifest lacks one."""
-
-    # Encode defensively and warn if any characters are replaced during encoding.
     raw = f"{domain}-{relative_path}"
     payload = raw.encode("utf-8", errors="replace")
-    # Detect replacement by round-tripping and comparing
-    roundtrip = payload.decode("utf-8", errors="replace")
-    if roundtrip != raw:
-        logger.warning(
-            "Encoding replacement occurred while deriving backup key: domain=%s relative_path=%s",
-            domain,
-            relative_path,
-        )
     return hashlib.sha1(payload).hexdigest()
 
 
 def _manifest_db_member(zip_file: zipfile.ZipFile) -> str:
+    """Find the manifest.db member in the ZIP archive."""
     for name in zip_file.namelist():
         if Path(name).name.lower() == "manifest.db":
             return name
@@ -98,10 +76,12 @@ def _manifest_db_member(zip_file: zipfile.ZipFile) -> str:
 
 
 def _metadata_members(zip_file: zipfile.ZipFile) -> list[str]:
+    """Identify metadata members in the ZIP archive based on known names."""
     return [name for name in zip_file.namelist() if Path(name).name.lower() in BACKUP_METADATA_NAMES]
 
 
 def _extract_zip_member(zip_file: zipfile.ZipFile, member: str, output_path: Path) -> None:
+    """Extract a member from the ZIP archive to the specified output path."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with zip_file.open(member) as source_handle, output_path.open("wb") as target_handle:
         while True:
@@ -112,9 +92,10 @@ def _extract_zip_member(zip_file: zipfile.ZipFile, member: str, output_path: Pat
 
 
 def _copy_metadata(zip_file: zipfile.ZipFile, metadata_root: Path) -> list[Path]:
+    """Copy metadata members from the ZIP archive to the metadata root, returning the list of copied paths."""
     copied: list[Path] = []
     for member in _metadata_members(zip_file):
-        output_path = metadata_root / _safe_segment(Path(member).name)
+        output_path = metadata_root / safe_segment(Path(member).name)
         # Extract while computing SHA-256 of the archive member
         output_path.parent.mkdir(parents=True, exist_ok=True)
         archive_hasher = hashlib.sha256()
@@ -149,22 +130,26 @@ def _copy_metadata(zip_file: zipfile.ZipFile, metadata_root: Path) -> list[Path]
 
 
 def _extract_manifest_db(zip_file: zipfile.ZipFile, manifest_member: str, manifest_root: Path) -> Path:
+    """Extract the manifest.db member from the ZIP archive to the manifest root, returning the path to the extracted file."""
     manifest_path = manifest_root / "Manifest.db"
     _extract_zip_member(zip_file, manifest_member, manifest_path)
     return manifest_path
 
 
 def _candidate_tables(cursor: sqlite3.Cursor) -> list[str]:
+    """List candidate tables in the manifest.db that may contain backup records."""
     rows = cursor.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").fetchall()
     return [row[0] for row in rows]
 
 
 def _column_map(cursor: sqlite3.Cursor, table_name: str) -> dict[str, str]:
+    """Map column names in a table to their canonical forms for file_id, domain, and relative_path."""
     rows = cursor.execute(f'PRAGMA table_info("{table_name.replace("\"", "\"\"")}")').fetchall()
     return {row[1].lower(): row[1] for row in rows}
 
 
 def _manifest_rows(manifest_db_path: Path) -> list[BackupRecord]:
+    """Extract backup records from the manifest.db, returning a list of BackupRecord dataclasses."""
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as temp_handle:
         temp_copy = Path(temp_handle.name)
 
@@ -210,6 +195,7 @@ def _manifest_rows(manifest_db_path: Path) -> list[BackupRecord]:
 
 
 def _member_for_file_id(zip_file: zipfile.ZipFile, file_id: str) -> str | None:
+    """Find the ZIP member corresponding to a given file_id, using flexible matching."""
     file_id = file_id.lower()
     direct_candidates = [file_id, f"{file_id[:2]}/{file_id}", f"{file_id[:2].upper()}/{file_id}"]
     names = zip_file.namelist()
@@ -226,6 +212,7 @@ def _member_for_file_id(zip_file: zipfile.ZipFile, file_id: str) -> str | None:
 
 
 def _write_index(result: ConversionResult) -> None:
+    """Write the conversion index to JSON and CSV in the output root."""
     json_path = result.output_root / "conversion_index.json"
     csv_path = result.output_root / "conversion_index.csv"
 
@@ -242,6 +229,7 @@ def _write_index(result: ConversionResult) -> None:
 
 
 def _parse_info_plist(metadata_root: Path) -> dict[str, Any]:
+    """Parse the Info.plist file from the metadata root, returning its contents as a dictionary."""
     info_path = metadata_root / "Info.plist"
     if not info_path.exists():
         return {}
@@ -252,6 +240,7 @@ def _parse_info_plist(metadata_root: Path) -> dict[str, Any]:
 
 
 def _json_safe(value: Any) -> Any:
+    """Convert a value to a JSON-safe representation, handling common non-serializable types."""
     if isinstance(value, dict):
         return {str(key): _json_safe(item) for key, item in value.items()}
     if isinstance(value, list):
@@ -291,8 +280,8 @@ def convert_ios_backup(archive_path: Path | str, output_root: Path | str | None 
         records = _manifest_rows(manifest_db_path)
 
         for record in records:
-            domain_dir = domains_root / _safe_segment(record.domain or "_unknown")
-            relative_target = _safe_relative_path(record.relative_path) if record.relative_path else Path(record.file_id)
+            domain_dir = domains_root / safe_segment(record.domain or "_unknown")
+            relative_target = sanitise_path(record.relative_path) if record.relative_path else Path(record.file_id)
             output_path = domain_dir / relative_target
             member = _member_for_file_id(zip_file, record.file_id)
             record.source_member = member

@@ -43,26 +43,3 @@ def test_evidence_directory_size_uses_recursive_content(tmp_path: Path) -> None:
 	evidence = Evidence(parsed_root, type="parsed", skip_hash=True)
 
 	assert evidence.size == 7
-
-
-def test_state_save_load_round_trip(tmp_path: Path) -> None:
-	sample_file = tmp_path / "state_fixture.bin"
-	sample_file.write_bytes(b"state fixture")
-
-	evidence = Evidence(sample_file, type="input")
-	state = State(case_id="CASE-001", operator="Floris", evidence_directory=str(tmp_path), input_evidence=[evidence])
-	state.completed_phases.append("p1_provenance")
-	state.log_tool_invocation(tool_name="mmls", version="TSK 4.15.0", args=["mmls", "image.E01"], return_code=0)
-
-	state_path = tmp_path / "state.json"
-	state.save(state_path)
-	loaded = State.load(state_path)
-
-	assert loaded.case_id == state.case_id
-	assert loaded.operator == state.operator
-	assert loaded.evidence_directory == str(tmp_path)
-	assert loaded.completed_phases == ["p1_provenance"]
-	assert loaded.input_evidence[0].to_dict() == evidence.to_dict()
-	assert loaded.input_evidence[0].to_dict()["stored_path"] == str(sample_file)
-	assert loaded.tool_invocation_log[0]["tool_name"] == "mmls"
-

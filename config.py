@@ -22,7 +22,7 @@ DJI_APP_DOMAINS = {
 	},
 }
 
-# Source identification types (P1)
+# Source identification types
 IDENTIFICATION_CONTROLLER_IOS = "controller_ios"
 IDENTIFICATION_CONTROLLER_ANDROID = "controller_android"
 IDENTIFICATION_DRONE_SD = "drone_sd"
@@ -66,20 +66,24 @@ MAX_SUMMARY_LENGTH = 125
 
 # Default functions
 def _env_path(name: str, default: str) -> Path:
+	"""Helper to get a Path from an environment variable, with a default fallback."""
 	return Path(os.environ.get(name, default))
 
 
 def summarise_text(value: str, limit: int = MAX_SUMMARY_LENGTH) -> str:
+	"""Summarise a long text value for logging, truncating and adding ellipsis if it exceeds the limit."""
 	if len(value) <= limit:
 		return value
 	return value[: limit - 3] + "..."
 
 
 def utc_now_iso() -> str:
+	"""Get the current UTC time as an ISO 8601 string."""
 	return datetime.now(timezone.utc).isoformat()
 
 
 def output_dir() -> Path:
+	"""Determine the output directory for extracted evidence and logs."""
 	documents = Path.home() / "Documents"
 	if documents.exists():
 		return documents / "dfdof_output"

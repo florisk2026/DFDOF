@@ -19,25 +19,24 @@ from config import (
     summarise_text,
 )
 from evidence import Evidence
-from parsing.path_utils import sanitise_path
+from parsing.path_utils import sanitise_path, to_windows_path
 
 _FLS_LINE_RE = re.compile(r"^([rd]/[rd])\s+(\d+)(?:-\d+)?:\s+(.+)$")
 _MMLS_ROW_RE = re.compile(r"^\s*\d+:\s+\S+\s+(\d+)\s+(\d+)\s+(\d+)\s+\S+\s+(.+)$")
 
 
 def run_command(command: list[str], *, capture_output: bool = True, stdout=None) -> subprocess.CompletedProcess[str]:
+    """Run a command and return the completed process with text output."""
     return subprocess.run(command, capture_output=capture_output, text=True, check=False, stdout=stdout)
 
 
 def _command_summary(result: subprocess.CompletedProcess[str]) -> dict[str, Any]:
+    """Summarise a subprocess result for logging."""
     return {
         "return_code": result.returncode,
         "stdout": (summarise_text(result.stdout) if result.stdout else None),
         "stderr": (summarise_text(result.stderr) if result.stderr else None),
     }
-
-
-# Version probing is handled centrally by State.log_command_result
 
 
 def parse_mmls_offset(output: str) -> int:
@@ -157,7 +156,7 @@ def extract_tsk_image(
             tool_log({"tool_name": "icat", "source_path": str(image_path), "offset_sectors": offset_sectors, "inode": inode, "output_path": str(out_path), "cmd": str(TSK_ICAT), **_command_summary(icat_result)})
         extracted.append(
             Evidence(
-                source_path=relative_path,
+                source_path=to_windows_path(relative_path),
                 stored_path=out_path,
                 parent=parent,
                 acquisition_method=acquisition_method,

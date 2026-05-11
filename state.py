@@ -1,7 +1,7 @@
 """DFDOF State Management.
 
-The state class captures all mutable informatiom about the case
-maintaining the digital chain of custody.
+The state class captures all mutable information about 
+the case maintaining the digital chain of custody
 """
 
 from __future__ import annotations

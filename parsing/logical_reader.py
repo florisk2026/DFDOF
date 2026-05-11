@@ -17,10 +17,11 @@ from config import (
 	EXTENSION_ZIP,
 )
 from evidence import Evidence, hash_file
-from parsing.path_utils import normalise_path, sanitise_path
+from parsing.path_utils import normalise_path, sanitise_path, to_windows_path, normalise_path_to_posix
 
 
 def _copy_zip_member(zip_file: zipfile.ZipFile, member: str, output_path: Path) -> str:
+	"""Copy a member from the ZIP archive to the output path, returning the SHA256 hash of the extracted file."""
 	output_path.parent.mkdir(parents=True, exist_ok=True)
 	hasher = hashlib.sha256()
 	with zip_file.open(member) as source_handle, output_path.open("wb") as target_handle:
@@ -34,6 +35,7 @@ def _copy_zip_member(zip_file: zipfile.ZipFile, member: str, output_path: Path) 
 
 
 def _resolve_member_name(archive_names: list[str], requested: str) -> str:
+	"""Resolve a requested member name against the archive's namelist with flexible matching."""
 	requested_normalised = normalise_path(requested, to_lower=True)
 	exact_lookup: dict[str, str] = {}
 	basename_lookup: dict[str, list[str]] = {}
@@ -58,7 +60,7 @@ def find_acquisition_pdf_member(archive_path: Path | str) -> str | None:
 
 	archive_path = Path(archive_path)
 	with zipfile.ZipFile(archive_path) as archive:
-		member_paths = [PurePosixPath(name.replace("\\", "/")) for name in archive.namelist() if not name.endswith("/")]
+		member_paths = [normalise_path_to_posix(name) for name in archive.namelist() if not name.endswith("/")]
 		folder_candidates: dict[PurePosixPath, list[PurePosixPath]] = {}
 		for member_path in member_paths:
 			depth = len(member_path.parts) - 1
@@ -119,7 +121,7 @@ def extract_logical_files(
 					f"Verification failed for {member_name}: archive_sha256={archive_hash} file_sha256={file_hash}"
 				)
 			extracted.append(Evidence(
-				source_path=member_name,
+				source_path=to_windows_path(member_name),
 				stored_path=copied_path,
 				parent=source_evidence,
 			acquisition_method=ACQUISITION_LOGICAL_READER,
@@ -160,7 +162,7 @@ def extract_logical_member(
 			)
 
 	evidence = Evidence(
-		source_path=resolved_member,
+		source_path=to_windows_path(resolved_member),
 		stored_path=copied_path,
 		parent=source_evidence,
 		acquisition_method=ACQUISITION_LOGICAL_READER,

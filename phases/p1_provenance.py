@@ -163,6 +163,7 @@ def _enumerate_image_listing(image_path: Path, state: State) -> list[str]:
 
 
 def _enumerate_zip_listing(zip_path: Path) -> list[str]:
+	"""Enumerate file listing from ZIP archive."""
 	with zipfile.ZipFile(zip_path) as archive:
 		return [normalise_path(name) for name in archive.namelist()]
 
@@ -224,12 +225,20 @@ def run_phase_1(state: State, *, confirm_all: bool = True) -> State:
 
 def _show_summary(sources: list[SourceRecord]) -> None:
 	"""Display a compact summary of all identifications."""
+	if not sources:
+		print("No evidence sources detected.")
+		return
+
+	# Calculate maximum lengths for alignment
+	max_filename_len = max(len(Path(_record_source_path(cast(dict[str, object], record))).name) for record in sources)
+	max_ident_len = max(len(record["identified_as"]) for record in sources)
 
 	print("Evidence sources detected:")
 	for idx, record in enumerate(sources, start=1):
+		filename = Path(_record_source_path(cast(dict[str, object], record))).name
 		identified_as = record["identified_as"]
 		identified = record["identified"]
-		print(f"  [{idx}] {Path(_record_source_path(cast(dict[str, object], record))).name} -> {identified_as} (identified: {identified})")
+		print(f"  [{idx}] {filename:<{max_filename_len}} -> {identified_as:<{max_ident_len}} (identified: {identified})")
 
 
 def _prompt_override_identifications(sources: list[SourceRecord]) -> None:
@@ -260,6 +269,7 @@ def _prompt_override_identifications(sources: list[SourceRecord]) -> None:
 
 
 def _has_unidentified_sources(sources: list[SourceRecord]) -> bool:
+	"""Check if any sources remain unidentified."""
 	return any(not record["identified"] for record in sources)
 
 

@@ -46,12 +46,14 @@ _DATE_RE = re.compile(
 
 
 def _clear_and_make(path: Path) -> None:
+	"""Clear a directory if it exists and create it."""
 	if path.exists():
 		shutil.rmtree(path)
 	path.mkdir(parents=True, exist_ok=True)
 
 
 def _normalise_scalar(value: Any) -> str | None:
+	"""Normalise a scalar value to a stripped string, or return None if empty."""
 	if value is None:
 		return None
 	if isinstance(value, str):
@@ -62,10 +64,12 @@ def _normalise_scalar(value: Any) -> str | None:
 
 
 def _normalise_key(value: Any) -> str:
+	"""Normalise a key to a lowercase string with non-alphanumeric chars removed."""
 	return re.sub(r"[^a-z0-9]+", "", str(value).lower())
 
 
 def _lookup_nested_value(data: Any, candidate_keys: tuple[str, ...]) -> Any:
+	"""Recursively search for a value in nested dict/list structures matching any of the candidate keys."""
 	wanted = {_normalise_key(key) for key in candidate_keys}
 	for k, v in _walk_nested(data):
 		if k is not None and _normalise_key(k) in wanted:
@@ -74,6 +78,7 @@ def _lookup_nested_value(data: Any, candidate_keys: tuple[str, ...]) -> Any:
 
 
 def _collect_text_fragments(value: Any) -> list[str]:
+	"""Collect text fragments from a nested structure, returning a list of non-empty stripped strings."""
 	fragments: list[str] = []
 	
 	# Handle plain strings directly
@@ -93,12 +98,7 @@ def _collect_text_fragments(value: Any) -> list[str]:
 
 
 def _walk_nested(data: Any):
-	"""Yield (key, value) pairs for nested dict/list structures.
-
-	- For dict entries yields (key, value) and recursively walks value.
-	- For list/tuple/set items yields (None, item) and recursively walks item.
-	- Leaves that are not containers are not recursed further.
-	"""
+	"""Generator to walk through nested dict/list structures, yielding (key, value) pairs."""
 	if isinstance(data, dict):
 		for key, value in data.items():
 			yield key, value
@@ -112,6 +112,7 @@ def _walk_nested(data: Any):
 
 
 def _collect_allowed_dji_apps(value: Any, allowed_domains: dict[str, str]) -> list[str]:
+	"""Collect allowed DJI app domains from a value that may contain text or nested structures."""
 	allowed = list(allowed_domains.keys())
 	if isinstance(value, (list, tuple, set)):
 		candidates = {str(item).strip().lower() for item in value if str(item).strip()}
@@ -127,15 +128,18 @@ def _collect_allowed_dji_apps(value: Any, allowed_domains: dict[str, str]) -> li
 
 
 def _installed_dji_apps_from_backup_info(backup_info: dict[str, Any]) -> list[str]:
+	"""Extract installed DJI apps from iOS backup_info, using the Installed Applications section if present."""
 	installed = _lookup_nested_value(backup_info, ("Installed Applications", "InstalledApplications"))
 	return _collect_allowed_dji_apps(installed, DJI_APP_DOMAINS["ios"])
 
 
 def _read_text(path: Path) -> str:
+	"""Read text content from a file, returning it as a string with UTF-8 encoding and replacement for errors."""
 	return path.read_text(encoding="utf-8", errors="replace")
 
 
 def _extract_pdf_text(path: Path) -> str:
+	"""Extract text from a PDF file, returning it as a single string. Falls back to raw text if PDF parsing fails."""
 	if PdfReader is not None:
 		try:
 			reader = PdfReader(str(path))
@@ -149,6 +153,7 @@ def _extract_pdf_text(path: Path) -> str:
 
 
 def _match_labeled_value(text: str, labels: tuple[str, ...]) -> str | None:
+	"""Search for labeled values in text using multiple patterns, returning the first match found."""
 	patterns = []
 	for label in labels:
 		escaped = re.escape(label)
@@ -164,6 +169,7 @@ def _match_labeled_value(text: str, labels: tuple[str, ...]) -> str | None:
 
 
 def _extract_ios_backup_metadata(backup_info: dict[str, Any]) -> dict[str, Any]:
+	"""Extract relevant metadata from iOS backup_info, returning a dictionary of normalized values."""
 	mapping = {
 		"device_name": ("Device Name", "Display Name", "DeviceName"),
 		"product_name": ("Product Name", "Product Type", "ProductType"),
@@ -177,6 +183,7 @@ def _extract_ios_backup_metadata(backup_info: dict[str, Any]) -> dict[str, Any]:
 
 
 def _extract_android_acquisition_metadata(pdf_path: Path) -> dict[str, Any]:
+	"""Extract relevant metadata from an Android acquisition PDF, returning a dictionary of normalized values."""
 	text = _extract_pdf_text(pdf_path)
 	mapping = {
 		"phone_model": ("Phone model", "Device model", "Model"),
@@ -190,8 +197,7 @@ def _extract_android_acquisition_metadata(pdf_path: Path) -> dict[str, Any]:
 
 
 def _extract_android_device_metadata(extracted_files: list[Evidence]) -> None:
-	"""Extract and populate device metadata into each Evidence object's values field."""
-
+	"""Extract and populate metadata from Android device files into their Evidence objects."""
 	for evidence in extracted_files:
 		stored_path = cast(Path, evidence.stored_path)
 		file_name = stored_path.name.lower()
@@ -219,12 +225,7 @@ def _extract_android_device_metadata(extracted_files: list[Evidence]) -> None:
 
 
 def _extract_metadata_dict(data: Any, mapping: dict[str, tuple[str, ...]], *, extra: dict[str, Any] | None = None) -> dict[str, Any]:
-	"""Generic metadata extractor.
-
-	- `data` may be a nested mapping, a text blob or similar structure.
-	- `mapping` maps output keys to a tuple of candidate labels to search for.
-	- `extra` allows adding pre-computed values into the returned dict.
-	"""
+	"""Extract metadata values from data using a mapping of output keys to candidate labels."""
 	out: dict[str, Any] = {}
 	for out_key, candidates in mapping.items():
 		if isinstance(data, str):
@@ -237,7 +238,7 @@ def _extract_metadata_dict(data: Any, mapping: dict[str, tuple[str, ...]], *, ex
 
 
 def _populate_acquisition_evidence(android_source: Evidence, android_output_dir: Path, pdf_member: str, derived_evidence: list[dict[str, Any]]) -> None:
-	"""Extract acquisition PDF and populate its evidence values."""
+	"""Extract acquisition metadata from the PDF member and create a derived Evidence object."""
 	acquisition_file = extract_logical_member(
 		android_source,
 		android_output_dir,
@@ -251,6 +252,7 @@ def _populate_acquisition_evidence(android_source: Evidence, android_output_dir:
 
 
 def _append_evidence(derived_evidence: list[dict[str, Any]], evidence: Evidence) -> None:
+	"""Append an Evidence object to the derived evidence list as a dictionary."""
 	derived_evidence.append(evidence.to_dict())
 
 
@@ -267,6 +269,7 @@ def _p1_image_metadata(state: State, image_name: str) -> dict[str, Any] | None:
 
 
 def _process_ios_source(state: State, ios_source: Evidence, ios_output_dir: Path, derived_evidence: list[dict[str, Any]]) -> None:
+	"""Process the iOS source evidence by converting the backup and extracting metadata."""
 	ios_stored_path = cast(Path, ios_source.stored_path)
 	result = convert_ios_backup(ios_stored_path, output_root=ios_output_dir)
 	backup_info_path = result.output_root / "backup_info.json"
@@ -312,6 +315,7 @@ def _process_android_logical_source(
 	android_output_dir: Path,
 	derived_evidence: list[dict[str, Any]],
 ) -> None:
+	"""Process an Android logical source by extracting relevant files and metadata."""
 	android_stored_path = cast(Path, android_source.stored_path)
 	acquisition_pdf_member = find_acquisition_pdf_member(android_stored_path)
 	if acquisition_pdf_member is not None:
@@ -335,6 +339,7 @@ def _process_android_physical_source(
 	android_output_dir: Path,
 	derived_evidence: list[dict[str, Any]],
 ) -> None:
+	"""Process an Android physical source by extracting files using TSK and metadata."""
 	android_stored_path = cast(Path, android_source.stored_path)
 	
 	# Inline logging for TSK tool callbacks: convert dict format to log_tool_invocation

@@ -1,7 +1,6 @@
 """Path normalization utilities for forensic extraction.
 
-Unified handling of path sanitization across ZIP member names, fls output,
-and filesystem paths to ensure consistent, safe relative paths.
+Unified handling of path sanitization to ensure consistency.
 """
 
 from __future__ import annotations
@@ -11,44 +10,43 @@ from pathlib import Path, PurePosixPath
 
 
 def normalise_path(value: str, *, to_lower: bool = False) -> str:
-	"""Normalize a path-like string to forward-slash format.
-	
-	Args:
-		value: Input path string (may contain backslashes or mixed separators).
-		to_lower: If True, convert to lowercase.
-	
-	Returns:
-		Normalized posix path string.
-	"""
-	normalized = PurePosixPath(value.replace("\\", "/")).as_posix().lstrip("./")
-	return normalized.lower() if to_lower else normalized
-
-
-# Provide an American-spelling alias for callers using `normalize_path`.
-def normalize_path(value: str, *, to_lower: bool = False) -> str:
-	return normalise_path(value, to_lower=to_lower)
+	"""Normalise a path-like string to forward-slash format."""
+	normalised = PurePosixPath(value.replace("\\", "/")).as_posix().lstrip("./")
+	return normalised.lower() if to_lower else normalised
 
 
 def sanitise_path(relative_path: str) -> Path:
-	"""Normalize a forensic path into a safe relative filesystem path.
-	
-	Removes traversal attempts, normalizes separators, and sanitizes characters
-	to ensure safe on-disk storage without path injection risks.
-	
-	Args:
-		relative_path: Forensic path from extraction tool (fls, ZIP member, etc).
-	
-	Returns:
-		Safe Path object suitable for filesystem operations.
-	"""
+	"""Normalise a forensic path into a safe relative filesystem path."""
 	parts: list[str] = []
 	for raw_part in PurePosixPath(relative_path.replace("\\", "/")).parts:
-		if raw_part in ("", ".", "/"):
-			continue
 		if raw_part == "..":
 			continue
-		# Replace non-alphanumeric chars (except . _ -) with underscore
 		cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", raw_part).strip("._")
 		if cleaned:
 			parts.append(cleaned)
 	return Path(*parts) if parts else Path("unnamed_file")
+
+
+def to_windows_path(path: str) -> str:
+	"""Convert forward slashes to backslashes for unified forensic path notation in JSON."""
+	return path.replace("/", "\\")
+
+
+def safe_segment(value: str) -> str:
+	"""Sanitise a single path segment (filename or folder name).
+	
+	Replaces non-alphanumeric chars (except . _ -) with underscore.
+	Strips leading/trailing dots and underscores.
+	Returns fallback 'unnamed' if result is empty.
+	"""
+	cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", value.strip()).strip("._")
+	return cleaned or "unnamed"
+
+
+def normalise_path_to_posix(value: str) -> PurePosixPath:
+	"""Convert a path string to PurePosixPath for structural analysis.
+	
+	Normalises separators (backslash to forward slash) and creates
+	a PurePosixPath object suitable for parts analysis, suffix checks, etc.
+	"""
+	return PurePosixPath(value.replace("\\", "/"))
