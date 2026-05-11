@@ -191,7 +191,7 @@ def test_run_phase_2_processes_android_logical_source(tmp_path: Path, monkeypatc
 		None
 	)
 	assert acquisition_pdf is not None
-	assert acquisition_pdf["source_path"] == "backup/report.pdf"
+	assert acquisition_pdf["source_path"] == "backup\\report.pdf"
 	assert acquisition_pdf["values"]["phone_model"] == "DJI RC 2"
 	assert acquisition_pdf["values"]["acquisition_date"] == "2026-05-05"
 	
@@ -201,7 +201,7 @@ def test_run_phase_2_processes_android_logical_source(tmp_path: Path, monkeypatc
 		None
 	)
 	assert deviceinfo is not None
-	assert deviceinfo["source_path"] == "property/DeviceInfo.xml"
+	assert deviceinfo["source_path"] == "property\\DeviceInfo.xml"
 	assert deviceinfo["values"]["device_name"] == "RC Controller"
 	assert deviceinfo["values"]["model_name"] == "RC 2"
 	assert deviceinfo["values"]["version"] == "1.2.3"

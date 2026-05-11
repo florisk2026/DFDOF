@@ -62,7 +62,7 @@ def _path_size(path: Path) -> int:
 	return path.stat().st_size
 
 
-@dataclass(slots=True)
+@dataclass
 class Evidence:
 	"""A forensically tracked file or derived artefact."""
 

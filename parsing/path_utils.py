@@ -33,20 +33,11 @@ def to_windows_path(path: str) -> str:
 
 
 def safe_segment(value: str) -> str:
-	"""Sanitise a single path segment (filename or folder name).
-	
-	Replaces non-alphanumeric chars (except . _ -) with underscore.
-	Strips leading/trailing dots and underscores.
-	Returns fallback 'unnamed' if result is empty.
-	"""
+	"""Sanitise a single path segment (filename or folder name)."""
 	cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", value.strip()).strip("._")
 	return cleaned or "unnamed"
 
 
 def normalise_path_to_posix(value: str) -> PurePosixPath:
-	"""Convert a path string to PurePosixPath for structural analysis.
-	
-	Normalises separators (backslash to forward slash) and creates
-	a PurePosixPath object suitable for parts analysis, suffix checks, etc.
-	"""
+	"""Convert a path string to PurePosixPath for structural analysis."""
 	return PurePosixPath(value.replace("\\", "/"))

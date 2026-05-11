@@ -30,7 +30,7 @@ def _get_tsk_tool_version(tool_path: str) -> str | None:
 	return None
 
 
-@dataclass(slots=True)
+@dataclass
 class State:
 	"""Mutable pipeline state used to resume the multi-phase workflow."""
 

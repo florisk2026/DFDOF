@@ -34,7 +34,7 @@ def test_extract_logical_files_batch_returns_derived_evidence(tmp_path: Path) ->
 	assert extracted[0].type == "extracted"
 	assert extracted[0].artefact_category == DEVICE_AND_BACKUP_INFO
 	assert extracted[0].parent_sha256 == source.sha256
-	assert extracted[0].source_path == "folder/deviceinfo.xml"
+	assert extracted[0].source_path == "folder\\deviceinfo.xml"
 	assert extracted[0].stored_path == output_dir / "folder" / "deviceinfo.xml"
 	assert extracted[0].sha256
 	assert extracted[0].sha1

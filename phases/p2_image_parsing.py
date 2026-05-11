@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import json
 import re
-import shutil
 from pathlib import Path
 from typing import Any, cast
 
@@ -26,6 +25,7 @@ from config import (
 	EXTENSION_ZIP,
 	output_dir,
 	utc_now_iso,
+	clear_and_make,
 )
 from evidence import Evidence
 from parsing.ios_parser import convert_ios_backup
@@ -43,13 +43,6 @@ except Exception:  # pragma: no cover - optional dependency fallback
 _DATE_RE = re.compile(
 	r"\b\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:?\d{2})?)?\b"
 )
-
-
-def _clear_and_make(path: Path) -> None:
-	"""Clear a directory if it exists and create it."""
-	if path.exists():
-		shutil.rmtree(path)
-	path.mkdir(parents=True, exist_ok=True)
 
 
 def _normalise_scalar(value: Any) -> str | None:
@@ -410,13 +403,13 @@ def run_phase_2(state: State) -> State:
 		raise ValueError("Phase 2 requires Phase 1 outputs (p1_provenance.identified_evidence). Run Phase 1 first.")
 
 	phase_dir = output_dir() / state.case_id / "p2_image_parsing"
-	_clear_and_make(phase_dir)
+	clear_and_make(phase_dir)
 
 	android_output_dir = phase_dir / "controller_android_parsed"
-	_clear_and_make(android_output_dir)
+	clear_and_make(android_output_dir)
 
 	ios_output_dir = phase_dir / "controller_ios_parsed"
-	_clear_and_make(ios_output_dir)
+	clear_and_make(ios_output_dir)
 
 	derived_evidence: list[dict[str, Any]] = []
 

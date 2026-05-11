@@ -240,7 +240,7 @@ def test_prompt_blocks_continuation_for_unidentified_sources(monkeypatch, capsys
 			{
 				"source_path": "sample.zip",
 				"identified": False,
-				"identified_as": "unclassified",
+				"identified_as": "not_identified",
 				"operator_confirmed": False,
 				"identified_by_operator_as": None,
 			},

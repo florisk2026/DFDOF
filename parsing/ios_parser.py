@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 BACKUP_METADATA_NAMES = {"manifest.db", "manifest.plist", "info.plist", "status.plist"}
 
 
-@dataclass(slots=True)
+@dataclass
 class BackupRecord:
     file_id: str
     domain: str
@@ -40,7 +40,7 @@ class BackupRecord:
     extracted: bool
 
 
-@dataclass(slots=True)
+@dataclass
 class ConversionResult:
     source_archive: Path
     output_root: Path
@@ -144,7 +144,8 @@ def _candidate_tables(cursor: sqlite3.Cursor) -> list[str]:
 
 def _column_map(cursor: sqlite3.Cursor, table_name: str) -> dict[str, str]:
     """Map column names in a table to their canonical forms for file_id, domain, and relative_path."""
-    rows = cursor.execute(f'PRAGMA table_info("{table_name.replace("\"", "\"\"")}")').fetchall()
+    escaped_table_name = table_name.replace('"', '""')
+    rows = cursor.execute(f'PRAGMA table_info("{escaped_table_name}")').fetchall()
     return {row[1].lower(): row[1] for row in rows}
 
 

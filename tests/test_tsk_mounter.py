@@ -64,7 +64,7 @@ d/d 1236: FlightRecord/
 	assert extracted_path.exists()
 	assert extracted_path.name == "DJIFlightRecord_2024-01-01.txt"
 	assert extracted[0].parent_sha256 == parent.sha256
-	assert extracted[0].source_path == "FlightRecord/DJIFlightRecord_2024-01-01.txt"
+	assert extracted[0].source_path == "FlightRecord\\DJIFlightRecord_2024-01-01.txt"
 	assert tool_log
 	assert any(Path(command[0]).name.lower().startswith("icat") for command in commands)
 

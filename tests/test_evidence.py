@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from config import MEDIA
+from config import IMAGES
 from evidence import Evidence
 from state import State
 
@@ -17,7 +17,7 @@ def test_evidence_round_trip(tmp_path: Path) -> None:
 		parent=parent,
 		acquisition_method="zip",
 		type="extracted",
-		artefact_category=MEDIA,
+		artefact_category=IMAGES,
 	)
 
 	assert len(child.sha256) == 64
