@@ -20,6 +20,7 @@ from typing import cast
 
 from phases.p1_provenance import prompt_phase_1_summary_and_confirm, run_phase_1
 from phases.p2_image_parsing import run_phase_2
+from phases.p3_artefact_extraction import run_phase_3
 from state import State
 
 
@@ -92,6 +93,12 @@ def run_phases(
 	# Phase 2: Image Parsing
 	print("[Phase 2] Image parsing:")
 	state = run_phase_2(state)
+	state.save(state_path)
+	print()
+
+	# Phase 3: Artefact Extraction
+	print("[Phase 3] Artefact extraction:")
+	state = run_phase_3(state)
 	state.save(state_path)
 	print()
 

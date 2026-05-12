@@ -14,7 +14,7 @@ def _create_logical_zip(zip_path: Path) -> None:
 		archive.writestr("logs/other.txt", b"other contents")
 
 
-def test_extract_logical_files_batch_returns_derived_evidence(tmp_path: Path) -> None:
+def test_extract_logical_files_batch_returns_parsed_evidence(tmp_path: Path) -> None:
 	archive_path = tmp_path / "logical.zip"
 	_create_logical_zip(archive_path)
 

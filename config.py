@@ -44,7 +44,7 @@ ACQUISITION_LOGICAL = "logical"
 ACQUISITION_PHYSICAL = "physical"
 ACQUISITION_IOS_PARSER = "ios_parser"
 ACQUISITION_LOGICAL_READER = "logical_reader"
-ACQUISITION_TSK_MOUNTER = "tsk_mounter"
+ACQUISITION_PHYSICAL_READER = "physical_reader"
 
 # Evidence types
 EVIDENCE_TYPE_INPUT = "input"
@@ -65,25 +65,27 @@ ARTEFACT_EXTENSIONS = {
 	DRONE_LOGS: {".DAT"},
 	FLIGHT_RECORDS: {".txt"},
 	FLIGHT_LOGS: {".txt", ".dat"},
-	IMAGES: {".jpg", ".jpeg", ".thumbnail", ".THM"},
-	VIDEOS: {".mp4", ".MP4", ".mov", ".info"},
-	DATABASES: {".db", ".sqlite"},
-	ACCOUNT_DATA: {".plist", ".xml"},
-	# Does not need to contain Device and Backup Info (already handled in P2)
+	IMAGES: {".jpg", ".jpeg", ".thumbnail"},
+	VIDEOS: {".mp4", ".mov", ".info"},
+	DATABASES: {".db"},
+	# ACCOUNT_DATA: For Android .xml and for iOS .plist
+	# DEVICE_AND_BACKUP_INFO: already handled in phase 2
 }
 
+# These paths are only used on the controller
 ARTEFACT_PATHS = {
-	DRONE_LOGS: {"FlightRecords/MCDatFlightRecords/"},
-	FLIGHT_RECORDS: {"FlightRecords/"},
+	DRONE_LOGS: {"FlightRecords/", "FlightRecords/MCDatFlightRecords/"},
+	FLIGHT_RECORDS: {"FlightRecord", "FlightRecords/"},
 	FLIGHT_LOGS: {"FlightLogs/", "LOG/", "Logs/"},
-	IMAGES: {"CACHE_IMAGE/", "videoCache/", "100MEDIA/", "THM/100/"},
-	VIDEOS: {"DJI_RECORD/", "videoCache/", "100MEDIA/", "THM/100/"},
+	IMAGES: {"CACHE_IMAGE/", "videoCache/"},
+	VIDEOS: {"DJI_RECORD/", "videoCache/"},
 	DATABASES: {"db/", "dbData/", ".space_db/"},
-	# Account data directly found via DJI app domains
-	# Device and Backup Info already handled in P2
+	# ACCOUNT_DATA: derived via DJI_APP_DOMAINS
+	# DEVICE_AND_BACKUP_INFO: already handled in phase 2
 }
 
-ARTEFACT_DATABASES_INCLUDES = {"mbgl-offline", "djiFMDB", "datastore", "dji", "flysafe_areas_djigo"}
+ARTEFACT_EXTENSIONS_DRONE_SD = {".MP4", ".THM"}
+ARTEFACT_DATABASES_INCLUDES = {"mbgl-offline", "datastore", "dji", "flysafe_areas_djigo"}
 EXTENSION_ZIP = [".zip"]
 EXTENSION_PHYSICAL = [".E01", ".001"]
 SUPPORTED_IMAGE_EXTENSIONS = tuple(EXTENSION_PHYSICAL) + tuple(EXTENSION_ZIP)
@@ -140,4 +142,8 @@ TSK_FLS = _env_path(
 TSK_ICAT = _env_path(
 	"DFDOF_TSK_ICAT",
 	str(SLEUTH_KIT_BIN / "icat.exe"),
+)
+EXTRACT_DJI_EXE = _env_path(
+	"DFDOF_EXTRACT_DJI_EXE",
+	r"C:\Program Files (x86)\CsvView\ExtractDJI.exe",
 )

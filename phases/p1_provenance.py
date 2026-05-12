@@ -212,10 +212,13 @@ def run_phase_1(state: State, *, confirm_all: bool = True) -> State:
 				raise ValueError(f"Unidentified source: {_record_source_path(cast(dict[str, object], record))}. Identify all sources before proceeding.")
 			record["operator_confirmed"] = True
 
+	previous_p1 = state.phase_outputs.get("p1_provenance", {})
+	image_metadata = previous_p1.get("image_metadata", {}) if isinstance(previous_p1, dict) else {}
 	state.phase_outputs["p1_provenance"] = {
 		"completed_at": now,
 		"identified_evidence": p1_outputs,
 		"operator_final_confirmation": {"accepted": None, "timestamp": None},
+		"image_metadata": image_metadata,
 	}
 	if "p1_provenance" not in state.completed_phases:
 		state.completed_phases.append("p1_provenance")

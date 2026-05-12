@@ -104,10 +104,10 @@ def test_run_phase_2_convert_controller_ios_evidence(tmp_path: Path, monkeypatch
 
 	assert converted_root.exists()
 	phase_output = result.phase_outputs["p2_image_parsing"]
-	assert phase_output["derived_evidence"]
+	assert phase_output["parsed_evidence"]
 	
 	# First evidence should be the converted root
-	derived = phase_output["derived_evidence"][0]
+	derived = phase_output["parsed_evidence"][0]
 	assert derived["stored_path"] == str(converted_root)
 	assert derived["source_path"] == str(input_archive)
 	assert derived["type"] == "parsed"
@@ -116,7 +116,7 @@ def test_run_phase_2_convert_controller_ios_evidence(tmp_path: Path, monkeypatch
 	
 	# Second evidence should be backup_info.json with values
 	backup_info_evidence = next(
-		(item for item in phase_output["derived_evidence"] if Path(item["stored_path"]).name == "backup_info.json"),
+		(item for item in phase_output["parsed_evidence"] if Path(item["stored_path"]).name == "backup_info.json"),
 		None
 	)
 	assert backup_info_evidence is not None
@@ -187,7 +187,7 @@ def test_run_phase_2_processes_android_logical_source(tmp_path: Path, monkeypatc
 	
 	# Check that acquisition PDF was extracted
 	acquisition_pdf = next(
-		(item for item in phase_output["derived_evidence"] if Path(item["stored_path"]).name == "report.pdf"),
+		(item for item in phase_output["parsed_evidence"] if Path(item["stored_path"]).name == "report.pdf"),
 		None
 	)
 	assert acquisition_pdf is not None
@@ -197,7 +197,7 @@ def test_run_phase_2_processes_android_logical_source(tmp_path: Path, monkeypatc
 	
 	# Check that device files were extracted with metadata
 	deviceinfo = next(
-		(item for item in phase_output["derived_evidence"] if Path(item["stored_path"]).name == "DeviceInfo.xml"),
+		(item for item in phase_output["parsed_evidence"] if Path(item["stored_path"]).name == "DeviceInfo.xml"),
 		None
 	)
 	assert deviceinfo is not None
@@ -208,28 +208,28 @@ def test_run_phase_2_processes_android_logical_source(tmp_path: Path, monkeypatc
 	assert deviceinfo["values"]["firmware_version"] == "FW-9.9.9"
 	
 	appinfo = next(
-		(item for item in phase_output["derived_evidence"] if Path(item["stored_path"]).name == "ApplicationInfo.xml"),
+		(item for item in phase_output["parsed_evidence"] if Path(item["stored_path"]).name == "ApplicationInfo.xml"),
 		None
 	)
 	assert appinfo is not None
 	assert appinfo["values"]["installed_dji_apps"] == ["com.dji.go", "dji.go.v4"]
 	
 	serialno = next(
-		(item for item in phase_output["derived_evidence"] if Path(item["stored_path"]).name == "ro.serialno"),
+		(item for item in phase_output["parsed_evidence"] if Path(item["stored_path"]).name == "ro.serialno"),
 		None
 	)
 	assert serialno is not None
 	assert serialno["values"]["device_serial"] == "SERIAL-ANDROID-1"
 	
 	hostname = next(
-		(item for item in phase_output["derived_evidence"] if Path(item["stored_path"]).name == "net.hostname"),
+		(item for item in phase_output["parsed_evidence"] if Path(item["stored_path"]).name == "net.hostname"),
 		None
 	)
 	assert hostname is not None
 	assert hostname["values"]["device_hostname"] == "hostname-android"
-	assert any(Path(item["stored_path"]).name == "ApplicationInfo.xml" for item in phase_output["derived_evidence"])
-	assert any(Path(item["stored_path"]).name == "ro.serialno" for item in phase_output["derived_evidence"])
-	assert any(Path(item["stored_path"]).name == "net.hostname" for item in phase_output["derived_evidence"])
+	assert any(Path(item["stored_path"]).name == "ApplicationInfo.xml" for item in phase_output["parsed_evidence"])
+	assert any(Path(item["stored_path"]).name == "ro.serialno" for item in phase_output["parsed_evidence"])
+	assert any(Path(item["stored_path"]).name == "net.hostname" for item in phase_output["parsed_evidence"])
 
 
 def test_run_phase_2_processes_android_physical_source(tmp_path: Path, monkeypatch) -> None:
@@ -256,7 +256,7 @@ def test_run_phase_2_processes_android_physical_source(tmp_path: Path, monkeypat
 
 	monkeypatch.setattr(Path, "home", lambda: project_root)
 
-	def fake_extract_tsk_image(image_path, working_dir, *, include_paths=None, acquisition_method="tsk_mounter", parent=None, tool_log=None, artefact_category=None):
+	def fake_extract_tsk_image(image_path, working_dir, *, include_paths=None, acquisition_method="physical_reader", parent=None, tool_log=None, artefact_category=None):
 		_ = (image_path, include_paths, acquisition_method, parent, tool_log, artefact_category)
 		working_dir = Path(working_dir)
 		working_dir.mkdir(parents=True, exist_ok=True)
@@ -289,7 +289,7 @@ def test_run_phase_2_processes_android_physical_source(tmp_path: Path, monkeypat
 
 	# Check that device files were extracted with metadata
 	deviceinfo = next(
-		(item for item in phase_output["derived_evidence"] if Path(item["stored_path"]).name == "DeviceInfo.xml"),
+		(item for item in phase_output["parsed_evidence"] if Path(item["stored_path"]).name == "DeviceInfo.xml"),
 		None
 	)
 	assert deviceinfo is not None
@@ -300,23 +300,23 @@ def test_run_phase_2_processes_android_physical_source(tmp_path: Path, monkeypat
 	assert deviceinfo["values"]["firmware_version"] == "FW-1.0"
 	
 	appinfo = next(
-		(item for item in phase_output["derived_evidence"] if Path(item["stored_path"]).name == "ApplicationInfo.xml"),
+		(item for item in phase_output["parsed_evidence"] if Path(item["stored_path"]).name == "ApplicationInfo.xml"),
 		None
 	)
 	assert appinfo is not None
 	assert appinfo["values"]["installed_dji_apps"] == ["dji.pilot"]
 	
 	serialno = next(
-		(item for item in phase_output["derived_evidence"] if Path(item["stored_path"]).name == "ro.serialno"),
+		(item for item in phase_output["parsed_evidence"] if Path(item["stored_path"]).name == "ro.serialno"),
 		None
 	)
 	assert serialno is not None
 	assert serialno["values"]["device_serial"] == "SERIAL-PHYSICAL"
 	
 	hostname = next(
-		(item for item in phase_output["derived_evidence"] if Path(item["stored_path"]).name == "net.hostname"),
+		(item for item in phase_output["parsed_evidence"] if Path(item["stored_path"]).name == "net.hostname"),
 		None
 	)
 	assert hostname is not None
 	assert hostname["values"]["device_hostname"] == "physical-host"
-	assert all(item["artefact_category"] == DEVICE_AND_BACKUP_INFO for item in phase_output["derived_evidence"])
+	assert all(item["artefact_category"] == DEVICE_AND_BACKUP_INFO for item in phase_output["parsed_evidence"])

@@ -19,7 +19,7 @@ from config import (
 	EVIDENCE_TYPE_PARSED,
 	ACQUISITION_IOS_PARSER,
 	ACQUISITION_LOGICAL,
-	ACQUISITION_TSK_MOUNTER,
+	ACQUISITION_PHYSICAL_READER,
 	IDENTIFICATION_CONTROLLER_IOS,
 	IDENTIFICATION_CONTROLLER_ANDROID,
 	EXTENSION_ZIP,
@@ -230,7 +230,7 @@ def _extract_metadata_dict(data: Any, mapping: dict[str, tuple[str, ...]], *, ex
 	return out
 
 
-def _populate_acquisition_evidence(android_source: Evidence, android_output_dir: Path, pdf_member: str, derived_evidence: list[dict[str, Any]]) -> None:
+def _populate_acquisition_evidence(android_source: Evidence, android_output_dir: Path, pdf_member: str, parsed_evidence: list[dict[str, Any]]) -> None:
 	"""Extract acquisition metadata from the PDF member and create a derived Evidence object."""
 	acquisition_file = extract_logical_member(
 		android_source,
@@ -241,19 +241,19 @@ def _populate_acquisition_evidence(android_source: Evidence, android_output_dir:
 	acquisition_stored_path = cast(Path, acquisition_file.stored_path)
 	acquisition_metadata = _extract_android_acquisition_metadata(acquisition_stored_path)
 	acquisition_file.values = acquisition_metadata
-	_append_evidence(derived_evidence, acquisition_file)
+	_append_evidence(parsed_evidence, acquisition_file)
 
 
-def _append_evidence(derived_evidence: list[dict[str, Any]], evidence: Evidence) -> None:
-	"""Append an Evidence object to the derived evidence list as a dictionary."""
-	derived_evidence.append(evidence.to_dict())
+def _append_evidence(parsed_evidence: list[dict[str, Any]], evidence: Evidence) -> None:
+	"""Append an Evidence object to the parsed evidence list as a dictionary."""
+	parsed_evidence.append(evidence.to_dict())
 
 
-def _finalize_android_device_files(device_files: list[Evidence], derived_evidence: list[dict[str, Any]]) -> None:
+def _finalize_android_device_files(device_files: list[Evidence], parsed_evidence: list[dict[str, Any]]) -> None:
 	"""Extract and populate metadata into each device file, then append."""
 	_extract_android_device_metadata(device_files)
 	for evidence in device_files:
-		_append_evidence(derived_evidence, evidence)
+		_append_evidence(parsed_evidence, evidence)
 
 
 def _p1_image_metadata(state: State, image_name: str) -> dict[str, Any] | None:
@@ -261,7 +261,7 @@ def _p1_image_metadata(state: State, image_name: str) -> dict[str, Any] | None:
 	return state.phase_outputs.get("p1_provenance", {}).get("image_metadata", {}).get(image_name)
 
 
-def _process_ios_source(state: State, ios_source: Evidence, ios_output_dir: Path, derived_evidence: list[dict[str, Any]]) -> None:
+def _process_ios_source(state: State, ios_source: Evidence, ios_output_dir: Path, parsed_evidence: list[dict[str, Any]]) -> None:
 	"""Process the iOS source evidence by converting the backup and extracting metadata."""
 	ios_stored_path = cast(Path, ios_source.stored_path)
 	result = convert_ios_backup(ios_stored_path, output_root=ios_output_dir)
@@ -276,7 +276,7 @@ def _process_ios_source(state: State, ios_source: Evidence, ios_output_dir: Path
 		artefact_category=DEVICE_AND_BACKUP_INFO,
 		skip_hash=True,
 	)
-	_append_evidence(derived_evidence, converted_root_evidence)
+	_append_evidence(parsed_evidence, converted_root_evidence)
 
 	if backup_info_path.exists():
 		backup_info_metadata = _extract_ios_backup_metadata(json.loads(backup_info_path.read_text(encoding="utf-8")))
@@ -289,7 +289,7 @@ def _process_ios_source(state: State, ios_source: Evidence, ios_output_dir: Path
 			artefact_category=DEVICE_AND_BACKUP_INFO,
 			values=backup_info_metadata,
 		)
-		_append_evidence(derived_evidence, backup_info_evidence)
+		_append_evidence(parsed_evidence, backup_info_evidence)
 	else:
 		state.anomaly_flags.append(f"P2: Missing backup_info.json for {ios_stored_path.name}")
 
@@ -306,14 +306,14 @@ def _process_ios_source(state: State, ios_source: Evidence, ios_output_dir: Path
 def _process_android_logical_source(
 	android_source: Evidence,
 	android_output_dir: Path,
-	derived_evidence: list[dict[str, Any]],
+	parsed_evidence: list[dict[str, Any]],
 ) -> None:
 	"""Process an Android logical source by extracting relevant files and metadata."""
 	android_stored_path = cast(Path, android_source.stored_path)
 	acquisition_pdf_member = find_acquisition_pdf_member(android_stored_path)
 	if acquisition_pdf_member is not None:
 		_populate_acquisition_evidence(
-			android_source, android_output_dir, acquisition_pdf_member, derived_evidence
+			android_source, android_output_dir, acquisition_pdf_member, parsed_evidence
 		)
 
 	device_files = extract_logical_files(
@@ -323,14 +323,14 @@ def _process_android_logical_source(
 		artefact_category=DEVICE_AND_BACKUP_INFO,
 		missing_ok=True,
 	)
-	_finalize_android_device_files(device_files, derived_evidence)
+	_finalize_android_device_files(device_files, parsed_evidence)
 
 
 def _process_android_physical_source(
 	state: State,
 	android_source: Evidence,
 	android_output_dir: Path,
-	derived_evidence: list[dict[str, Any]],
+	parsed_evidence: list[dict[str, Any]],
 ) -> None:
 	"""Process an Android physical source by extracting files using TSK and metadata."""
 	android_stored_path = cast(Path, android_source.stored_path)
@@ -382,7 +382,7 @@ def _process_android_physical_source(
 	extract_kwargs: dict[str, Any] = {
 		"include_paths": ["DeviceInfo.xml", "ApplicationInfo.xml", "ro.serialno", "net.hostname"],
 		"parent": android_source,
-		"acquisition_method": ACQUISITION_TSK_MOUNTER,
+		"acquisition_method": ACQUISITION_PHYSICAL_READER,
 		"artefact_category": DEVICE_AND_BACKUP_INFO,
 		"tool_log": _log_tsk_tool,
 	}
@@ -392,7 +392,7 @@ def _process_android_physical_source(
 		extract_kwargs["offset_sectors"] = offset_sectors
 
 	device_files = extract_tsk_image(android_stored_path, android_output_dir, **extract_kwargs)
-	_finalize_android_device_files(device_files, derived_evidence)
+	_finalize_android_device_files(device_files, parsed_evidence)
 
 
 def run_phase_2(state: State) -> State:
@@ -405,20 +405,17 @@ def run_phase_2(state: State) -> State:
 	phase_dir = output_dir() / state.case_id / "p2_image_parsing"
 	clear_and_make(phase_dir)
 
-	android_output_dir = phase_dir / "controller_android_parsed"
-	clear_and_make(android_output_dir)
-
-	ios_output_dir = phase_dir / "controller_ios_parsed"
-	clear_and_make(ios_output_dir)
-
-	derived_evidence: list[dict[str, Any]] = []
+	parsed_evidence: list[dict[str, Any]] = []
 
 	ios_source = find_input_evidence_by_identification(state, IDENTIFICATION_CONTROLLER_IOS)
 	if ios_source is None:
 		state.anomaly_flags.append("P2: No controller_ios evidence found")
 	else:
 		try:
-			_process_ios_source(state, ios_source, ios_output_dir, derived_evidence)
+			ios_output_dir = phase_dir / "controller_ios_parsed"
+			clear_and_make(ios_output_dir)
+
+			_process_ios_source(state, ios_source, ios_output_dir, parsed_evidence)
 		except Exception as exc:
 			state.anomaly_flags.append(f"P2: Failed to convert {cast(Path, ios_source.stored_path)}: {exc}")
 
@@ -428,17 +425,20 @@ def run_phase_2(state: State) -> State:
 	else:
 		try:
 			android_stored_path = cast(Path, android_source.stored_path)
+			android_output_dir = phase_dir / "controller_android_parsed"
+			clear_and_make(android_output_dir)
+
 			if android_source.acquisition_method == ACQUISITION_LOGICAL or android_stored_path.suffix.lower() == EXTENSION_ZIP[0]:
-				_process_android_logical_source(android_source, android_output_dir, derived_evidence)
+				_process_android_logical_source(android_source, android_output_dir, parsed_evidence)
 			else:
-				_process_android_physical_source(state, android_source, android_output_dir, derived_evidence)
+				_process_android_physical_source(state, android_source, android_output_dir, parsed_evidence)
 		except Exception as exc:
 			state.anomaly_flags.append(f"P2: Failed to parse {cast(Path, android_source.stored_path)}: {exc}")
 
 	now = utc_now_iso()
 	state.phase_outputs["p2_image_parsing"] = {
 		"completed_at": now,
-		"derived_evidence": derived_evidence,
+		"parsed_evidence": parsed_evidence,
 	}
 	if "p2_image_parsing" not in state.completed_phases:
 		state.completed_phases.append("p2_image_parsing")
