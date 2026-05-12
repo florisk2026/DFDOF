@@ -31,7 +31,7 @@ from evidence import Evidence
 from parsing.ios_parser import convert_ios_backup
 from parsing.logical_reader import extract_logical_files, extract_logical_member, find_acquisition_pdf_member
 from parsing.physical_reader import extract_tsk_image
-from phases.phase_utils import find_input_evidence_by_identification
+from phases.phase_utils import find_input_evidence_list_by_identification
 from state import State, _get_tsk_tool_version
 
 try:
@@ -407,7 +407,8 @@ def run_phase_2(state: State) -> State:
 
 	parsed_evidence: list[dict[str, Any]] = []
 
-	ios_source = find_input_evidence_by_identification(state, IDENTIFICATION_CONTROLLER_IOS)
+	ios_sources = find_input_evidence_list_by_identification(state, IDENTIFICATION_CONTROLLER_IOS)
+	ios_source = ios_sources[0] if ios_sources else None
 	if ios_source is None:
 		state.anomaly_flags.append("P2: No controller_ios evidence found")
 	else:
@@ -419,7 +420,8 @@ def run_phase_2(state: State) -> State:
 		except Exception as exc:
 			state.anomaly_flags.append(f"P2: Failed to convert {cast(Path, ios_source.stored_path)}: {exc}")
 
-	android_source = find_input_evidence_by_identification(state, IDENTIFICATION_CONTROLLER_ANDROID)
+	android_sources = find_input_evidence_list_by_identification(state, IDENTIFICATION_CONTROLLER_ANDROID)
+	android_source = android_sources[0] if android_sources else None
 	if android_source is None:
 		state.anomaly_flags.append("P2: No controller_android evidence found")
 	else:

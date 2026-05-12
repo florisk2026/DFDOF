@@ -44,7 +44,7 @@ from evidence import Evidence
 from parsing.logical_reader import extract_logical_files
 from parsing.path_utils import normalise_path, safe_segment, to_windows_path
 from parsing.physical_reader import extract_tsk_image, run_command
-from phases.phase_utils import find_input_evidence_by_identification
+from phases.phase_utils import find_input_evidence_list_by_identification
 from state import State, _get_tsk_tool_version
 
 
@@ -397,7 +397,8 @@ def run_phase_3(state: State) -> State:
 	extracted: list[Evidence] = []
 
 	# Controller iOS
-	ios_source = find_input_evidence_by_identification(state, IDENTIFICATION_CONTROLLER_IOS)
+	ios_sources = find_input_evidence_list_by_identification(state, IDENTIFICATION_CONTROLLER_IOS)
+	ios_source = ios_sources[0] if ios_sources else None
 	ios_parsed_root: Path | None = None
 	if ios_source is not None:
 		p2_records = state.phase_outputs.get("p2_image_parsing", {}).get("parsed_evidence", [])
@@ -450,7 +451,8 @@ def run_phase_3(state: State) -> State:
 				state.anomaly_flags.append(f"p3_extraction_failed:{category}:controller_ios:{exc}")
 
 	# Controller Android
-	android_source = find_input_evidence_by_identification(state, IDENTIFICATION_CONTROLLER_ANDROID)
+	android_sources = find_input_evidence_list_by_identification(state, IDENTIFICATION_CONTROLLER_ANDROID)
+	android_source = android_sources[0] if android_sources else None
 	if android_source is None:
 		state.anomaly_flags.append("p3_no_source:controller_android")
 	else:
@@ -549,28 +551,30 @@ def run_phase_3(state: State) -> State:
 					state.anomaly_flags.append(f"p3_extraction_failed:{category}:controller_android:{exc}")
 
 	# Drone SD
-	sd_source = find_input_evidence_by_identification(state, IDENTIFICATION_DRONE_SD)
-	if sd_source is None:
+	sd_sources = find_input_evidence_list_by_identification(state, IDENTIFICATION_DRONE_SD)
+	if not sd_sources:
 		state.anomaly_flags.append("p3_no_source:drone_sd")
 	else:
-		drone_sd_dir = phase_dir / "drone_sd"
-		clear_and_make(drone_sd_dir)
-		print("Extracting from drone_sd")
-		sd_archive = Path(str(sd_source.stored_path))
-		acquisition_method = _normalise_acquisition_method(sd_source.acquisition_method)
-		if acquisition_method != "physical" and sd_archive.suffix.lower() == EXTENSION_ZIP[0]:
-			state.anomaly_flags.append("p3_drone_sd_requires_physical")
-		else:
-			try:
-				evidence_list = _extract_drone_sd_physical(state, sd_source, drone_sd_dir)
-				extracted.extend(evidence_list)
-				if not evidence_list:
-					state.anomaly_flags.append("p3_no_artefacts:drone_sd")
-			except Exception as exc:
-				state.anomaly_flags.append(f"p3_extraction_failed:drone_sd:{exc}")
+		for idx, sd_source in enumerate(sd_sources):
+			drone_sd_dir = phase_dir / f"drone_sd_{idx + 1}"
+			clear_and_make(drone_sd_dir)
+			print(f"Extracting from drone_sd {idx + 1}")
+			sd_archive = Path(str(sd_source.stored_path))
+			acquisition_method = _normalise_acquisition_method(sd_source.acquisition_method)
+			if acquisition_method != "physical" and sd_archive.suffix.lower() == EXTENSION_ZIP[0]:
+				state.anomaly_flags.append(f"p3_drone_sd_requires_physical_{idx + 1}")
+			else:
+				try:
+					evidence_list = _extract_drone_sd_physical(state, sd_source, drone_sd_dir)
+					extracted.extend(evidence_list)
+					if not evidence_list:
+						state.anomaly_flags.append(f"p3_no_artefacts:drone_sd_{idx + 1}")
+				except Exception as exc:
+					state.anomaly_flags.append(f"p3_extraction_failed:drone_sd_{idx + 1}:{exc}")
 
 	# Drone flight storage
-	flight_source = find_input_evidence_by_identification(state, IDENTIFICATION_DRONE_FLIGHT_STORAGE)
+	flight_sources = find_input_evidence_list_by_identification(state, IDENTIFICATION_DRONE_FLIGHT_STORAGE)
+	flight_source = flight_sources[0] if flight_sources else None
 	if flight_source is None:
 		state.anomaly_flags.append("p3_no_source:drone_flight_storage")
 	else:
