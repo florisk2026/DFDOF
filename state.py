@@ -7,6 +7,7 @@ the case maintaining the digital chain of custody
 from __future__ import annotations
 
 import json
+from functools import lru_cache
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,7 @@ from evidence import Evidence
 import subprocess
 
 
+@lru_cache(maxsize=8)
 def _get_tsk_tool_version(tool_path: str) -> str | None:
 	"""Probe a TSK binary (mmls, fls, icat) for its version string."""
 	try:

@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Any, cast
 
 from config import (
-	ACQUISITION_LOGICAL,
 	ACQUISITION_PHYSICAL_READER,
 	DEVICE_AND_BACKUP_INFO,
 	DJI_APP_DOMAINS,

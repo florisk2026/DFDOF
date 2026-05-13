@@ -10,6 +10,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 import shutil
 
+# For identification in phase 1
+CONTROLLER_IOS_INCLUDES = {"Manifest.db", "Info.plist"}
+CONTROLLER_ANDROID_INCLUDES = {'data/data/dji', 'data/data/com.dji', 'sdcard/dji', 'sdcard/DJI'}
+DRONE_FLIGHT_STORAGE_INCLUDES = {"FLY", "DJI_ASSISTANT_EXPORT_FILE"}
+DRONE_SD_INCLUDES = {"DCIM", "MISC"}
+
 # DJI app domains
 DJI_APP_DOMAINS = {
 	"ios": {

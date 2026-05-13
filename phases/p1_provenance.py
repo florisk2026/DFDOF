@@ -27,6 +27,13 @@ from config import (
 	ACQUISITION_PHYSICAL,
 	EVIDENCE_TYPE_INPUT,
 	EXTENSION_ZIP,
+	ARTEFACT_EXTENSIONS_DRONE_SD,
+	CONTROLLER_IOS_INCLUDES,
+	CONTROLLER_ANDROID_INCLUDES,
+	DRONE_FLIGHT_STORAGE_INCLUDES,
+	DRONE_SD_INCLUDES,
+	DRONE_LOGS,
+	ARTEFACT_EXTENSIONS,
 	utc_now_iso,
 )
 from evidence import Evidence
@@ -59,34 +66,34 @@ def _is_ios_logical_backup(listing: list[str]) -> bool:
 	"""Detect iTunes logical backup: Manifest.db + Info.plist + 50+ hex/hex folders."""
 	norm = [normalise_path(p) for p in listing]
 	return (
-		any("Manifest.db" in p for p in norm) and
-		any("Info.plist" in p for p in norm) and
+		all(any(inc in p for p in norm) for inc in CONTROLLER_IOS_INCLUDES) and
 		sum(1 for p in norm if re.search(r'[0-9a-fA-F]{2}/[0-9a-fA-F]{2}/', p)) > 50
 	)
 
 
 def _is_controller_android(listing: list[str]) -> bool:
-	"""Detect Android controller: (data/data/dji OR sdcard/dji) + FlightRecord."""
+	"""Detect Android controller: (data/data/dji OR sdcard/dji)."""
 	norm = [normalise_path(p) for p in listing]
-	has_dji = any(s in p.lower() for p in norm for s in ('data/data/dji', 'data/data/com.dji', 'sdcard/dji', 'sdcard/DJI'))
-	return has_dji and any('FlightRecord' in p for p in norm)
+	has_dji = any(s in p.lower() for p in norm for s in CONTROLLER_ANDROID_INCLUDES)
+	return has_dji
 
 
 def _is_drone_sd(listing: list[str]) -> bool:
-	"""Detect drone SD card: DCIM with media files (MP4/JPG/MOV)."""
+	"""Detect drone SD card: DCIM or MISC with media files (.MP4 and .THM only)."""
 	norm = [normalise_path(p) for p in listing]
+	extensions = {ext.lower() for ext in ARTEFACT_EXTENSIONS_DRONE_SD}
 	return (
-		any('DCIM/' in p for p in norm) and
-		any(p.endswith(('.MP4', '.JPG', '.mp4', '.jpg', '.MOV', '.mov', '.THM', '.thm')) 
-		    and 'DCIM' in p for p in norm)
+		any(folder in p for folder in DRONE_SD_INCLUDES for p in norm) and
+		any(p.lower().endswith(tuple(extensions)) and any(folder in p for folder in DRONE_SD_INCLUDES) for p in norm)
 	)
 
 
 def _is_drone_flight_storage(listing: list[str]) -> bool:
 	"""Detect drone flight storage: FLY*.DAT or DJI_ASSISTANT_EXPORT_FILE*.DAT."""
 	norm = [normalise_path(p) for p in listing]
+	dat_ext = tuple(ARTEFACT_EXTENSIONS[DRONE_LOGS])
 	return any(
-		re.search(r'(FLY\d+|DJI_ASSISTANT_EXPORT_FILE.*)', p, re.IGNORECASE) and p.upper().endswith('.DAT')
+		any(inc in p.upper() for inc in DRONE_FLIGHT_STORAGE_INCLUDES) and p.upper().endswith(dat_ext)
 		for p in norm
 	)
 
