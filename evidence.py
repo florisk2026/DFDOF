@@ -30,8 +30,10 @@ from hashlib import sha1, sha256
 from pathlib import Path
 from typing import Any, cast
 
-from config import EVIDENCE_TYPE_INPUT, utc_now_iso
-
+from config import (
+    EVIDENCE_TYPE_INPUT, 
+	utc_now_iso
+)
 
 def hash_file(path: Path) -> tuple[str, str]:
 	"""Hash a file in fixed-size chunks to stay memory-safe."""

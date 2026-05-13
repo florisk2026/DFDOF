@@ -11,10 +11,13 @@ from functools import lru_cache
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
-
-from config import summarise_text, utc_now_iso
-from evidence import Evidence
 import subprocess
+
+from config import (
+    summarise_text, 
+	utc_now_iso
+)
+from evidence import Evidence
 
 
 @lru_cache(maxsize=8)

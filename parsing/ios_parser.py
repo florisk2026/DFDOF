@@ -13,19 +13,21 @@ import hashlib
 import json
 import logging
 import plistlib
-import re
 import sqlite3
 import tempfile
 import zipfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
-from config import EXTENSION_ZIP, output_dir
+
+from config import (
+    EXTENSION_ZIP,
+    output_dir,
+)
 from evidence import hash_file
 from parsing.path_utils import safe_segment, sanitise_path
 
 logger = logging.getLogger(__name__)
-
 
 BACKUP_METADATA_NAMES = {"manifest.db", "manifest.plist", "info.plist", "status.plist"}
 

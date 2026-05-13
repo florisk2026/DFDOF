@@ -41,7 +41,6 @@ from parsing.path_utils import normalise_path
 from parsing.physical_reader import list_fls_entries, parse_mmls_offset, run_command
 from state import State
 
-
 _SUPPORTED_INPUT_EXTS = {ext.lower() for ext in SUPPORTED_IMAGE_EXTENSIONS}
 
 
@@ -51,6 +50,7 @@ class SourceRecord(TypedDict):
 	identified_as: str
 	operator_confirmed: bool
 	identified_by_operator_as: str | None
+
 
 
 def _record_source_path(record: dict[str, object]) -> str:

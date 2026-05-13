@@ -3,6 +3,7 @@
 This phase:
  - create a case output directory,
  - parse and store controller iOS backups,
+
  - extract controller Android acquisition and device metadata.
 """
 
@@ -30,7 +31,6 @@ from parsing.android_parser import convert_android_source
 from parsing.ios_parser import convert_ios_backup
 from parsing.logical_reader import extract_logical_member
 from parsing.path_utils import to_windows_path
-from parsing.physical_reader import extract_tsk_image
 from phases.phase_utils import find_input_evidence_list_by_identification
 from state import State
 
@@ -38,7 +38,6 @@ try:
 	from pypdf import PdfReader
 except Exception:  # pragma: no cover - optional dependency fallback
 	PdfReader = None
-
 
 _DATE_RE = re.compile(
 	r"\b\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:?\d{2})?)?\b"
@@ -159,20 +158,6 @@ def _match_labeled_value(text: str, labels: tuple[str, ...]) -> str | None:
 		if match:
 			return _normalise_scalar(match.group(1))
 	return None
-
-
-def _extract_ios_backup_metadata(backup_info: dict[str, Any]) -> dict[str, Any]:
-	"""Extract relevant metadata from iOS backup_info, returning a dictionary of normalized values."""
-	mapping = {
-		"device_name": ("Device Name", "Display Name", "DeviceName"),
-		"product_name": ("Product Name", "Product Type", "ProductType"),
-		"ios_version": ("Product Version", "iOS Version", "ProductVersion"),
-		"serial_number": ("Serial Number", "SerialNumber"),
-		"uid": ("Unique Identifier", "UID", "GUID", "Target Identifier"),
-		"backup_date": ("Last Backup Date", "Backup Date", "LastBackupDate"),
-		"itunes_version": ("iTunes Version", "Itunes Version", "iTunesVersion"),
-	}
-	return _extract_metadata_dict(backup_info, mapping, extra={"installed_dji_apps": _installed_dji_apps_from_backup_info(backup_info)})
 
 
 def _extract_android_acquisition_metadata(pdf_path: Path) -> dict[str, Any]:

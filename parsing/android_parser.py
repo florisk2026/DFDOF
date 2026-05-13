@@ -18,6 +18,7 @@ from config import (
 )
 from evidence import Evidence
 from parsing.logical_reader import extract_logical_files, extract_logical_member, find_acquisition_pdf_member
+from parsing.physical_reader import extract_tsk_image
 from state import State, _get_tsk_tool_version
 
 
@@ -178,7 +179,7 @@ def convert_android_source(
 		if offset_sectors is not None:
 			extract_kwargs["offset_sectors"] = offset_sectors
 
-		extracted_files = p2_module.extract_tsk_image(stored_path, output_root, **extract_kwargs)
+		extracted_files = extract_tsk_image(stored_path, output_root, **extract_kwargs)
 
 	# Populate per-file metadata values
 	_extract_android_device_metadata(extracted_files)
