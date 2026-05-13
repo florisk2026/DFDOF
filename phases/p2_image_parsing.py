@@ -17,22 +17,22 @@ from config import (
 	DEVICE_AND_BACKUP_INFO,
 	DJI_APP_DOMAINS,
 	EVIDENCE_TYPE_PARSED,
+	ACQUISITION_ANDROID_PARSER,
 	ACQUISITION_IOS_PARSER,
-	ACQUISITION_LOGICAL,
-	ACQUISITION_PHYSICAL_READER,
 	IDENTIFICATION_CONTROLLER_IOS,
 	IDENTIFICATION_CONTROLLER_ANDROID,
-	EXTENSION_ZIP,
 	output_dir,
 	utc_now_iso,
 	clear_and_make,
 )
 from evidence import Evidence
+from parsing.android_parser import convert_android_source
 from parsing.ios_parser import convert_ios_backup
-from parsing.logical_reader import extract_logical_files, extract_logical_member, find_acquisition_pdf_member
+from parsing.logical_reader import extract_logical_member
+from parsing.path_utils import to_windows_path
 from parsing.physical_reader import extract_tsk_image
 from phases.phase_utils import find_input_evidence_list_by_identification
-from state import State, _get_tsk_tool_version
+from state import State
 
 try:
 	from pypdf import PdfReader
@@ -230,6 +230,51 @@ def _extract_metadata_dict(data: Any, mapping: dict[str, tuple[str, ...]], *, ex
 	return out
 
 
+def _normalise_backup_info_values(backup_info_path: Path) -> dict[str, Any]:
+	"""Normalise backup_info.json values for evidence metadata."""
+	def _key(value: str) -> str:
+		return re.sub(r"[^a-z0-9]+", "", value.lower())
+
+	backup_info = json.loads(backup_info_path.read_text(encoding="utf-8"))
+	if not isinstance(backup_info, dict):
+		backup_info = {}
+
+	mapping = {
+		"productname": "product_name",
+		"productversion": "product_version",
+		"devicename": "device_name",
+		"lastbackupdate": "backup_date",
+		"serialnumber": "serial_number",
+		"uniqueidentifier": "unique_identifier",
+		"installedapplications": "installed_dji_apps",
+	}
+
+	values: dict[str, Any] = {
+		"product_name": None,
+		"product_version": None,
+		"device_name": None,
+		"backup_date": None,
+		"serial_number": None,
+		"unique_identifier": None,
+		"installed_dji_apps": [],
+	}
+
+	allowed_domains: dict[str, str] = {}
+	allowed_domains.update(DJI_APP_DOMAINS.get("ios", {}))
+	allowed_domains.update(DJI_APP_DOMAINS.get("android", {}))
+
+	for raw_key, raw_value in backup_info.items():
+		key = mapping.get(_key(str(raw_key)))
+		if key is None:
+			continue
+		if key == "installed_dji_apps":
+			values[key] = _collect_allowed_dji_apps(raw_value, allowed_domains)
+		else:
+			values[key] = _normalise_scalar(raw_value)
+
+	return values
+
+
 def _populate_acquisition_evidence(android_source: Evidence, android_output_dir: Path, pdf_member: str, parsed_evidence: list[dict[str, Any]]) -> None:
 	"""Extract acquisition metadata from the PDF member and create a derived Evidence object."""
 	acquisition_file = extract_logical_member(
@@ -279,7 +324,7 @@ def _process_ios_source(state: State, ios_source: Evidence, ios_output_dir: Path
 	_append_evidence(parsed_evidence, converted_root_evidence)
 
 	if backup_info_path.exists():
-		backup_info_metadata = _extract_ios_backup_metadata(json.loads(backup_info_path.read_text(encoding="utf-8")))
+		backup_info_metadata = _normalise_backup_info_values(backup_info_path)
 		backup_info_evidence = Evidence(
 			source_path=ios_source.source_path,
 			stored_path=backup_info_path,
@@ -297,102 +342,10 @@ def _process_ios_source(state: State, ios_source: Evidence, ios_output_dir: Path
 		tool_name="ios_parser",
 		args=[str(ios_stored_path), str(ios_output_dir)],
 		return_code=0,
-		stdout=f"Converted iOS backup to {result.output_root}",
+		stdout=f"Parsed iOS source to {result.output_root}",
 		stderr=None,
 		output_paths=[str(result.output_root)],
 	)
-
-
-def _process_android_logical_source(
-	android_source: Evidence,
-	android_output_dir: Path,
-	parsed_evidence: list[dict[str, Any]],
-) -> None:
-	"""Process an Android logical source by extracting relevant files and metadata."""
-	android_stored_path = cast(Path, android_source.stored_path)
-	acquisition_pdf_member = find_acquisition_pdf_member(android_stored_path)
-	if acquisition_pdf_member is not None:
-		_populate_acquisition_evidence(
-			android_source, android_output_dir, acquisition_pdf_member, parsed_evidence
-		)
-
-	device_files = extract_logical_files(
-		android_source,
-		android_output_dir,
-		["DeviceInfo.xml", "ApplicationInfo.xml", "ro.serialno", "net.hostname"],
-		artefact_category=DEVICE_AND_BACKUP_INFO,
-		missing_ok=True,
-	)
-	_finalize_android_device_files(device_files, parsed_evidence)
-
-
-def _process_android_physical_source(
-	state: State,
-	android_source: Evidence,
-	android_output_dir: Path,
-	parsed_evidence: list[dict[str, Any]],
-) -> None:
-	"""Process an Android physical source by extracting files using TSK and metadata."""
-	android_stored_path = cast(Path, android_source.stored_path)
-	
-	# Inline logging for TSK tool callbacks: convert dict format to log_tool_invocation
-	def _log_tsk_tool(log_dict: dict[str, Any]) -> None:
-		tool_name = log_dict.get("tool_name") or "unknown"
-		output_path = log_dict.get("output_path")
-		output_paths = [str(output_path)] if output_path else None
-		
-		# Build args list from dict; for icat, expand cmd into typical invocation
-		args_val: list[str] | None = None
-		cmd = log_dict.get("cmd")
-		if cmd is not None:
-			cmd_list = cmd if isinstance(cmd, list) else [cmd]
-			if tool_name == "icat" and cmd_list:
-				offset = log_dict.get("offset_sectors") or ""
-				source = log_dict.get("source_path") or ""
-				inode = log_dict.get("inode") or ""
-				args_val = [cmd_list[0], "-o", str(offset), str(source), str(inode)]
-			else:
-				args_val = [str(v) for v in cmd_list]
-		
-		# Probe version for known TSK tools
-		version_val = None
-		if cmd:
-			cmd_path = cmd if isinstance(cmd, str) else (cmd[0] if isinstance(cmd, list) else None)
-			if cmd_path:
-				version_val = _get_tsk_tool_version(str(cmd_path))
-		
-		state.log_tool_invocation(
-			tool_name=tool_name,
-			version=version_val,
-			args=args_val,
-			return_code=log_dict.get("return_code"),
-			stdout=log_dict.get("stdout"),
-			stderr=log_dict.get("stderr"),
-			output_paths=output_paths,
-		)
-	
-	# Attempt to reuse Phase 1 metadata (offset and fls entries) to avoid re-running mmls/fls
-	precomputed_entries = None
-	offset_sectors = None
-	p1_meta = _p1_image_metadata(state, str(android_stored_path.name))
-	if p1_meta:
-		offset_sectors = p1_meta.get("offset_sectors")
-		precomputed_entries = [ (entry["kind"], int(entry["inode"]), entry["path"]) for entry in p1_meta.get("entries", []) ]
-
-	extract_kwargs: dict[str, Any] = {
-		"include_paths": ["DeviceInfo.xml", "ApplicationInfo.xml", "ro.serialno", "net.hostname"],
-		"parent": android_source,
-		"acquisition_method": ACQUISITION_PHYSICAL_READER,
-		"artefact_category": DEVICE_AND_BACKUP_INFO,
-		"tool_log": _log_tsk_tool,
-	}
-	if precomputed_entries is not None:
-		extract_kwargs["precomputed_entries"] = precomputed_entries
-	if offset_sectors is not None:
-		extract_kwargs["offset_sectors"] = offset_sectors
-
-	device_files = extract_tsk_image(android_stored_path, android_output_dir, **extract_kwargs)
-	_finalize_android_device_files(device_files, parsed_evidence)
 
 
 def run_phase_2(state: State) -> State:
@@ -426,14 +379,31 @@ def run_phase_2(state: State) -> State:
 		state.anomaly_flags.append("P2: No controller_android evidence found")
 	else:
 		try:
-			android_stored_path = cast(Path, android_source.stored_path)
 			android_output_dir = phase_dir / "controller_android_parsed"
 			clear_and_make(android_output_dir)
 
-			if android_source.acquisition_method == ACQUISITION_LOGICAL or android_stored_path.suffix.lower() == EXTENSION_ZIP[0]:
-				_process_android_logical_source(android_source, android_output_dir, parsed_evidence)
+			result = convert_android_source(android_source, android_output_dir, state)
+			backup_info_path = result.output_root / "backup_info.json"
+
+			if backup_info_path.exists():
+				backup_info_metadata = _normalise_backup_info_values(backup_info_path)
+				backup_info_evidence = Evidence(
+					source_path=to_windows_path(str(android_source.source_path)),
+					stored_path=backup_info_path,
+					parent=android_source,
+					acquisition_method=ACQUISITION_ANDROID_PARSER,
+					type=EVIDENCE_TYPE_PARSED,
+					artefact_category=DEVICE_AND_BACKUP_INFO,
+					values=backup_info_metadata,
+				)
+				_append_evidence(parsed_evidence, backup_info_evidence)
 			else:
-				_process_android_physical_source(state, android_source, android_output_dir, parsed_evidence)
+				state.anomaly_flags.append(
+					f"P2: Missing backup_info.json for {cast(Path, android_source.stored_path).name}"
+				)
+
+			android_parser_output = state.phase_outputs.pop("p2_android_parser", {}).get("parsed_evidence", [])
+			parsed_evidence.extend(android_parser_output)
 		except Exception as exc:
 			state.anomaly_flags.append(f"P2: Failed to parse {cast(Path, android_source.stored_path)}: {exc}")
 

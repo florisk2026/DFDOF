@@ -1,7 +1,7 @@
 {
   "operator": "Floris",
   "case_id": "CASE-ZIP-01",
-  "start_time": "2026-05-12T11:10:27.820075+00:00",
+  "start_time": "2026-05-13T08:47:40.774692+00:00",
   "evidence_directory": "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df048\\2018_april",
   "completed_phases": [
     "p1_provenance",
@@ -10,6 +10,8 @@
   ],
   "anomaly_flags": [
     "p1_mmls_unavailable_fls_direct:df048_internal.E01",
+    "P2: Missing DeviceInfo.xml for android_logical.zip",
+    "P2: Missing ApplicationInfo.xml for android_logical.zip",
     "p3_no_artefacts:drone_logs:controller_android",
     "p3_no_source:drone_flight_storage"
   ],
@@ -25,7 +27,7 @@
       "size": 2521379428,
       "sha1": "a294c910a56a0b92716c510420599252f0cb5d27",
       "sha256": "0c3bd75b0bd8cf8ddd2835dbe303996c3eb2ca6abb0ae8b179791f12e4069d0c",
-      "hash_timestamp": "2026-05-12T11:10:36.606444+00:00"
+      "hash_timestamp": "2026-05-13T08:47:48.930021+00:00"
     },
     {
       "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df048\\2018_april\\df048_internal.E01",
@@ -38,7 +40,7 @@
       "size": 8418291378,
       "sha1": "b9bfc2d90b326950aea2121be9304692b298a288",
       "sha256": "5664f81579a3558ed7fdf79b06e49cf0849b5f41999ae5a996e43041460ac8f3",
-      "hash_timestamp": "2026-05-12T11:11:01.490820+00:00"
+      "hash_timestamp": "2026-05-13T08:48:13.039034+00:00"
     },
     {
       "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df048\\2018_april\\ios_logical.zip",
@@ -51,12 +53,12 @@
       "size": 172077545,
       "sha1": "94ab6d0ff0285bfe4de278ab8cc1a657aa10531d",
       "sha256": "bfa6bf59fa10e999fc080b84ce13b108bd759e1d4bc9f2155caa48389070deea",
-      "hash_timestamp": "2026-05-12T11:11:01.993914+00:00"
+      "hash_timestamp": "2026-05-13T08:48:13.539468+00:00"
     }
   ],
   "phase_outputs": {
     "p1_provenance": {
-      "completed_at": "2026-05-12T11:10:27.820588+00:00",
+      "completed_at": "2026-05-13T08:47:40.775328+00:00",
       "identified_evidence": [
         {
           "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df048\\2018_april\\android_logical.zip",
@@ -82,7 +84,7 @@
       ],
       "operator_final_confirmation": {
         "accepted": true,
-        "timestamp": "2026-05-12T11:11:01.994052+00:00"
+        "timestamp": "2026-05-13T08:48:13.539596+00:00"
       },
       "image_metadata": {
         "df048_internal.E01": {
@@ -203,7 +205,7 @@
       }
     },
     "p2_image_parsing": {
-      "completed_at": "2026-05-12T11:11:27.207644+00:00",
+      "completed_at": "2026-05-13T08:48:21.196292+00:00",
       "parsed_evidence": [
         {
           "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df048\\2018_april\\ios_logical.zip",
@@ -226,13 +228,12 @@
           "type": "parsed",
           "artefact_category": "device_and_backup_info",
           "values": {
-            "device_name": "Drone\u2019s iPad",
             "product_name": "iPad mini 4",
-            "ios_version": "10.3.2",
-            "serial_number": "FNWV304FGHK9",
-            "uid": "8777E5DBA7C2E31C2BAF60A03361D90B",
+            "product_version": "10.3.2",
+            "device_name": "Drone\u2019s iPad",
             "backup_date": "2018-04-24T20:29:42",
-            "itunes_version": "12.6.1.25",
+            "serial_number": "FNWV304FGHK9",
+            "unique_identifier": "7F05AD1235CEA98920B1112EF14DDD9FDDED744A",
             "installed_dji_apps": [
               "com.dji.go"
             ]
@@ -240,7 +241,47 @@
           "size": 67923,
           "sha1": "95855909f108d10db7e7674d6b1eea838b8974ed",
           "sha256": "eaff5dbbbb6872e168724ec955a7e92b3362aeb9edd9ff66c5baf63c6c0e65ae",
-          "hash_timestamp": "2026-05-12T11:11:26.771871+00:00"
+          "hash_timestamp": "2026-05-13T08:48:20.720988+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df048\\2018_april\\android_logical.zip",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p2_image_parsing\\controller_android_parsed\\backup_info.json",
+          "parent_sha256": "0c3bd75b0bd8cf8ddd2835dbe303996c3eb2ca6abb0ae8b179791f12e4069d0c",
+          "acquisition_method": "android_parser",
+          "type": "parsed",
+          "artefact_category": "device_and_backup_info",
+          "values": {
+            "product_name": "SM-T280 (Galaxy Tab A 2016)",
+            "product_version": null,
+            "device_name": null,
+            "backup_date": "2018-04-24 11:32:58",
+            "serial_number": null,
+            "unique_identifier": null,
+            "installed_dji_apps": [
+              "dji.go.v4"
+            ]
+          },
+          "size": 329,
+          "sha1": "f5e6d158577abdc4544b6446bb27a83dc6f63b6a",
+          "sha256": "17408b021dc094fb23c177d578b0cd123506513815ceb64658bb965a1a456f24",
+          "hash_timestamp": "2026-05-13T08:48:21.196275+00:00"
+        },
+        {
+          "source_path": "MC 04\\Media01\\userdata\\system\\packages.list",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p2_image_parsing\\controller_android_parsed\\packages.list",
+          "parent_sha256": "0c3bd75b0bd8cf8ddd2835dbe303996c3eb2ca6abb0ae8b179791f12e4069d0c",
+          "acquisition_method": "logical_reader",
+          "type": "extracted",
+          "artefact_category": "device_and_backup_info",
+          "values": {
+            "installed_dji_apps": [
+              "dji.go.v4"
+            ]
+          },
+          "size": 20166,
+          "sha1": "8f5af780fc63ed7258f52698425eb9f0d08e4cad",
+          "sha256": "d097b2676754c5735f3e9a68e4065444207e6dd9158b150a131e438f3ccc3384",
+          "hash_timestamp": "2026-05-13T08:48:20.973695+00:00"
         },
         {
           "source_path": "MC 04\\MC 04\\MC 04_SM-T280.pdf",
@@ -256,12 +297,12 @@
           "size": 1395555,
           "sha1": "0eca46d75f54618261dcde9056fe3887a27444f8",
           "sha256": "4f579b879ce53f6d328588c69aff1e2fac55546c26a03309740c09d3bb7231fa",
-          "hash_timestamp": "2026-05-12T11:11:26.924461+00:00"
+          "hash_timestamp": "2026-05-13T08:48:21.107900+00:00"
         }
       ]
     },
     "p3_artefact_extraction": {
-      "completed_at": "2026-05-12T11:12:23.986308+00:00",
+      "completed_at": "2026-05-13T08:49:16.889931+00:00",
       "extracted_artefacts": [
         {
           "source_path": "domains\\AppDomain-com.dji.go\\Documents\\FlightRecords\\MCDatFlightRecords\\2018-04-19_11-24-49_FLY029.DAT",
@@ -274,7 +315,7 @@
           "size": 1512415,
           "sha1": "cbf596350926fb5afc76249964640d8958bcda07",
           "sha256": "68be26ad31842e7e345b3bb0f957cc8990b8a05625faceea26f7636fb6904041",
-          "hash_timestamp": "2026-05-12T11:11:27.417626+00:00"
+          "hash_timestamp": "2026-05-13T08:48:21.275421+00:00"
         },
         {
           "source_path": "domains\\AppDomain-com.dji.go\\Documents\\FlightRecords\\DJIFlightRecord_2018-04-19__11-25-10_.txt",
@@ -287,7 +328,7 @@
           "size": 468667,
           "sha1": "e3d3a12f2b031c77344ee78b0cbf44a13013a058",
           "sha256": "70665f6b87164fef6f9c21bdb96ef7a9a6709b337900af71650d4f76ae1a2d82",
-          "hash_timestamp": "2026-05-12T11:11:27.471332+00:00"
+          "hash_timestamp": "2026-05-13T08:48:21.332472+00:00"
         },
         {
           "source_path": "domains\\AppDomain-com.dji.go\\Documents\\FlightLogs\\2018-04-19_11_25_15-0K1DECE2BC0633.dat",
@@ -300,7 +341,7 @@
           "size": 1249,
           "sha1": "89f5cf51110f874c17ca168f6879c381f78f1357",
           "sha256": "1131c8b1540caabb232d177c1e94cf0411c16d77d5cc3dd3e82194dd3e6351de",
-          "hash_timestamp": "2026-05-12T11:11:27.513819+00:00"
+          "hash_timestamp": "2026-05-13T08:48:21.385987+00:00"
         },
         {
           "source_path": "domains\\AppDomain-com.dji.go\\Documents\\Logs\\upgradeLog_0.txt",
@@ -313,7 +354,7 @@
           "size": 684,
           "sha1": "fb6e51a24b9bd88973b13b9dbbdb7075ea6a8a49",
           "sha256": "c9932a9fca834fa338ede7545e0e437c4977ed3aeb5ee4304f04623a8a8a788f",
-          "hash_timestamp": "2026-05-12T11:11:27.516038+00:00"
+          "hash_timestamp": "2026-05-13T08:48:21.393532+00:00"
         },
         {
           "source_path": "domains\\AppDomain-com.dji.go\\Documents\\Logs\\upgradeLog_1.txt",
@@ -326,7 +367,7 @@
           "size": 88,
           "sha1": "232d159cd7cc53e37bd308113a04c56f312fa83a",
           "sha256": "0b2010163a8b634a1087d572e910f6aa6080a2ad88a8ac8f461419e4b57eb175",
-          "hash_timestamp": "2026-05-12T11:11:27.518575+00:00"
+          "hash_timestamp": "2026-05-13T08:48:21.402695+00:00"
         },
         {
           "source_path": "domains\\AppDomain-com.dji.go\\Documents\\videoCache\\2018_04_19_11_25_09.thumbnail",
@@ -339,7 +380,7 @@
           "size": 107296,
           "sha1": "fb34a607c16e985e6a0c0a02d2476eddbcee36f1",
           "sha256": "cc0db7cb2c455432bc5840dd637bf089200b6bd1c1c2031cdb47fa2a2b1b1fd3",
-          "hash_timestamp": "2026-05-12T11:11:27.566690+00:00"
+          "hash_timestamp": "2026-05-13T08:48:21.449875+00:00"
         },
         {
           "source_path": "domains\\AppDomain-com.dji.go\\Documents\\videoCache\\2018_04_19_11_25_09.mp4",
@@ -352,7 +393,7 @@
           "size": 145267620,
           "sha1": "d0d00f3fbef6b9e4464a000b90c315d2dcce2c1f",
           "sha256": "a50b36359ed71de2fa8558c88a9ddc27ccb0b334f3f6423f194f604762e6679d",
-          "hash_timestamp": "2026-05-12T11:11:28.122822+00:00"
+          "hash_timestamp": "2026-05-13T08:48:22.010423+00:00"
         },
         {
           "source_path": "domains\\AppDomain-com.dji.go\\Library\\Application_Support\\dji_force_update.db",
@@ -365,7 +406,7 @@
           "size": 24576,
           "sha1": "105be3f68ad143cb7ad40cc0edfd23455ecb2b0b",
           "sha256": "6fac7adb4742381e578ecff38af1e2fa82eec71222fc9d6ef18e9c79aa799a46",
-          "hash_timestamp": "2026-05-12T11:11:28.169330+00:00"
+          "hash_timestamp": "2026-05-13T08:48:22.065863+00:00"
         },
         {
           "source_path": "domains\\AppDomain-com.dji.go\\Library\\space_db\\flysafe_areas_djigo.db",
@@ -378,7 +419,7 @@
           "size": 8262656,
           "sha1": "936e7b4a02e38dc7cd2b2d4cb7be8280096b17bd",
           "sha256": "d9164be112208833fe06583920459508675742a54e3ca70d358789ab362c7d3c",
-          "hash_timestamp": "2026-05-12T11:11:28.204258+00:00"
+          "hash_timestamp": "2026-05-13T08:48:22.097359+00:00"
         },
         {
           "source_path": "domains\\AppDomain-com.dji.go\\Library\\space_db\\flysafe_dji_flight_dynamic_areas.db",
@@ -391,7 +432,7 @@
           "size": 16384,
           "sha1": "14ff56247dd37de7754bf6af526aa56da1ba2512",
           "sha256": "3aaaa2157a9465749e0460f1438b0729840e7a06309a596b5f07afee2947c4dc",
-          "hash_timestamp": "2026-05-12T11:11:28.207816+00:00"
+          "hash_timestamp": "2026-05-13T08:48:22.100007+00:00"
         },
         {
           "source_path": "domains\\AppDomain-com.dji.go\\Documents\\dbData\\djiFMDB.db",
@@ -404,7 +445,7 @@
           "size": 28672,
           "sha1": "9d77797e6788fe25f2d71c838c7d59eae0164680",
           "sha256": "c2f956359b0006c3cf0a1ecad392d8c70da65f2ef9145fa6b995b84653329638",
-          "hash_timestamp": "2026-05-12T11:11:28.210223+00:00"
+          "hash_timestamp": "2026-05-13T08:48:22.102428+00:00"
         },
         {
           "source_path": "domains\\AppDomain-com.dji.go\\Library\\Preferences\\com.dji.go.plist",
@@ -417,7 +458,7 @@
           "size": 7408,
           "sha1": "382988b0f4531e1d61b4f5998527161b59fc2791",
           "sha256": "2ccaf116dc71cbccda1612b0103e10b6a51d1f9321505edf29bceaa67e40acf3",
-          "hash_timestamp": "2026-05-12T11:11:28.259734+00:00"
+          "hash_timestamp": "2026-05-13T08:48:22.149944+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\media\\0\\DJI\\dji.go.v4\\FlightRecord\\DJIFlightRecord_2018-04-19_[11-39-45].txt",
@@ -430,7 +471,7 @@
           "size": 123713,
           "sha1": "7bf87c208a676d3726044b65d118221e8defe4a1",
           "sha256": "cf67262239e3b970b24b8c423b8b2a6890348ff43f7b571de8363a137444cef9",
-          "hash_timestamp": "2026-05-12T11:11:28.444201+00:00"
+          "hash_timestamp": "2026-05-13T08:48:22.329855+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\data\\dji.go.v4\\app_bugly\\sys_log_1524065930716689.txt",
@@ -443,7 +484,7 @@
           "size": 0,
           "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
           "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          "hash_timestamp": "2026-05-12T11:11:28.534023+00:00"
+          "hash_timestamp": "2026-05-13T08:48:22.412276+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\data\\dji.go.v4\\app_bugly\\sys_log_1524159374991363.txt",
@@ -456,7 +497,7 @@
           "size": 0,
           "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
           "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          "hash_timestamp": "2026-05-12T11:11:28.578999+00:00"
+          "hash_timestamp": "2026-05-13T08:48:22.456929+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\data\\dji.go.v4\\app_bugly\\sys_log_1524587169133377.txt",
@@ -469,7 +510,7 @@
           "size": 0,
           "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
           "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          "hash_timestamp": "2026-05-12T11:11:28.627191+00:00"
+          "hash_timestamp": "2026-05-13T08:48:22.503889+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\log\\power_off_reset_reason.txt",
@@ -482,7 +523,7 @@
           "size": 2480,
           "sha1": "f200ce37c13919744e4262cadd5353b821e66b81",
           "sha256": "6dc2b2ba3d34e4efa4b816c5944630b0658846e4f6328d0ad6796b357b75e897",
-          "hash_timestamp": "2026-05-12T11:11:28.672992+00:00"
+          "hash_timestamp": "2026-05-13T08:48:22.580306+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\log\\PreloadInstaller.txt",
@@ -495,7 +536,7 @@
           "size": 952,
           "sha1": "0ace161b95acc2821aab21793c290c64b9d5c73f",
           "sha256": "a780390c1f7183e8afb4eb352b8d5c1c5446056498c095194f9e67c0e5f109c5",
-          "hash_timestamp": "2026-05-12T11:11:28.718760+00:00"
+          "hash_timestamp": "2026-05-13T08:48:22.634374+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\log\\provisioned.txt",
@@ -508,7 +549,7 @@
           "size": 1547,
           "sha1": "f53eb2e8148abd37d5df0d476691f4914aa65878",
           "sha256": "609aaaa9733f485ddd2f3b827234b032fbc81cb25af1ef88999bca5ad86a9907",
-          "hash_timestamp": "2026-05-12T11:11:28.774167+00:00"
+          "hash_timestamp": "2026-05-13T08:48:22.690398+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\log\\settingsprovider.txt",
@@ -521,7 +562,7 @@
           "size": 15503,
           "sha1": "866812eda40ed7e0e51dca261837a9c7d642fd7b",
           "sha256": "a8be688e6009c2ef200428df385e2d74aac70f9ccfd0b7a2e5fcc71f40566894",
-          "hash_timestamp": "2026-05-12T11:11:28.827590+00:00"
+          "hash_timestamp": "2026-05-13T08:48:22.752002+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\log\\setupwizard.txt",
@@ -534,7 +575,7 @@
           "size": 6305,
           "sha1": "068288c688d3d6cadf00e63f1c080b5b6bcfe5c6",
           "sha256": "4c8033baadbb2980a5346edee61c75659a826c29827463ec4ede588afd34cafc",
-          "hash_timestamp": "2026-05-12T11:11:28.873321+00:00"
+          "hash_timestamp": "2026-05-13T08:48:22.814909+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\log\\Status.dat",
@@ -547,7 +588,7 @@
           "size": 512,
           "sha1": "95dce72e2d1c72e58b6479fb2cf961adc7bb8c78",
           "sha256": "078ffa5ae9e1db6707623ac46f46985d747b8689a3ca9cfdda99233924436268",
-          "hash_timestamp": "2026-05-12T11:11:28.920765+00:00"
+          "hash_timestamp": "2026-05-13T08:48:22.868750+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\log\\wallpaper_log.txt",
@@ -560,7 +601,7 @@
           "size": 94,
           "sha1": "08ae79713a42d838f9ea25f2e0c17ff318da601c",
           "sha256": "a4518755db0cc5cfe1ab2ecc03f6261c2a3f46742c39e4f2176f5a84eb9af7a3",
-          "hash_timestamp": "2026-05-12T11:11:28.968754+00:00"
+          "hash_timestamp": "2026-05-13T08:48:22.927281+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\media\\0\\DJI\\dji.go.v4\\LOG\\CRASH\\crash-2018-04-22-01-45-10.txt",
@@ -573,7 +614,7 @@
           "size": 2302,
           "sha1": "5546481f7b623a861a57c6245d88c576515828a1",
           "sha256": "71380d4bf664e2e5d5a46582502e8c517536f0701f92cac821f8a0ece1b56946",
-          "hash_timestamp": "2026-05-12T11:11:29.030042+00:00"
+          "hash_timestamp": "2026-05-13T08:48:22.985551+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\system\\dropbox\\event_log@1524171211950.txt",
@@ -586,7 +627,7 @@
           "size": 39,
           "sha1": "4e286ba048bb95d3ab047e73a74472b7037eb421",
           "sha256": "54cf9c87e7b5b269c3a518d1967c7cc2b67770efa41365dcc71f6cb0d6475d26",
-          "hash_timestamp": "2026-05-12T11:11:29.105150+00:00"
+          "hash_timestamp": "2026-05-13T08:48:23.043663+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\system\\dropbox\\event_log@1524171211950_$deleted(0.0.0.0.21.3.192).txt",
@@ -599,7 +640,7 @@
           "size": 39,
           "sha1": "4e286ba048bb95d3ab047e73a74472b7037eb421",
           "sha256": "54cf9c87e7b5b269c3a518d1967c7cc2b67770efa41365dcc71f6cb0d6475d26",
-          "hash_timestamp": "2026-05-12T11:11:29.164463+00:00"
+          "hash_timestamp": "2026-05-13T08:48:23.100921+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\system\\dropbox\\event_log@1524173018421.txt",
@@ -612,7 +653,7 @@
           "size": 249,
           "sha1": "ef9ef12d58d5e77197a8d38574dbeaf671b3ede6",
           "sha256": "13624f46a070e94a1ab5b5850c62243e18038fb4078e8ed8159d83a114637e7c",
-          "hash_timestamp": "2026-05-12T11:11:29.215302+00:00"
+          "hash_timestamp": "2026-05-13T08:48:23.151892+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\system\\dropbox\\event_log@1524173018421_$deleted(0.0.0.0.21.3.194).txt",
@@ -625,7 +666,7 @@
           "size": 249,
           "sha1": "ef9ef12d58d5e77197a8d38574dbeaf671b3ede6",
           "sha256": "13624f46a070e94a1ab5b5850c62243e18038fb4078e8ed8159d83a114637e7c",
-          "hash_timestamp": "2026-05-12T11:11:29.263226+00:00"
+          "hash_timestamp": "2026-05-13T08:48:23.197218+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\system\\dropbox\\event_log@1524174825778.txt",
@@ -638,7 +679,7 @@
           "size": 7500,
           "sha1": "a54b9a16c9691936f5cb702e316eb99820bff117",
           "sha256": "41e767534a6303905617f0b77fdafcd87388d53837db0458b460ca8d8c8bcdb7",
-          "hash_timestamp": "2026-05-12T11:11:29.306889+00:00"
+          "hash_timestamp": "2026-05-13T08:48:23.249916+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\system\\dropbox\\event_log@1524174825778_$deleted(0.0.0.0.21.3.196).txt",
@@ -651,7 +692,7 @@
           "size": 7500,
           "sha1": "a54b9a16c9691936f5cb702e316eb99820bff117",
           "sha256": "41e767534a6303905617f0b77fdafcd87388d53837db0458b460ca8d8c8bcdb7",
-          "hash_timestamp": "2026-05-12T11:11:29.351895+00:00"
+          "hash_timestamp": "2026-05-13T08:48:23.294981+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\system\\dropbox\\event_log@1524176626485.txt",
@@ -664,7 +705,7 @@
           "size": 1051,
           "sha1": "946054668837e0f1ebaaa0d33f987a284776f992",
           "sha256": "7e994856958ff3a157af7c1fc3bab426c4d9cf2f4e63653dfbed4663c05d84cc",
-          "hash_timestamp": "2026-05-12T11:11:29.405182+00:00"
+          "hash_timestamp": "2026-05-13T08:48:23.343760+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\system\\dropbox\\event_log@1524176626485_$deleted(0.0.0.0.21.3.198).txt",
@@ -677,7 +718,7 @@
           "size": 1051,
           "sha1": "946054668837e0f1ebaaa0d33f987a284776f992",
           "sha256": "7e994856958ff3a157af7c1fc3bab426c4d9cf2f4e63653dfbed4663c05d84cc",
-          "hash_timestamp": "2026-05-12T11:11:29.450028+00:00"
+          "hash_timestamp": "2026-05-13T08:48:23.387860+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\system\\dropbox\\event_log@1524178437479.txt",
@@ -690,7 +731,7 @@
           "size": 2764,
           "sha1": "d4d993bebe41bfe2ac7392c0ce450274454ee45b",
           "sha256": "e73adc9dca151ba92cb6e37e71b99eb9054871162d14f30f7c90dd591444e563",
-          "hash_timestamp": "2026-05-12T11:11:29.494014+00:00"
+          "hash_timestamp": "2026-05-13T08:48:23.438396+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\system\\dropbox\\event_log@1524178437479_$deleted(0.0.0.0.21.3.200).txt",
@@ -703,7 +744,7 @@
           "size": 2764,
           "sha1": "d4d993bebe41bfe2ac7392c0ce450274454ee45b",
           "sha256": "e73adc9dca151ba92cb6e37e71b99eb9054871162d14f30f7c90dd591444e563",
-          "hash_timestamp": "2026-05-12T11:11:29.544415+00:00"
+          "hash_timestamp": "2026-05-13T08:48:23.482776+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\system\\dropbox\\event_log@1524180241239.txt",
@@ -716,7 +757,7 @@
           "size": 368212,
           "sha1": "feacb854e4d7098de94489aeca0110ac64b32351",
           "sha256": "27f69228114f67b310325cb54e939c0005b9de0e21f1fc4d960bfd967586545f",
-          "hash_timestamp": "2026-05-12T11:11:29.602123+00:00"
+          "hash_timestamp": "2026-05-13T08:48:23.538127+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\system\\dropbox\\event_log@1524180241239_$deleted(0.0.0.0.21.3.202).txt",
@@ -729,7 +770,7 @@
           "size": 368212,
           "sha1": "feacb854e4d7098de94489aeca0110ac64b32351",
           "sha256": "27f69228114f67b310325cb54e939c0005b9de0e21f1fc4d960bfd967586545f",
-          "hash_timestamp": "2026-05-12T11:11:29.657866+00:00"
+          "hash_timestamp": "2026-05-13T08:48:23.591982+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\media\\0\\DJI\\dji.go.v4\\CACHE_IMAGE\\thumb_33177fb665068406_1523618594000.jpg",
@@ -742,7 +783,7 @@
           "size": 14224,
           "sha1": "55b6683fe7bf253b609ca32c4fcc3a33795ca21d",
           "sha256": "e8d6ac3d4cda2bccff4dd3e64950e87fd68700cf80b37f2c45e9e0ac59a4d42a",
-          "hash_timestamp": "2026-05-12T11:11:29.800901+00:00"
+          "hash_timestamp": "2026-05-13T08:48:23.731172+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\media\\0\\DJI\\dji.go.v4\\CACHE_IMAGE\\thumb_5be64acbef28816c_1523618190000.jpg",
@@ -755,7 +796,7 @@
           "size": 19191,
           "sha1": "ed1bfdceab3e02d87575cadd6c79fdd983021271",
           "sha256": "e6a060c7756c7e2fd99c850434b02c708a329ebf16a814e0fe0a77b15caaab24",
-          "hash_timestamp": "2026-05-12T11:11:29.850025+00:00"
+          "hash_timestamp": "2026-05-13T08:48:23.781154+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\media\\0\\DJI\\dji.go.v4\\CACHE_IMAGE\\thumb_6d9f39f0ca9decc3_1523618188000.jpg",
@@ -768,7 +809,7 @@
           "size": 12755,
           "sha1": "5b90ca57716f15045a6a65c7215ca77036ff6af2",
           "sha256": "cbe6209aa64bbb44340e4aed5d2e276fd1df75805f956307b24a83e79b1d6f90",
-          "hash_timestamp": "2026-05-12T11:11:29.900601+00:00"
+          "hash_timestamp": "2026-05-13T08:48:23.831062+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\media\\0\\DJI\\dji.go.v4\\CACHE_IMAGE\\thumb_7f92b744bbc53b3a_1523618192000.jpg",
@@ -781,7 +822,7 @@
           "size": 19508,
           "sha1": "874dff84aaa18baf06b4070276135346c328e178",
           "sha256": "32ff09733d14f4ecdd59171811fd50111cc00752ebdb528f04b75b08cf220874",
-          "hash_timestamp": "2026-05-12T11:11:29.949392+00:00"
+          "hash_timestamp": "2026-05-13T08:48:23.880878+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\media\\0\\DJI\\dji.go.v4\\CACHE_IMAGE\\thumb_dd609e61934788b3_1523618694000.jpg",
@@ -794,7 +835,7 @@
           "size": 13791,
           "sha1": "3802402288db8466063ecaec81012031de544392",
           "sha256": "8986d1b4a162ca4bbe0adbf12f01141b9d7673ba196436ee31e16fb6b540b2e2",
-          "hash_timestamp": "2026-05-12T11:11:29.996614+00:00"
+          "hash_timestamp": "2026-05-13T08:48:23.930840+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\media\\0\\DJI\\dji.go.v4\\DJI_RECORD\\2018_04_19_11_40_02.info",
@@ -807,7 +848,7 @@
           "size": 855,
           "sha1": "8d45b0a1e17a07551a4315a249425f66813aba90",
           "sha256": "d2f1468ffc1d0b2b66b61909c46b9e691b1d78a9416d103cc6e1b5b4907e0cd1",
-          "hash_timestamp": "2026-05-12T11:11:30.078864+00:00"
+          "hash_timestamp": "2026-05-13T08:48:24.070841+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\media\\0\\DJI\\dji.go.v4\\DJI_RECORD\\2018_04_19_11_40_02.mp4",
@@ -820,7 +861,7 @@
           "size": 20849518,
           "sha1": "1fc46d9b4740f6b7190cc1315cbcdacd01e3a779",
           "sha256": "478d1d59aed00f642ceabca80e3c63d994a258e450b2007ce79faac4714aa165",
-          "hash_timestamp": "2026-05-12T11:11:30.320230+00:00"
+          "hash_timestamp": "2026-05-13T08:48:24.392293+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\data\\dji.go.v4\\databases\\dji.db",
@@ -833,7 +874,7 @@
           "size": 114688,
           "sha1": "92c03c60adddcb46ced52d314902b2064e841dde",
           "sha256": "4d4573e8522bd5b40b28e39c8c1836b19d6bf984e6b61ce95afbfaaf6a6ac0b7",
-          "hash_timestamp": "2026-05-12T11:11:30.413984+00:00"
+          "hash_timestamp": "2026-05-13T08:48:24.483320+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\data\\dji.go.v4\\databases\\flysafe_areas_djigo.db",
@@ -846,7 +887,7 @@
           "size": 8263680,
           "sha1": "674c8f1245f5c9c15dc02fffa1ea2690d688f591",
           "sha256": "a21513f2ae3bebe5c80a26c654403e108bef51629a2201a47b8838434abfa70a",
-          "hash_timestamp": "2026-05-12T11:11:30.565899+00:00"
+          "hash_timestamp": "2026-05-13T08:48:24.662680+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\data\\dji.go.v4\\files\\flysafe\\flysafe_areas_djigo.db",
@@ -859,7 +900,7 @@
           "size": 8262656,
           "sha1": "936e7b4a02e38dc7cd2b2d4cb7be8280096b17bd",
           "sha256": "d9164be112208833fe06583920459508675742a54e3ca70d358789ab362c7d3c",
-          "hash_timestamp": "2026-05-12T11:11:30.715717+00:00"
+          "hash_timestamp": "2026-05-13T08:48:24.835671+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\data\\dji.go.v4\\files\\mbgl-offline.db",
@@ -872,7 +913,7 @@
           "size": 331776,
           "sha1": "4184a13112cae799c637b47d761703130a5f7e58",
           "sha256": "fdbdf1daa6d143da25c474eb73402f1f8d429c42362c59a408066ddc5f14ad75",
-          "hash_timestamp": "2026-05-12T11:11:30.763458+00:00"
+          "hash_timestamp": "2026-05-13T08:48:24.886875+00:00"
         },
         {
           "source_path": "MC 04\\Media01\\userdata\\data\\dji.go.v4\\shared_prefs\\dji.go.v4.xml",
@@ -885,11 +926,11 @@
           "size": 0,
           "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
           "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          "hash_timestamp": "2026-05-12T11:11:30.842932+00:00"
+          "hash_timestamp": "2026-05-13T08:48:24.970751+00:00"
         },
         {
           "source_path": "DCIM\\100MEDIA\\DJI_0001.MP4",
-          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\videos\\DJI_0001.MP4",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0001.MP4",
           "parent_sha256": "5664f81579a3558ed7fdf79b06e49cf0849b5f41999ae5a996e43041460ac8f3",
           "acquisition_method": "physical_reader",
           "type": "extracted",
@@ -898,11 +939,11 @@
           "size": 785356701,
           "sha1": "9873e6568f8631e23ae819daa214f6e88312efea",
           "sha256": "61a290fa102ce3e2913242b83aae8073af3751cd6b8f1ed0e14eab7625f77815",
-          "hash_timestamp": "2026-05-12T11:11:36.386187+00:00"
+          "hash_timestamp": "2026-05-13T08:48:29.846584+00:00"
         },
         {
           "source_path": "DCIM\\100MEDIA\\DJI_0002.MP4",
-          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\videos\\DJI_0002.MP4",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0002.MP4",
           "parent_sha256": "5664f81579a3558ed7fdf79b06e49cf0849b5f41999ae5a996e43041460ac8f3",
           "acquisition_method": "physical_reader",
           "type": "extracted",
@@ -911,11 +952,11 @@
           "size": 681239977,
           "sha1": "5131359773d614150ff1d62d8ee4c4d984eb640f",
           "sha256": "9db5019a6c22e8ce2c2d726df4f8c1c0b52fc3d5806b38058bf1896f80e6ba7b",
-          "hash_timestamp": "2026-05-12T11:11:41.139849+00:00"
+          "hash_timestamp": "2026-05-13T08:48:34.256304+00:00"
         },
         {
           "source_path": "DCIM\\100MEDIA\\DJI_0003.MP4",
-          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\videos\\DJI_0003.MP4",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0003.MP4",
           "parent_sha256": "5664f81579a3558ed7fdf79b06e49cf0849b5f41999ae5a996e43041460ac8f3",
           "acquisition_method": "physical_reader",
           "type": "extracted",
@@ -924,11 +965,11 @@
           "size": 3759523376,
           "sha1": "e74bf86c588742fb6cf85fda3b641c41e7834b65",
           "sha256": "aad026be3d81c7dbf251c37d7be4776d239dd44cd7a9988190e6a0f04b87796a",
-          "hash_timestamp": "2026-05-12T11:12:03.860560+00:00"
+          "hash_timestamp": "2026-05-13T08:48:57.465165+00:00"
         },
         {
           "source_path": "DCIM\\100MEDIA\\DJI_0004.MP4",
-          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\videos\\DJI_0004.MP4",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0004.MP4",
           "parent_sha256": "5664f81579a3558ed7fdf79b06e49cf0849b5f41999ae5a996e43041460ac8f3",
           "acquisition_method": "physical_reader",
           "type": "extracted",
@@ -937,11 +978,11 @@
           "size": 1714275603,
           "sha1": "8a6bfb4eca3908e47a7bab171aa907e333ed0ab7",
           "sha256": "6aa7dc8ae4f82d9238d99673a3b4c30ab87f3dfe46627de30b2d6f200beaacb3",
-          "hash_timestamp": "2026-05-12T11:12:14.746409+00:00"
+          "hash_timestamp": "2026-05-13T08:49:07.666991+00:00"
         },
         {
           "source_path": "DCIM\\100MEDIA\\DJI_0005.MP4",
-          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\videos\\DJI_0005.MP4",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0005.MP4",
           "parent_sha256": "5664f81579a3558ed7fdf79b06e49cf0849b5f41999ae5a996e43041460ac8f3",
           "acquisition_method": "physical_reader",
           "type": "extracted",
@@ -950,11 +991,11 @@
           "size": 1473715936,
           "sha1": "a262dd9af22576b92269280cc9e1fe567e375821",
           "sha256": "890e7c07f2d747cdbdffe8939636fc1c4f1230ce592db8d91fff8742551f8192",
-          "hash_timestamp": "2026-05-12T11:12:23.693128+00:00"
+          "hash_timestamp": "2026-05-13T08:49:16.467007+00:00"
         },
         {
           "source_path": "MISC\\THM\\100\\DJI_0001.THM",
-          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\images\\DJI_0001.THM",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0001.THM",
           "parent_sha256": "5664f81579a3558ed7fdf79b06e49cf0849b5f41999ae5a996e43041460ac8f3",
           "acquisition_method": "physical_reader",
           "type": "extracted",
@@ -963,11 +1004,11 @@
           "size": 7555,
           "sha1": "b6b5af5e4d4b0d5ecae0eef6e7901ec873ce8048",
           "sha256": "3a3918e0c00dddb9ad706491020da1b7db90479f49e29814274087259da2bcf0",
-          "hash_timestamp": "2026-05-12T11:12:23.751942+00:00"
+          "hash_timestamp": "2026-05-13T08:49:16.533377+00:00"
         },
         {
           "source_path": "MISC\\THM\\100\\DJI_0002.THM",
-          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\images\\DJI_0002.THM",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0002.THM",
           "parent_sha256": "5664f81579a3558ed7fdf79b06e49cf0849b5f41999ae5a996e43041460ac8f3",
           "acquisition_method": "physical_reader",
           "type": "extracted",
@@ -976,11 +1017,11 @@
           "size": 7951,
           "sha1": "9f15bf98c1c26619f2499ece191f0dc426aae6e3",
           "sha256": "c452f70bc9e9bad9f05047d07cf685498ab5117ec940a5bc6622bd77baa79b1f",
-          "hash_timestamp": "2026-05-12T11:12:23.811913+00:00"
+          "hash_timestamp": "2026-05-13T08:49:16.707253+00:00"
         },
         {
           "source_path": "MISC\\THM\\100\\DJI_0003.THM",
-          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\images\\DJI_0003.THM",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0003.THM",
           "parent_sha256": "5664f81579a3558ed7fdf79b06e49cf0849b5f41999ae5a996e43041460ac8f3",
           "acquisition_method": "physical_reader",
           "type": "extracted",
@@ -989,11 +1030,11 @@
           "size": 11721,
           "sha1": "c958de01cff11f28d30a028a327b0d9867c968fc",
           "sha256": "9727e9310aa901a379b5fdfaf29a50e22fb879ff86d7ba6d75e82c6a39497d79",
-          "hash_timestamp": "2026-05-12T11:12:23.869355+00:00"
+          "hash_timestamp": "2026-05-13T08:49:16.765277+00:00"
         },
         {
           "source_path": "MISC\\THM\\100\\DJI_0004.THM",
-          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\images\\DJI_0004.THM",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0004.THM",
           "parent_sha256": "5664f81579a3558ed7fdf79b06e49cf0849b5f41999ae5a996e43041460ac8f3",
           "acquisition_method": "physical_reader",
           "type": "extracted",
@@ -1002,11 +1043,11 @@
           "size": 10748,
           "sha1": "434ae634442c15bfbe0b51dbc2b31193f14968d5",
           "sha256": "f99c4b6f1f614bd2ea9829aa50e08d966ed188dde73ce9dfcf388ee70adb7dc4",
-          "hash_timestamp": "2026-05-12T11:12:23.930012+00:00"
+          "hash_timestamp": "2026-05-13T08:49:16.829276+00:00"
         },
         {
           "source_path": "MISC\\THM\\100\\DJI_0005.THM",
-          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\images\\DJI_0005.THM",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0005.THM",
           "parent_sha256": "5664f81579a3558ed7fdf79b06e49cf0849b5f41999ae5a996e43041460ac8f3",
           "acquisition_method": "physical_reader",
           "type": "extracted",
@@ -1015,14 +1056,14 @@
           "size": 6154,
           "sha1": "6f4b46f652887ad89b44020dc176a4ac9f0bb324",
           "sha256": "b3f920d7ad5412a19b8f122aaa0ff4cedfcf9b25c2baa89bbf4d26e0d796fe5f",
-          "hash_timestamp": "2026-05-12T11:12:23.986234+00:00"
+          "hash_timestamp": "2026-05-13T08:49:16.889857+00:00"
         }
       ]
     }
   },
   "tool_invocation_log": [
     {
-      "timestamp": "2026-05-12T11:10:28.077020+00:00",
+      "timestamp": "2026-05-13T08:47:41.068602+00:00",
       "tool_name": "mmls",
       "version": "The Sleuth Kit ver 4.15.0",
       "args": [
@@ -1035,7 +1076,7 @@
       "output_paths": null
     },
     {
-      "timestamp": "2026-05-12T11:10:28.497826+00:00",
+      "timestamp": "2026-05-13T08:47:41.489260+00:00",
       "tool_name": "fls",
       "version": "The Sleuth Kit ver 4.15.0",
       "args": [
@@ -1050,7 +1091,7 @@
       "output_paths": null
     },
     {
-      "timestamp": "2026-05-12T11:11:26.771898+00:00",
+      "timestamp": "2026-05-13T08:48:20.721009+00:00",
       "tool_name": "ios_parser",
       "version": null,
       "args": [
@@ -1065,7 +1106,20 @@
       ]
     },
     {
-      "timestamp": "2026-05-12T11:11:33.230841+00:00",
+      "timestamp": "2026-05-13T08:48:21.194386+00:00",
+      "tool_name": "android_parser",
+      "version": null,
+      "args": [
+        "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df048\\2018_april\\android_logical.zip",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p2_image_parsing\\controller_android_parsed"
+      ],
+      "return_code": 0,
+      "stdout_summary": "Parsed Android source to C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p2_image_parsing\\controller_android_parsed",
+      "stderr_summary": null,
+      "output_paths": null
+    },
+    {
+      "timestamp": "2026-05-13T08:48:27.547055+00:00",
       "tool_name": "icat",
       "version": "The Sleuth Kit ver 4.15.0",
       "args": [
@@ -1079,11 +1133,11 @@
       "stdout_summary": null,
       "stderr_summary": null,
       "output_paths": [
-        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\videos\\DJI_0001.MP4"
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0001.MP4"
       ]
     },
     {
-      "timestamp": "2026-05-12T11:11:39.113119+00:00",
+      "timestamp": "2026-05-13T08:48:32.284497+00:00",
       "tool_name": "icat",
       "version": "The Sleuth Kit ver 4.15.0",
       "args": [
@@ -1097,11 +1151,11 @@
       "stdout_summary": null,
       "stderr_summary": null,
       "output_paths": [
-        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\videos\\DJI_0002.MP4"
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0002.MP4"
       ]
     },
     {
-      "timestamp": "2026-05-12T11:11:52.709080+00:00",
+      "timestamp": "2026-05-13T08:48:46.400400+00:00",
       "tool_name": "icat",
       "version": "The Sleuth Kit ver 4.15.0",
       "args": [
@@ -1115,11 +1169,11 @@
       "stdout_summary": null,
       "stderr_summary": null,
       "output_paths": [
-        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\videos\\DJI_0003.MP4"
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0003.MP4"
       ]
     },
     {
-      "timestamp": "2026-05-12T11:12:09.859388+00:00",
+      "timestamp": "2026-05-13T08:49:02.672053+00:00",
       "tool_name": "icat",
       "version": "The Sleuth Kit ver 4.15.0",
       "args": [
@@ -1133,11 +1187,11 @@
       "stdout_summary": null,
       "stderr_summary": null,
       "output_paths": [
-        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\videos\\DJI_0004.MP4"
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0004.MP4"
       ]
     },
     {
-      "timestamp": "2026-05-12T11:12:19.369157+00:00",
+      "timestamp": "2026-05-13T08:49:12.202720+00:00",
       "tool_name": "icat",
       "version": "The Sleuth Kit ver 4.15.0",
       "args": [
@@ -1151,11 +1205,11 @@
       "stdout_summary": null,
       "stderr_summary": null,
       "output_paths": [
-        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\videos\\DJI_0005.MP4"
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0005.MP4"
       ]
     },
     {
-      "timestamp": "2026-05-12T11:12:23.750691+00:00",
+      "timestamp": "2026-05-13T08:49:16.527461+00:00",
       "tool_name": "icat",
       "version": "The Sleuth Kit ver 4.15.0",
       "args": [
@@ -1169,11 +1223,11 @@
       "stdout_summary": null,
       "stderr_summary": null,
       "output_paths": [
-        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\images\\DJI_0001.THM"
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0001.THM"
       ]
     },
     {
-      "timestamp": "2026-05-12T11:12:23.810809+00:00",
+      "timestamp": "2026-05-13T08:49:16.701647+00:00",
       "tool_name": "icat",
       "version": "The Sleuth Kit ver 4.15.0",
       "args": [
@@ -1187,11 +1241,11 @@
       "stdout_summary": null,
       "stderr_summary": null,
       "output_paths": [
-        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\images\\DJI_0002.THM"
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0002.THM"
       ]
     },
     {
-      "timestamp": "2026-05-12T11:12:23.863171+00:00",
+      "timestamp": "2026-05-13T08:49:16.759777+00:00",
       "tool_name": "icat",
       "version": "The Sleuth Kit ver 4.15.0",
       "args": [
@@ -1205,11 +1259,11 @@
       "stdout_summary": null,
       "stderr_summary": null,
       "output_paths": [
-        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\images\\DJI_0003.THM"
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0003.THM"
       ]
     },
     {
-      "timestamp": "2026-05-12T11:12:23.924436+00:00",
+      "timestamp": "2026-05-13T08:49:16.823875+00:00",
       "tool_name": "icat",
       "version": "The Sleuth Kit ver 4.15.0",
       "args": [
@@ -1223,11 +1277,11 @@
       "stdout_summary": null,
       "stderr_summary": null,
       "output_paths": [
-        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\images\\DJI_0004.THM"
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0004.THM"
       ]
     },
     {
-      "timestamp": "2026-05-12T11:12:23.985133+00:00",
+      "timestamp": "2026-05-13T08:49:16.884403+00:00",
       "tool_name": "icat",
       "version": "The Sleuth Kit ver 4.15.0",
       "args": [
@@ -1241,7 +1295,7 @@
       "stdout_summary": null,
       "stderr_summary": null,
       "output_paths": [
-        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd\\images\\DJI_0005.THM"
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-ZIP-01\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0005.THM"
       ]
     }
   ]

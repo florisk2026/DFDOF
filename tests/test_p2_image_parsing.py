@@ -123,11 +123,10 @@ def test_run_phase_2_convert_controller_ios_evidence(tmp_path: Path, monkeypatch
 	assert backup_info_evidence["source_path"] == str(input_archive)
 	assert backup_info_evidence["values"]["device_name"] == "Test iPhone"
 	assert backup_info_evidence["values"]["product_name"] == "iPhone15,2"
-	assert backup_info_evidence["values"]["ios_version"] == "17.4"
+	assert backup_info_evidence["values"]["product_version"] == "17.4"
 	assert backup_info_evidence["values"]["serial_number"] == "SERIAL-001"
-	assert backup_info_evidence["values"]["uid"] == "UID-123"
+	assert backup_info_evidence["values"]["unique_identifier"] == "UID-123"
 	assert backup_info_evidence["values"]["backup_date"] == "2026-05-04T12:34:56Z"
-	assert backup_info_evidence["values"]["itunes_version"] == "12.13"
 	assert backup_info_evidence["values"]["installed_dji_apps"] == ["com.dji.go"]
 	assert "completed_at" in phase_output
 	assert isinstance(phase_output["completed_at"], str)
