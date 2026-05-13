@@ -18,9 +18,14 @@ from state import State
 @dataclass
 class FakeConversionResult:
 	output_root: Path
+	metadata_evidence: list | None = None
+
+	def __post_init__(self) -> None:
+		if self.metadata_evidence is None:
+			self.metadata_evidence = []
 
 
-def test_run_phase_2_convert_controller_ios_evidence(tmp_path: Path, monkeypatch) -> None:
+def test_run_phase_2_convert_controller_ios_evidence(tmp_path: Path, monkeypatch, capsys) -> None:
 	project_root = tmp_path
 	documents_dir = project_root / "Documents"
 	documents_dir.mkdir(parents=True)
@@ -77,7 +82,7 @@ def test_run_phase_2_convert_controller_ios_evidence(tmp_path: Path, monkeypatch
 	# into the temporary Documents directory.
 	monkeypatch.setattr(Path, "home", lambda: project_root)
 
-	def fake_convert(archive_path, output_root=None):
+	def fake_convert(archive_path, output_root=None, source_evidence=None):
 		actual_root = Path(output_root) if output_root is not None else (documents_dir / "dfdof_output" / "CASE-001" / "controller_ios_parsed")
 		actual_root.mkdir(parents=True, exist_ok=True)
 		(actual_root / "backup_info.json").write_text(
@@ -98,11 +103,13 @@ def test_run_phase_2_convert_controller_ios_evidence(tmp_path: Path, monkeypatch
 		)
 		return FakeConversionResult(output_root=actual_root)
 
-	monkeypatch.setattr(p2_module, "convert_ios_backup", fake_convert)
+	monkeypatch.setattr(p2_module, "parse_ios_backup", fake_convert)
 
 	result = p2_module.run_phase_2(state)
+	output = capsys.readouterr().out
 
 	assert converted_root.exists()
+	assert "Parsing controller iOS" in output
 	phase_output = result.phase_outputs["p2_image_parsing"]
 	assert phase_output["parsed_evidence"]
 	
@@ -154,7 +161,7 @@ def _create_android_logical_zip(zip_path: Path) -> None:
 		archive.writestr("property/net.hostname", "hostname-android\n")
 
 
-def test_run_phase_2_processes_android_logical_source(tmp_path: Path, monkeypatch) -> None:
+def test_run_phase_2_processes_android_logical_source(tmp_path: Path, monkeypatch, capsys) -> None:
 	project_root = tmp_path
 	documents_dir = project_root / "Documents"
 	documents_dir.mkdir(parents=True)
@@ -180,9 +187,11 @@ def test_run_phase_2_processes_android_logical_source(tmp_path: Path, monkeypatc
 	converted_root = documents_dir / "dfdof_output" / "CASE-002" / "p2_image_parsing" / "controller_android_parsed"
 
 	result = p2_module.run_phase_2(state)
+	output = capsys.readouterr().out
 	phase_output = result.phase_outputs["p2_image_parsing"]
 
 	assert converted_root.exists()
+	assert "Parsing controller Android" in output
 	
 	# Check that acquisition PDF was extracted
 	acquisition_pdf = next(
@@ -193,6 +202,18 @@ def test_run_phase_2_processes_android_logical_source(tmp_path: Path, monkeypatc
 	assert acquisition_pdf["source_path"] == "backup\\report.pdf"
 	assert acquisition_pdf["values"]["phone_model"] == "DJI RC 2"
 	assert acquisition_pdf["values"]["acquisition_date"] == "2026-05-05"
+
+	backup_info_evidence = next(
+		(item for item in phase_output["parsed_evidence"] if Path(item["stored_path"]).name == "backup_info.json"),
+		None
+	)
+	assert backup_info_evidence is not None
+	assert backup_info_evidence["values"]["device_name"] == "RC Controller"
+	assert backup_info_evidence["values"]["product_name"] == "RC 2"
+	assert backup_info_evidence["values"]["product_version"] == "1.2.3"
+	assert backup_info_evidence["values"]["serial_number"] == "SERIAL-ANDROID-1"
+	assert backup_info_evidence["values"]["backup_date"] == "2026-05-05"
+	assert backup_info_evidence["values"]["installed_dji_apps"] == ["com.dji.go", "dji.go.v4"]
 	
 	# Check that device files were extracted with metadata
 	deviceinfo = next(
@@ -231,7 +252,7 @@ def test_run_phase_2_processes_android_logical_source(tmp_path: Path, monkeypatc
 	assert any(Path(item["stored_path"]).name == "net.hostname" for item in phase_output["parsed_evidence"])
 
 
-def test_run_phase_2_processes_android_physical_source(tmp_path: Path, monkeypatch) -> None:
+def test_run_phase_2_processes_android_physical_source(tmp_path: Path, monkeypatch, capsys) -> None:
 	project_root = tmp_path
 	documents_dir = project_root / "Documents"
 	documents_dir.mkdir(parents=True)
@@ -254,6 +275,7 @@ def test_run_phase_2_processes_android_physical_source(tmp_path: Path, monkeypat
 	}
 
 	monkeypatch.setattr(Path, "home", lambda: project_root)
+	converted_root = documents_dir / "dfdof_output" / "CASE-003" / "p2_image_parsing" / "controller_android_parsed"
 
 	def fake_extract_tsk_image(image_path, working_dir, *, include_paths=None, acquisition_method="physical_reader", parent=None, tool_log=None, artefact_category=None):
 		_ = (image_path, include_paths, acquisition_method, parent, tool_log, artefact_category)
@@ -281,12 +303,16 @@ def test_run_phase_2_processes_android_physical_source(tmp_path: Path, monkeypat
 			)
 		return extracted
 
-	monkeypatch.setattr(p2_module, "extract_tsk_image", fake_extract_tsk_image)
+	monkeypatch.setattr("parsing.physical_reader.extract_tsk_image", fake_extract_tsk_image)
 
 	result = p2_module.run_phase_2(state)
+	output = capsys.readouterr().out
 	phase_output = result.phase_outputs["p2_image_parsing"]
 
+	assert "Parsing controller Android" in output
+
 	# Check that device files were extracted with metadata
+	assert not any(child.is_dir() for child in converted_root.iterdir())
 	deviceinfo = next(
 		(item for item in phase_output["parsed_evidence"] if Path(item["stored_path"]).name == "DeviceInfo.xml"),
 		None
@@ -318,4 +344,17 @@ def test_run_phase_2_processes_android_physical_source(tmp_path: Path, monkeypat
 	)
 	assert hostname is not None
 	assert hostname["values"]["device_hostname"] == "physical-host"
+	assert not any(Path(item["stored_path"]).name == "report.pdf" for item in phase_output["parsed_evidence"])
+
+	backup_info_evidence = next(
+		(item for item in phase_output["parsed_evidence"] if Path(item["stored_path"]).name == "backup_info.json"),
+		None
+	)
+	assert backup_info_evidence is not None
+	assert backup_info_evidence["values"]["device_name"] == "Physical RC"
+	assert backup_info_evidence["values"]["product_name"] == "RC Pro"
+	assert backup_info_evidence["values"]["product_version"] == "9.1.0"
+	assert backup_info_evidence["values"]["serial_number"] == "SERIAL-PHYSICAL"
+	assert backup_info_evidence["values"]["backup_date"] is None
+	assert backup_info_evidence["values"]["installed_dji_apps"] == ["dji.pilot"]
 	assert all(item["artefact_category"] == DEVICE_AND_BACKUP_INFO for item in phase_output["parsed_evidence"])

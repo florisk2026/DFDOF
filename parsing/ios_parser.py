@@ -260,7 +260,7 @@ def _json_safe(value: Any) -> Any:
     return value
 
 
-def convert_ios_backup(archive_path: Path | str, output_root: Path | str | None = None) -> ConversionResult:
+def parse_ios_backup(archive_path: Path | str, output_root: Path | str | None = None) -> ConversionResult:
     """Convert a zipped iTunes-style iOS backup into a readable domain tree."""
 
     archive_path = Path(archive_path)

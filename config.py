@@ -16,21 +16,6 @@ CONTROLLER_ANDROID_INCLUDES = {'data/data/dji', 'data/data/com.dji', 'sdcard/dji
 DRONE_FLIGHT_STORAGE_INCLUDES = {"FLY", "DJI_ASSISTANT_EXPORT_FILE"}
 DRONE_SD_INCLUDES = {"DCIM", "MISC"}
 
-# DJI app domains
-DJI_APP_DOMAINS = {
-	"ios": {
-		"com.dji.pilot": "DJI GO",
-		"com.dji.go": "DJI GO 4",
-		"dji.pilot": "DJI Pilot",
-	},
-	"android": {
-		"com.dji.go": "DJI GO",
-		"dji.go.v4": "DJI GO 4",
-		"dji.pilot": "DJI Pilot",
-	},
-}
-
-# Source identification types
 IDENTIFICATION_CONTROLLER_IOS = "controller_ios"
 IDENTIFICATION_CONTROLLER_ANDROID = "controller_android"
 IDENTIFICATION_DRONE_SD = "drone_sd"
@@ -45,6 +30,20 @@ SOURCE_IDENTIFICATION_TYPES = {
 }
 SOURCE_IDENTIFICATION_TYPES = frozenset(SOURCE_IDENTIFICATION_TYPES)
 
+# DJI app domains
+DJI_APP_DOMAINS = {
+	"ios": {
+		"com.dji.pilot": "DJI GO",
+		"com.dji.go": "DJI GO 4",
+		"dji.pilot": "DJI Pilot",
+	},
+	"android": {
+		"com.dji.go": "DJI GO",
+		"dji.go.v4": "DJI GO 4",
+		"dji.pilot": "DJI Pilot",
+	},
+}
+
 # Acquisition method types
 ACQUISITION_LOGICAL = "logical"
 ACQUISITION_PHYSICAL = "physical"
@@ -57,6 +56,20 @@ ACQUISITION_PHYSICAL_READER = "physical_reader"
 EVIDENCE_TYPE_INPUT = "input"
 EVIDENCE_TYPE_PARSED = "parsed"
 EVIDENCE_TYPE_EXTRACTED = "extracted"
+
+# Android backup_info.json schema
+BACKUP_INFO_SCHEMA = {
+	"Build Version": None,
+	"Device Name": None,
+	"GUID": None,
+	"Installed Applications": [],
+	"Last Backup Date": None,
+	"Product Name": None,
+	"Product Type": None,
+	"Product Version": None,
+	"Serial Number": None,
+	"Unique Identifier": None,
+}
 
 # Artefact extraction
 DRONE_LOGS = "drone_logs"

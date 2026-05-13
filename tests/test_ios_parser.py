@@ -6,7 +6,7 @@ import sqlite3
 import zipfile
 from pathlib import Path
 
-from parsing.ios_parser import convert_ios_backup
+from parsing.ios_parser import parse_ios_backup
 
 
 def _build_manifest_db(path: Path, file_id: str) -> None:
@@ -40,13 +40,13 @@ def _create_backup_zip(zip_path: Path, file_id: str) -> None:
         archive.writestr(f"{file_id[:2]}/{file_id}", b"deviceinfo contents")
 
 
-def test_convert_ios_backup_exports_domain_layout(tmp_path: Path) -> None:
+def test_parse_ios_backup_exports_domain_layout(tmp_path: Path) -> None:
     file_id = hashlib.sha1(b"AppDomain-com.example.dji-Documents/logs/deviceinfo.xml").hexdigest()
     archive_path = tmp_path / "backup.zip"
     _create_backup_zip(archive_path, file_id)
 
     output_root = tmp_path / "results"
-    result = convert_ios_backup(archive_path, output_root=output_root)
+    result = parse_ios_backup(archive_path, output_root=output_root)
 
     exported_file = result.domains_root / "AppDomain-com.example.dji" / "Documents" / "logs" / "deviceinfo.xml"
     assert exported_file.exists()
