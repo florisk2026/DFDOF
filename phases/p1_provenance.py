@@ -37,8 +37,8 @@ from config import (
     utc_now_iso,
 )
 from evidence import Evidence
-from parsing.parse_utils import normalise_path
-from parsing.physical_reader import list_fls_entries, parse_mmls_offset, run_command
+from parsing.utils_parse import normalise_path
+from parsing.extract_physical import list_fls_entries, parse_mmls_offset, run_command
 from state import State
 
 _SUPPORTED_INPUT_EXTS = {ext.lower() for ext in SUPPORTED_IMAGE_EXTENSIONS}

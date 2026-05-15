@@ -19,10 +19,10 @@ from config import (
     EXTENSION_ZIP,
 )
 from evidence import Evidence
-from parsing.logical_reader import extract_logical_files, find_acquisition_pdf_member
-from parsing import physical_reader
+from parsing.extract_logical import extract_logical_files, find_acquisition_pdf_member
+from parsing import extract_physical
 from state import State, get_tsk_tool_version
-from parsing.parse_utils import (
+from parsing.utils_parse import (
     match_labeled_value,
     normalise_scalar,
     normalise_acquisition_method,
@@ -365,7 +365,7 @@ def parse_android_source(
         if offset_sectors is not None:
             extract_kwargs["offset_sectors"] = offset_sectors
 
-        extracted_files = physical_reader.extract_tsk_image(
+        extracted_files = extract_physical.extract_tsk_image(
             stored_path, output_root, **extract_kwargs
         )
 

@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import cast
 
 from evidence import Evidence
-from parsing.physical_reader import extract_tsk_image, parse_mmls_offset
-from parsing.parse_utils import sanitise_path
+from parsing.extract_physical import extract_tsk_image, parse_mmls_offset
+from parsing.utils_parse import sanitise_path
 
 
 def test_parse_mmls_offset_prefers_data_partition() -> None:
@@ -65,7 +65,7 @@ d/d 1236: FlightRecord/
             return subprocess.CompletedProcess(command, 0, stdout="")
         raise AssertionError(f"Unexpected command: {command}")
 
-    monkeypatch.setattr("parsing.physical_reader.subprocess.run", fake_run)
+    monkeypatch.setattr("parsing.extract_physical.subprocess.run", fake_run)
 
     extracted = extract_tsk_image(
         image_path,

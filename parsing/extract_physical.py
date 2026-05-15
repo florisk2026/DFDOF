@@ -19,8 +19,8 @@ from config import (
     summarise_text,
 )
 from evidence import Evidence
-from parsing.logical_reader import ensure_unique_path
-from parsing.parse_utils import sanitise_path, to_windows_path
+from parsing.extract_logical import ensure_unique_path
+from parsing.utils_parse import sanitise_path, to_windows_path
 
 _FLS_LINE_RE = re.compile(r"^([rd]/[rd])\s+(\d+)(?:-\d+)?:\s+(.+)$")
 _MMLS_ROW_RE = re.compile(r"^\s*\d+:\s+\S+\s+(\d+)\s+(\d+)\s+(\d+)\s+\S+\s+(.+)$")

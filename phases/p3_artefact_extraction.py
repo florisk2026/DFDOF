@@ -44,15 +44,15 @@ from config import (
     utc_now_iso,
 )
 from evidence import Evidence
-from parsing.logical_reader import ensure_unique_path, extract_logical_files
-from parsing.parse_utils import (
+from parsing.extract_logical import ensure_unique_path, extract_logical_files
+from parsing.utils_parse import (
     normalise_path,
     safe_segment,
     to_windows_path,
     normalise_acquisition_method,
 )
-from parsing.physical_reader import extract_tsk_image, run_command
-from phases.phase_utils import find_input_evidence_list_by_identification
+from parsing.extract_physical import extract_tsk_image, run_command
+from phases.utils_phase import find_input_evidence_list_by_identification
 from state import State, get_tsk_tool_version
 
 _DJI_EXPORT_RE = re.compile(r"^DJI_ASSISTANT_EXPORT_FILE_.*\.DAT$", re.IGNORECASE)

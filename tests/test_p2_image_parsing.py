@@ -419,7 +419,7 @@ def test_run_phase_2_processes_android_physical_source(
         return extracted
 
     monkeypatch.setattr(
-        "parsing.physical_reader.extract_tsk_image", fake_extract_tsk_image
+        "parsing.extract_physical.extract_tsk_image", fake_extract_tsk_image
     )
 
     result = p2_module.run_phase_2(state)

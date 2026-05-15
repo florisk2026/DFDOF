@@ -24,8 +24,8 @@ from config import (
     output_dir,
 )
 from evidence import hash_file
-from parsing.logical_reader import copy_zip_member
-from parsing.parse_utils import parse_plist_file, safe_segment, sanitise_path
+from parsing.extract_logical import copy_zip_member
+from parsing.utils_parse import parse_plist_file, safe_segment, sanitise_path
 
 logger = logging.getLogger(__name__)
 

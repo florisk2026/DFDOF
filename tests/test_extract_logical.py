@@ -5,7 +5,7 @@ from pathlib import Path
 
 from config import DEVICE_AND_BACKUP_INFO
 from evidence import Evidence
-from parsing.logical_reader import extract_logical_files, find_acquisition_pdf_member
+from parsing.extract_logical import extract_logical_files, find_acquisition_pdf_member
 
 
 def _create_logical_zip(zip_path: Path) -> None:

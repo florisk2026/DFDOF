@@ -6,7 +6,7 @@ import sqlite3
 import zipfile
 from pathlib import Path
 
-from parsing.ios_parser import parse_ios_backup
+from parsing.parser_ios import parse_ios_backup
 
 
 def _build_manifest_db(path: Path, file_id: str) -> None:
