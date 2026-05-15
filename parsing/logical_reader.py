@@ -17,7 +17,7 @@ from config import (
     EXTENSION_ZIP,
 )
 from evidence import Evidence, hash_file
-from parsing.path_utils import normalise_path, to_windows_path, normalise_path_to_posix
+from parsing.parse_utils import normalise_path, to_windows_path, normalise_path_to_posix
 
 
 def ensure_unique_path(target: Path) -> Path:

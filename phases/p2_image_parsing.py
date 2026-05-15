@@ -28,7 +28,7 @@ from config import (
 from evidence import Evidence
 from parsing.android_parser import parse_android_source
 from parsing.ios_parser import parse_ios_backup
-from parsing.path_utils import to_windows_path, normalise_scalar
+from parsing.parse_utils import to_windows_path, normalise_scalar
 from phases.phase_utils import find_input_evidence_list_by_identification
 from state import State
 

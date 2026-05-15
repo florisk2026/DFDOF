@@ -5,6 +5,7 @@ Unified handling of path sanitization to ensure consistency.
 
 from __future__ import annotations
 
+import plistlib
 import re
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -60,3 +61,32 @@ def normalise_acquisition_method(value: str | None) -> str:
     if value is None:
         return ""
     return str(value).strip().lower()
+
+
+def parse_plist_file(path: Path) -> dict[str, Any]:
+    """Parse a plist file and return a dictionary, or an empty dict on failure."""
+    if not path.exists():
+        return {}
+    try:
+        parsed = plistlib.loads(path.read_bytes())
+    except Exception:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def match_labeled_value(text: str, labels: tuple[str, ...]) -> str | None:
+    """Find the first value matching any label in plain or plist-style XML text."""
+    patterns: list[str] = []
+    for label in labels:
+        escaped = re.escape(label)
+        patterns.extend(
+            [
+                rf"{escaped}\s*[:=]\s*([^\r\n<]+)",
+                rf"<key>\s*{escaped}\s*</key>\s*<(?:string|date|integer|real)>\s*(.*?)\s*</(?:string|date|integer|real)>",
+            ]
+        )
+    for pattern in patterns:
+        match = re.search(pattern, text, flags=re.IGNORECASE | re.DOTALL)
+        if match:
+            return normalise_scalar(match.group(1))
+    return None

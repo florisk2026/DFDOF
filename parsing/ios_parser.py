@@ -12,7 +12,6 @@ import csv
 import hashlib
 import json
 import logging
-import plistlib
 import sqlite3
 import tempfile
 import zipfile
@@ -26,7 +25,7 @@ from config import (
 )
 from evidence import hash_file
 from parsing.logical_reader import copy_zip_member
-from parsing.path_utils import safe_segment, sanitise_path
+from parsing.parse_utils import parse_plist_file, safe_segment, sanitise_path
 
 logger = logging.getLogger(__name__)
 
@@ -259,17 +258,6 @@ def _write_index(result: ConversionResult) -> None:
             writer.writerow(asdict(record))
 
 
-def _parse_info_plist(metadata_root: Path) -> dict[str, Any]:
-    """Parse the Info.plist file from the metadata root, returning its contents as a dictionary."""
-    info_path = metadata_root / "Info.plist"
-    if not info_path.exists():
-        return {}
-    try:
-        return plistlib.loads(info_path.read_bytes())
-    except Exception:
-        return {}
-
-
 def _json_safe(value: Any) -> Any:
     """Convert a value to a JSON-safe representation, handling common non-serializable types."""
     if isinstance(value, dict):
@@ -349,7 +337,7 @@ def parse_ios_backup(
 
     _write_index(result)
 
-    backup_info = _parse_info_plist(metadata_root)
+    backup_info = parse_plist_file(metadata_root / "Info.plist")
     if backup_info:
         (result_root / "backup_info.json").write_text(
             json.dumps(_json_safe(backup_info), indent=2, sort_keys=True),

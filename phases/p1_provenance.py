@@ -37,7 +37,7 @@ from config import (
     utc_now_iso,
 )
 from evidence import Evidence
-from parsing.path_utils import normalise_path
+from parsing.parse_utils import normalise_path
 from parsing.physical_reader import list_fls_entries, parse_mmls_offset, run_command
 from state import State
 

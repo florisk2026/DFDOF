@@ -22,7 +22,11 @@ from evidence import Evidence
 from parsing.logical_reader import extract_logical_files, find_acquisition_pdf_member
 from parsing import physical_reader
 from state import State, get_tsk_tool_version
-from parsing.path_utils import normalise_scalar, normalise_acquisition_method
+from parsing.parse_utils import (
+    match_labeled_value,
+    normalise_scalar,
+    normalise_acquisition_method,
+)
 
 try:
     from pypdf import PdfReader
@@ -130,24 +134,6 @@ def _extract_pdf_text(path: Path) -> str:
     return _read_text(path)
 
 
-def _match_labeled_value(text: str, labels: tuple[str, ...]) -> str | None:
-    """Search for labeled values in text using multiple patterns, returning the first match found."""
-    patterns = []
-    for label in labels:
-        escaped = re.escape(label)
-        patterns.extend(
-            [
-                rf"{escaped}\s*[:=]\s*([^\r\n<]+)",
-                rf"<key>\s*{escaped}\s*</key>\s*<(?:string|date|integer|real)>\s*(.*?)\s*</(?:string|date|integer|real)>",
-            ]
-        )
-    for pattern in patterns:
-        match = re.search(pattern, text, flags=re.IGNORECASE | re.DOTALL)
-        if match:
-            return normalise_scalar(match.group(1))
-    return None
-
-
 def _extract_metadata_dict(
     data: Any,
     mapping: dict[str, tuple[str, ...]],
@@ -158,7 +144,7 @@ def _extract_metadata_dict(
     out: dict[str, Any] = {}
     for out_key, candidates in mapping.items():
         if isinstance(data, str):
-            out[out_key] = normalise_scalar(_match_labeled_value(data, candidates))
+            out[out_key] = normalise_scalar(match_labeled_value(data, candidates))
         else:
             out[out_key] = normalise_scalar(_lookup_nested_value(data, candidates))
     if extra:
@@ -189,16 +175,16 @@ def _extract_android_device_metadata(extracted_files: list[Evidence]) -> None:
         values: dict[str, Any] = {}
 
         if file_name == "deviceinfo.xml":
-            values["device_name"] = _match_labeled_value(
+            values["device_name"] = match_labeled_value(
                 text, ("Device Name", "DeviceName", "Name")
             )
-            values["model_name"] = _match_labeled_value(
+            values["model_name"] = match_labeled_value(
                 text, ("Model Name", "ModelName", "Model")
             )
-            values["version"] = _match_labeled_value(
+            values["version"] = match_labeled_value(
                 text, ("Version", "Device Version", "Android Version")
             )
-            values["firmware_version"] = _match_labeled_value(
+            values["firmware_version"] = match_labeled_value(
                 text,
                 (
                     "Firmware Version",

@@ -6,7 +6,7 @@ from typing import cast
 
 from evidence import Evidence
 from parsing.physical_reader import extract_tsk_image, parse_mmls_offset
-from parsing.path_utils import sanitise_path
+from parsing.parse_utils import sanitise_path
 
 
 def test_parse_mmls_offset_prefers_data_partition() -> None:
