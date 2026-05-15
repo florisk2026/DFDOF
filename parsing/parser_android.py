@@ -12,7 +12,8 @@ from pathlib import Path
 from typing import Any, cast
 
 from config import (
-    ACQUISITION_PHYSICAL_READER,
+    ACQUISITION_EXTRACT_PHYSICAL,
+    ACQUISITION_PARSER_ANDROID,
     BACKUP_INFO_SCHEMA,
     DEVICE_AND_BACKUP_INFO,
     DJI_APP_DOMAINS,
@@ -37,13 +38,13 @@ _DATE_RE = re.compile(
     r"\b\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:?\d{2})?)?\b"
 )
 
-TARGET_FILES = [
+TARGET_FILES = { 
     "DeviceInfo.xml",
     "ApplicationInfo.xml",
     "ro.serialno",
     "net.hostname",
     "packages.list",
-]
+}
 
 
 @dataclass
@@ -356,7 +357,7 @@ def parse_android_source(
         extract_kwargs: dict[str, Any] = {
             "include_paths": TARGET_FILES,
             "parent": source_evidence,
-            "acquisition_method": ACQUISITION_PHYSICAL_READER,
+            "acquisition_method": ACQUISITION_EXTRACT_PHYSICAL,
             "artefact_category": DEVICE_AND_BACKUP_INFO,
             "tool_log": lambda log_dict: _log_tsk_tool(state, log_dict),
         }
@@ -462,7 +463,7 @@ def parse_android_source(
     backup_info_path.write_text(json.dumps(backup_info, indent=2), encoding="utf-8")
 
     state.log_tool_invocation(
-        tool_name="android_parser",
+        tool_name=ACQUISITION_PARSER_ANDROID,
         args=[str(source_evidence.stored_path), str(output_root)],
         return_code=0,
         stdout=f"Parsed Android source to {output_root}",

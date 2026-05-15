@@ -14,7 +14,7 @@ from config import (
     TSK_FLS,
     TSK_ICAT,
     TSK_MMLS,
-    ACQUISITION_PHYSICAL_READER,
+        ACQUISITION_EXTRACT_PHYSICAL,
     EVIDENCE_TYPE_EXTRACTED,
     summarise_text,
 )
@@ -92,7 +92,7 @@ def extract_tsk_image(
     working_dir: Path | str,
     *,
     include_paths: Iterable[str] | None = None,
-    acquisition_method: str = ACQUISITION_PHYSICAL_READER,
+        acquisition_method: str = ACQUISITION_EXTRACT_PHYSICAL,
     parent: Evidence | None = None,
     tool_log: Callable[[dict[str, Any]], None] | None = None,
     artefact_category: str | None = None,

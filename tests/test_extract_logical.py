@@ -30,7 +30,7 @@ def test_extract_logical_files_batch_returns_parsed_evidence(tmp_path: Path) -> 
     assert len(extracted) == 2
     assert (output_dir / "deviceinfo.xml").exists()
     assert (output_dir / "other.txt").exists()
-    assert extracted[0].acquisition_method == "logical_reader"
+    assert extracted[0].acquisition_method == "extract_logical"
     assert extracted[0].type == "extracted"
     assert extracted[0].artefact_category == DEVICE_AND_BACKUP_INFO
     assert extracted[0].parent_sha256 == source.sha256

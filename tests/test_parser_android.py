@@ -77,7 +77,7 @@ def test_parse_android_source_logical_builds_backup_info(tmp_path: Path, monkeyp
                     source_path=source_path,
                     stored_path=out_path,
                     parent=source_evidence,
-                    acquisition_method="logical_reader",
+                    acquisition_method="extract_logical",
                     type="extracted",
                     artefact_category=artefact_category,
                     skip_hash=True,
@@ -115,7 +115,7 @@ def test_parse_android_source_logical_builds_backup_info(tmp_path: Path, monkeyp
     assert any(Path(item["stored_path"]).name == "report.pdf" for item in parsed_evidence)
 
     assert case_state.tool_invocation_log
-    assert case_state.tool_invocation_log[-1]["tool_name"] == "android_parser"
+    assert case_state.tool_invocation_log[-1]["tool_name"] == "parser_android"
     assert case_state.tool_invocation_log[-1]["output_paths"] == [str(output_root)]
 
 
@@ -148,7 +148,7 @@ def test_parse_android_source_flags_missing_key_files(tmp_path: Path, monkeypatc
                 source_path="property\\packages.list",
                 stored_path=out_path,
                 parent=source_evidence,
-                acquisition_method="logical_reader",
+                acquisition_method="extract_logical",
                 type="extracted",
                 artefact_category=artefact_category,
                 skip_hash=True,

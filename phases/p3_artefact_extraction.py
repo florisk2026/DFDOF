@@ -21,8 +21,8 @@ from config import (
     ARTEFACT_EXTENSIONS,
     ARTEFACT_EXTENSIONS_DRONE_SD,
     ARTEFACT_PATHS,
-    ACQUISITION_LOGICAL_READER,
-    ACQUISITION_PHYSICAL_READER,
+    ACQUISITION_EXRACT_LOGICAL,
+    ACQUISITION_EXTRACT_PHYSICAL,
     DATABASES,
     DEVICE_AND_BACKUP_INFO,
     DJI_APP_DOMAINS,
@@ -240,7 +240,7 @@ def _extract_drone_sd_physical(
                 source_path=to_windows_path(rel_path),
                 stored_path=output_path,
                 parent=sd_source,
-                acquisition_method=ACQUISITION_PHYSICAL_READER,
+                acquisition_method=ACQUISITION_EXTRACT_PHYSICAL,
                 type=EVIDENCE_TYPE_EXTRACTED,
                 artefact_category=category,
             )
@@ -417,9 +417,9 @@ def run_phase_3(state: State) -> State:
     else:
         ios_acquisition = normalise_acquisition_method(ios_source.acquisition_method)
         if ios_acquisition == "physical":
-            ios_acquisition_method = ACQUISITION_PHYSICAL_READER
+            ios_acquisition_method = ACQUISITION_EXTRACT_PHYSICAL
         else:
-            ios_acquisition_method = ACQUISITION_LOGICAL_READER
+            ios_acquisition_method = ACQUISITION_EXRACT_LOGICAL
         controller_ios_dir = phase_dir / "controller_ios"
         clear_and_make(controller_ios_dir)
         print("Extracting from controller_ios")

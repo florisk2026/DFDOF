@@ -139,7 +139,7 @@ def test_run_phase_2_convert_controller_ios_evidence(
     assert derived["stored_path"] == str(converted_root)
     assert derived["source_path"] == str(input_archive)
     assert derived["type"] == "parsed"
-    assert derived["acquisition_method"] == "ios_parser"
+    assert derived["acquisition_method"] == "parser_ios"
     assert derived["artefact_category"] == DEVICE_AND_BACKUP_INFO
 
     # Second evidence should be backup_info.json with values
@@ -175,7 +175,7 @@ def test_run_phase_2_convert_controller_ios_evidence(
     assert isinstance(phase_output["completed_at"], str)
     assert result.completed_phases == ["p2_image_parsing"]
     assert result.tool_invocation_log
-    assert result.tool_invocation_log[0]["tool_name"] == "ios_parser"
+    assert result.tool_invocation_log[0]["tool_name"] == "parser_ios"
 
 
 def _create_android_logical_zip(zip_path: Path) -> None:
@@ -275,7 +275,7 @@ def test_run_phase_2_processes_android_logical_source(
     android_tool = next(
         item
         for item in result.tool_invocation_log
-        if item["tool_name"] == "android_parser"
+        if item["tool_name"] == "parser_android"
     )
     assert android_tool["output_paths"] == [str(converted_root)]
 
@@ -381,7 +381,7 @@ def test_run_phase_2_processes_android_physical_source(
         working_dir,
         *,
         include_paths=None,
-        acquisition_method="physical_reader",
+        acquisition_method="extract_physical",
         parent=None,
         tool_log=None,
         artefact_category=None,
@@ -411,7 +411,7 @@ def test_run_phase_2_processes_android_physical_source(
                     source_path=name,
                     stored_path=path,
                     parent=parent,
-                    acquisition_method="tsk",
+                    acquisition_method="extract_physical",
                     type="extracted",
                     artefact_category=DEVICE_AND_BACKUP_INFO,
                 )

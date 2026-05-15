@@ -52,10 +52,10 @@ DJI_APP_DOMAINS = {
 # Acquisition method types
 ACQUISITION_LOGICAL = "logical"
 ACQUISITION_PHYSICAL = "physical"
-ACQUISITION_IOS_PARSER = "ios_parser"
-ACQUISITION_ANDROID_PARSER = "android_parser"
-ACQUISITION_LOGICAL_READER = "logical_reader"
-ACQUISITION_PHYSICAL_READER = "physical_reader"
+ACQUISITION_PARSER_IOS = "parser_ios"
+ACQUISITION_PARSER_ANDROID = "parser_android"
+ACQUISITION_EXRACT_LOGICAL = "extract_logical"
+ACQUISITION_EXTRACT_PHYSICAL = "extract_physical"
 
 # Evidence types
 EVIDENCE_TYPE_INPUT = "input"
