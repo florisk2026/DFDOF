@@ -90,9 +90,9 @@ class State:
         # the raw output so information is not lost.
         std_summary: str | None
         if stderr:
-            std_summary = "[ERROR]: " + str(stderr)
+            std_summary = summarise_text("[ERROR]: " + str(stderr))
         elif stdout:
-            std_summary = "[INFO]: " + str(stdout)
+            std_summary = summarise_text("[INFO]: " + str(stdout))
         else:
             std_summary = None
 
