@@ -3,7 +3,7 @@
 Converts an iTunes backup via:
 - mappings between hashes and domains are derived from `Manifest.db`,
 - the hashed payload files live in the 00-ff directory fan-out inside the zip,
-- files are exported into the case directory under `Documents/dfdof_output`.
+- files are exported into the case directory.
 """
 
 from __future__ import annotations
@@ -25,6 +25,7 @@ from config import (
     output_dir,
 )
 from evidence import hash_file
+from parsing.logical_reader import copy_zip_member
 from parsing.path_utils import safe_segment, sanitise_path
 
 logger = logging.getLogger(__name__)
@@ -50,6 +51,7 @@ class ConversionResult:
     domains_root: Path
     records: list[BackupRecord]
     metadata_files: list[Path]
+    metadata_members: dict[str, str]
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -58,6 +60,7 @@ class ConversionResult:
             "metadata_root": str(self.metadata_root),
             "domains_root": str(self.domains_root),
             "metadata_files": [str(path) for path in self.metadata_files],
+            "metadata_members": self.metadata_members,
             "records": [asdict(record) for record in self.records],
         }
 
@@ -79,18 +82,11 @@ def _manifest_db_member(zip_file: zipfile.ZipFile) -> str:
 
 def _metadata_members(zip_file: zipfile.ZipFile) -> list[str]:
     """Identify metadata members in the ZIP archive based on known names."""
-    return [name for name in zip_file.namelist() if Path(name).name.lower() in BACKUP_METADATA_NAMES]
-
-
-def _extract_zip_member(zip_file: zipfile.ZipFile, member: str, output_path: Path) -> None:
-    """Extract a member from the ZIP archive to the specified output path."""
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with zip_file.open(member) as source_handle, output_path.open("wb") as target_handle:
-        while True:
-            chunk = source_handle.read(1024 * 1024)
-            if not chunk:
-                break
-            target_handle.write(chunk)
+    return [
+        name
+        for name in zip_file.namelist()
+        if Path(name).name.lower() in BACKUP_METADATA_NAMES
+    ]
 
 
 def _copy_metadata(zip_file: zipfile.ZipFile, metadata_root: Path) -> list[Path]:
@@ -101,7 +97,9 @@ def _copy_metadata(zip_file: zipfile.ZipFile, metadata_root: Path) -> list[Path]
         # Extract while computing SHA-256 of the archive member
         output_path.parent.mkdir(parents=True, exist_ok=True)
         archive_hasher = hashlib.sha256()
-        with zip_file.open(member) as source_handle, output_path.open("wb") as target_handle:
+        with zip_file.open(member) as source_handle, output_path.open(
+            "wb"
+        ) as target_handle:
             while True:
                 chunk = source_handle.read(1024 * 1024)
                 if not chunk:
@@ -131,16 +129,20 @@ def _copy_metadata(zip_file: zipfile.ZipFile, metadata_root: Path) -> list[Path]
     return copied
 
 
-def _extract_manifest_db(zip_file: zipfile.ZipFile, manifest_member: str, manifest_root: Path) -> Path:
+def _extract_manifest_db(
+    zip_file: zipfile.ZipFile, manifest_member: str, manifest_root: Path
+) -> Path:
     """Extract the manifest.db member from the ZIP archive to the manifest root, returning the path to the extracted file."""
     manifest_path = manifest_root / "Manifest.db"
-    _extract_zip_member(zip_file, manifest_member, manifest_path)
+    copy_zip_member(zip_file, manifest_member, manifest_path)
     return manifest_path
 
 
 def _candidate_tables(cursor: sqlite3.Cursor) -> list[str]:
     """List candidate tables in the manifest.db that may contain backup records."""
-    rows = cursor.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").fetchall()
+    rows = cursor.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+    ).fetchall()
     return [row[0] for row in rows]
 
 
@@ -166,7 +168,11 @@ def _manifest_rows(manifest_db_path: Path) -> list[BackupRecord]:
             columns = _column_map(cursor, table_name)
             file_id_col = columns.get("fileid") or columns.get("file_id")
             domain_col = columns.get("domain")
-            relative_path_col = columns.get("relativepath") or columns.get("relative_path") or columns.get("path")
+            relative_path_col = (
+                columns.get("relativepath")
+                or columns.get("relative_path")
+                or columns.get("path")
+            )
             if not (file_id_col and domain_col and relative_path_col):
                 continue
 
@@ -175,7 +181,7 @@ def _manifest_rows(manifest_db_path: Path) -> list[BackupRecord]:
                 f'"{domain_col}" AS domain, '
                 f'"{relative_path_col}" AS relative_path '
                 f'FROM "{table_name}" '
-                f'ORDER BY domain, relative_path'
+                f"ORDER BY domain, relative_path"
             )
             records: list[BackupRecord] = []
             for row in cursor.execute(query):
@@ -184,7 +190,16 @@ def _manifest_rows(manifest_db_path: Path) -> list[BackupRecord]:
                 relative_path = str(row["relative_path"] or "").strip()
                 if not file_id:
                     file_id = _sha1_backup_key(domain, relative_path)
-                records.append(BackupRecord(file_id=file_id, domain=domain, relative_path=relative_path, source_member=None, output_path=None, extracted=False))
+                records.append(
+                    BackupRecord(
+                        file_id=file_id,
+                        domain=domain,
+                        relative_path=relative_path,
+                        source_member=None,
+                        output_path=None,
+                        extracted=False,
+                    )
+                )
 
             if records:
                 connection.close()
@@ -200,7 +215,11 @@ def _manifest_rows(manifest_db_path: Path) -> list[BackupRecord]:
 def _member_for_file_id(zip_file: zipfile.ZipFile, file_id: str) -> str | None:
     """Find the ZIP member corresponding to a given file_id, using flexible matching."""
     file_id = file_id.lower()
-    direct_candidates = [file_id, f"{file_id[:2]}/{file_id}", f"{file_id[:2].upper()}/{file_id}"]
+    direct_candidates = [
+        file_id,
+        f"{file_id[:2]}/{file_id}",
+        f"{file_id[:2].upper()}/{file_id}",
+    ]
     names = zip_file.namelist()
     lower_lookup = {name.lower(): name for name in names}
 
@@ -219,12 +238,21 @@ def _write_index(result: ConversionResult) -> None:
     json_path = result.output_root / "conversion_index.json"
     csv_path = result.output_root / "conversion_index.csv"
 
-    json_path.write_text(json.dumps(result.to_dict(), indent=2, sort_keys=True), encoding="utf-8")
+    json_path.write_text(
+        json.dumps(result.to_dict(), indent=2, sort_keys=True), encoding="utf-8"
+    )
 
     with csv_path.open("w", encoding="utf-8", newline="") as csv_handle:
         writer = csv.DictWriter(
             csv_handle,
-            fieldnames=["file_id", "domain", "relative_path", "source_member", "output_path", "extracted"],
+            fieldnames=[
+                "file_id",
+                "domain",
+                "relative_path",
+                "source_member",
+                "output_path",
+                "extracted",
+            ],
         )
         writer.writeheader()
         for record in result.records:
@@ -260,7 +288,9 @@ def _json_safe(value: Any) -> Any:
     return value
 
 
-def parse_ios_backup(archive_path: Path | str, output_root: Path | str | None = None) -> ConversionResult:
+def parse_ios_backup(
+    archive_path: Path | str, output_root: Path | str | None = None
+) -> ConversionResult:
     """Convert a zipped iTunes-style iOS backup into a readable domain tree."""
 
     archive_path = Path(archive_path)
@@ -269,7 +299,11 @@ def parse_ios_backup(archive_path: Path | str, output_root: Path | str | None = 
     if archive_path.suffix.lower() != EXTENSION_ZIP[0]:
         raise ValueError("This converter expects a zipped iTunes backup")
 
-    result_root = Path(output_root) if output_root is not None else output_dir() / "controller_ios_parsed"
+    result_root = (
+        Path(output_root)
+        if output_root is not None
+        else output_dir() / "controller_ios_parsed"
+    )
     result_root = Path(result_root)
     metadata_root = result_root / "_metadata"
     domains_root = result_root / "domains"
@@ -278,20 +312,29 @@ def parse_ios_backup(archive_path: Path | str, output_root: Path | str | None = 
 
     with zipfile.ZipFile(archive_path) as zip_file:
         manifest_member = _manifest_db_member(zip_file)
+        metadata_members = {
+            Path(member).name.lower(): member for member in _metadata_members(zip_file)
+        }
         metadata_files = _copy_metadata(zip_file, metadata_root)
-        manifest_db_path = _extract_manifest_db(zip_file, manifest_member, metadata_root)
+        manifest_db_path = _extract_manifest_db(
+            zip_file, manifest_member, metadata_root
+        )
         records = _manifest_rows(manifest_db_path)
 
         for record in records:
             domain_dir = domains_root / safe_segment(record.domain or "_unknown")
-            relative_target = sanitise_path(record.relative_path) if record.relative_path else Path(record.file_id)
+            relative_target = (
+                sanitise_path(record.relative_path)
+                if record.relative_path
+                else Path(record.file_id)
+            )
             output_path = domain_dir / relative_target
             member = _member_for_file_id(zip_file, record.file_id)
             record.source_member = member
             record.output_path = str(output_path)
             if member is None:
                 continue
-            _extract_zip_member(zip_file, member, output_path)
+            copy_zip_member(zip_file, member, output_path)
             record.extracted = True
 
     result = ConversionResult(
@@ -301,6 +344,7 @@ def parse_ios_backup(archive_path: Path | str, output_root: Path | str | None = 
         domains_root=domains_root,
         records=records,
         metadata_files=metadata_files,
+        metadata_members=metadata_members,
     )
 
     _write_index(result)

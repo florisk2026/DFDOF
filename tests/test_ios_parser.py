@@ -41,14 +41,22 @@ def _create_backup_zip(zip_path: Path, file_id: str) -> None:
 
 
 def test_parse_ios_backup_exports_domain_layout(tmp_path: Path) -> None:
-    file_id = hashlib.sha1(b"AppDomain-com.example.dji-Documents/logs/deviceinfo.xml").hexdigest()
+    file_id = hashlib.sha1(
+        b"AppDomain-com.example.dji-Documents/logs/deviceinfo.xml"
+    ).hexdigest()
     archive_path = tmp_path / "backup.zip"
     _create_backup_zip(archive_path, file_id)
 
     output_root = tmp_path / "results"
     result = parse_ios_backup(archive_path, output_root=output_root)
 
-    exported_file = result.domains_root / "AppDomain-com.example.dji" / "Documents" / "logs" / "deviceinfo.xml"
+    exported_file = (
+        result.domains_root
+        / "AppDomain-com.example.dji"
+        / "Documents"
+        / "logs"
+        / "deviceinfo.xml"
+    )
     assert exported_file.exists()
     assert exported_file.read_bytes() == b"deviceinfo contents"
 
