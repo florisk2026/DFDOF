@@ -14,21 +14,22 @@ from pathlib import Path
 from typing import Any, cast
 
 from config import (
+    ACQUISITION_PARSER_ANDROID,
+    ACQUISITION_PARSER_IOS,
     DEVICE_AND_BACKUP_INFO,
     DJI_APP_DOMAINS,
     EVIDENCE_TYPE_PARSED,
-    ACQUISITION_PARSER_ANDROID,
-    ACQUISITION_PARSER_IOS,
-    IDENTIFICATION_CONTROLLER_IOS,
     IDENTIFICATION_CONTROLLER_ANDROID,
+    IDENTIFICATION_CONTROLLER_IOS,
+    clear_and_make,
     output_dir,
     utc_now_iso,
-    clear_and_make,
 )
 from evidence import Evidence
+from observation import Content, Observation
 from parsing.parser_android import parse_android_source
 from parsing.parser_ios import parse_ios_backup
-from parsing.utils_parse import to_windows_path, normalise_scalar
+from parsing.utils_parse import normalise_scalar, to_windows_path
 from phases.utils_phase import find_input_evidence_list_by_identification
 from state import State
 
@@ -53,7 +54,7 @@ def _extract_installed_dji_apps(
 
 
 def _normalise_backup_info_values(backup_info_path: Path) -> dict[str, Any]:
-    """Normalise backup_info.json values for evidence metadata."""
+    """Normalise backup_info.json values for observation content."""
 
     def _key(value: str) -> str:
         return re.sub(r"[^a-z0-9]+", "", value.lower())
@@ -103,11 +104,25 @@ def _append_evidence(parsed_evidence: list[dict[str, Any]], evidence: Evidence) 
     parsed_evidence.append(evidence.to_dict())
 
 
+def _make_observation(
+    evidence: Evidence, derived_observations: list[Any]
+) -> Observation:
+    return Observation(
+        content=Content(
+            evidence_sha256=str(evidence.sha256),
+            evidence_category=evidence.artefact_category,
+            acquisition_method=evidence.acquisition_method,
+            observations=derived_observations,
+        )
+    )
+
+
 def _process_ios_source(
     state: State,
     ios_source: Evidence,
     ios_output_dir: Path,
     parsed_evidence: list[dict[str, Any]],
+    observations: list[dict[str, Any]],
 ) -> None:
     """Process the iOS source evidence by converting the backup and extracting metadata."""
     ios_stored_path = cast(Path, ios_source.stored_path)
@@ -130,11 +145,6 @@ def _process_ios_source(
     _append_evidence(parsed_evidence, converted_root_evidence)
 
     if info_plist_path.exists():
-        info_plist_metadata = (
-            _normalise_backup_info_values(backup_info_path)
-            if backup_info_path.exists()
-            else {}
-        )
         info_plist_evidence = Evidence(
             source_path=to_windows_path(info_plist_member),
             stored_path=info_plist_path,
@@ -142,23 +152,16 @@ def _process_ios_source(
             acquisition_method=ACQUISITION_PARSER_IOS,
             type=EVIDENCE_TYPE_PARSED,
             artefact_category=DEVICE_AND_BACKUP_INFO,
-            values=info_plist_metadata,
         )
         _append_evidence(parsed_evidence, info_plist_evidence)
 
-    if backup_info_path.exists():
-        backup_info_metadata = _normalise_backup_info_values(backup_info_path)
-        backup_info_evidence = Evidence(
-            source_path=ios_source.source_path,
-            stored_path=backup_info_path,
-            parent=ios_source,
-            acquisition_method=ACQUISITION_PARSER_IOS,
-            type=EVIDENCE_TYPE_PARSED,
-            artefact_category=DEVICE_AND_BACKUP_INFO,
-            values=backup_info_metadata,
-        )
-        _append_evidence(parsed_evidence, backup_info_evidence)
-    else:
+        if backup_info_path.exists():
+            info_plist_metadata = _normalise_backup_info_values(backup_info_path)
+            info_plist_observation = _make_observation(
+                info_plist_evidence, [info_plist_metadata]
+            )
+            observations.append(info_plist_observation.to_dict())
+    elif not backup_info_path.exists():
         state.anomaly_flags.append(
             f"P2: Missing backup_info.json for {ios_stored_path.name}"
         )
@@ -167,7 +170,7 @@ def _process_ios_source(
         tool_name=ACQUISITION_PARSER_IOS,
         args=[str(ios_stored_path), str(ios_output_dir)],
         return_code=0,
-        stdout=f"Parsed iOS source to {result.output_root}",
+        stdout="Parsed iOS source",
         stderr=None,
         output_paths=[str(result.output_root)],
     )
@@ -175,7 +178,6 @@ def _process_ios_source(
 
 def run_phase_2(state: State) -> State:
     """Create the case output directory and convert controller evidence."""
-    # Validate that Phase 1 outputs are present and usable
     p1 = state.phase_outputs.get("p1_provenance")
     if not p1 or "identified_evidence" not in p1:
         raise ValueError(
@@ -186,6 +188,7 @@ def run_phase_2(state: State) -> State:
     clear_and_make(phase_dir)
 
     parsed_evidence: list[dict[str, Any]] = []
+    observations: list[dict[str, Any]] = []
 
     ios_sources = find_input_evidence_list_by_identification(
         state, IDENTIFICATION_CONTROLLER_IOS
@@ -199,7 +202,13 @@ def run_phase_2(state: State) -> State:
             ios_output_dir = phase_dir / "controller_ios_parsed"
             clear_and_make(ios_output_dir)
 
-            _process_ios_source(state, ios_source, ios_output_dir, parsed_evidence)
+            _process_ios_source(
+                state,
+                ios_source,
+                ios_output_dir,
+                parsed_evidence,
+                observations,
+            )
         except Exception as exc:
             state.anomaly_flags.append(
                 f"P2: Failed to convert {cast(Path, ios_source.stored_path)}: {exc}"
@@ -219,28 +228,16 @@ def run_phase_2(state: State) -> State:
 
             result = parse_android_source(android_source, android_output_dir, state)
             backup_info_path = result.output_root / "backup_info.json"
-
-            if backup_info_path.exists():
-                backup_info_metadata = _normalise_backup_info_values(backup_info_path)
-                backup_info_evidence = Evidence(
-                    source_path=to_windows_path(str(android_source.source_path)),
-                    stored_path=backup_info_path,
-                    parent=android_source,
-                    acquisition_method=ACQUISITION_PARSER_ANDROID,
-                    type=EVIDENCE_TYPE_PARSED,
-                    artefact_category=DEVICE_AND_BACKUP_INFO,
-                    values=backup_info_metadata,
-                )
-                _append_evidence(parsed_evidence, backup_info_evidence)
-            else:
+            if not backup_info_path.exists():
                 state.anomaly_flags.append(
                     f"P2: Missing backup_info.json for {cast(Path, android_source.stored_path).name}"
                 )
 
-            android_parser_output = state.phase_outputs.pop(
-                "p2_android_parser", {}
-            ).get("parsed_evidence", [])
-            parsed_evidence.extend(android_parser_output)
+            android_parser_phase = state.phase_outputs.pop("p2_android_parser", {})
+            parsed_evidence.extend(android_parser_phase.get("parsed_evidence", []))
+
+            android_observation_dicts = android_parser_phase.get("observations", [])
+            observations.extend(android_observation_dicts)
         except Exception as exc:
             state.anomaly_flags.append(
                 f"P2: Failed to parse {cast(Path, android_source.stored_path)}: {exc}"
@@ -250,6 +247,7 @@ def run_phase_2(state: State) -> State:
     state.phase_outputs["p2_image_parsing"] = {
         "completed_at": now,
         "parsed_evidence": parsed_evidence,
+        "observations": observations,
     }
     if "p2_image_parsing" not in state.completed_phases:
         state.completed_phases.append("p2_image_parsing")

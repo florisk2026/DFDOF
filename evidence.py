@@ -72,7 +72,6 @@ class Evidence:
     acquisition_method: str | None = None
     type: str = EVIDENCE_TYPE_INPUT
     artefact_category: str | None = None
-    values: dict[str, Any] | None = None
     skip_hash: bool = False
     size: int = field(init=False)
     sha1: str = field(init=False)
@@ -115,7 +114,6 @@ class Evidence:
             "acquisition_method": self.acquisition_method,
             "type": self.type,
             "artefact_category": self.artefact_category,
-            "values": self.values,
             "size": self.size,
             "sha1": (self.sha1 if self.sha1 else None),
             "sha256": (self.sha256 if self.sha256 else None),
@@ -132,7 +130,6 @@ class Evidence:
         instance.acquisition_method = data.get("acquisition_method")
         instance.type = data.get("type", EVIDENCE_TYPE_INPUT)
         instance.artefact_category = data.get("artefact_category")
-        instance.values = data.get("values")
         instance.size = int(data["size"])
         instance.sha1 = data.get("sha1") or ""
         instance.sha256 = data.get("sha256") or ""

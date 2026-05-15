@@ -20,6 +20,7 @@ from config import (
     EXTENSION_ZIP,
 )
 from evidence import Evidence
+from observation import Content, Observation
 from parsing.extract_logical import extract_logical_files, find_acquisition_pdf_member
 from parsing import extract_physical
 from state import State, get_tsk_tool_version
@@ -50,6 +51,17 @@ TARGET_FILES = {
 @dataclass
 class AndroidParserResult:
     output_root: Path
+
+
+def _make_observation(evidence: Evidence, observations: list[Any]) -> Observation:
+    return Observation(
+        content=Content(
+            evidence_sha256=evidence.sha256,
+            evidence_category=evidence.artefact_category,
+            acquisition_method=evidence.acquisition_method,
+            observations=observations,
+        )
+    )
 
 
 def _normalise_key(value: Any) -> str:
@@ -167,8 +179,11 @@ def _extract_android_acquisition_metadata(pdf_path: Path) -> dict[str, Any]:
     return result
 
 
-def _extract_android_device_metadata(extracted_files: list[Evidence]) -> None:
-    """Extract and populate metadata from Android device files into their Evidence objects."""
+def _extract_android_device_metadata(
+    extracted_files: list[Evidence],
+) -> dict[str, dict[str, Any]]:
+    """Extract metadata from Android device files, keyed by stored path."""
+    metadata_by_path: dict[str, dict[str, Any]] = {}
     for evidence in extracted_files:
         stored_path = cast(Path, evidence.stored_path)
         file_name = stored_path.name.lower()
@@ -203,7 +218,10 @@ def _extract_android_device_metadata(extracted_files: list[Evidence]) -> None:
         elif file_name == "net.hostname":
             values["device_hostname"] = normalise_scalar(text)
 
-        evidence.values = values
+        if values:
+            metadata_by_path[str(stored_path)] = values
+
+    return metadata_by_path
 
 
 def _p1_image_metadata(state: State, image_name: str) -> dict[str, Any] | None:
@@ -375,8 +393,10 @@ def parse_android_source(
     if not is_logical:
         _flatten_extracted_files(output_root, extracted_files)
 
-    # Populate per-file metadata values
-    _extract_android_device_metadata(extracted_files)
+    observations: list[Observation] = []
+
+    # Collect per-file metadata for later observations and backup-info synthesis.
+    device_metadata = _extract_android_device_metadata(extracted_files)
 
     # Track missing primary sources
     found_names = {Path(str(item.stored_path)).name.lower() for item in extracted_files}
@@ -392,7 +412,7 @@ def parse_android_source(
 
     # Layer 1: DeviceInfo.xml + ApplicationInfo.xml
     for evidence_item in extracted_files:
-        values = evidence_item.values or {}
+        values = device_metadata.get(str(cast(Path, evidence_item.stored_path)), {})
         name = Path(str(evidence_item.stored_path)).name.lower()
         if name == "deviceinfo.xml":
             _merge_if_empty(backup_info, "Device Name", values.get("device_name"))
@@ -401,26 +421,39 @@ def parse_android_source(
             _merge_if_empty(
                 backup_info, "Build Version", values.get("firmware_version")
             )
+            if values:
+                observations.append(_make_observation(evidence_item, [values]))
         elif name == "applicationinfo.xml":
             _merge_list_if_empty(
                 backup_info,
                 "Installed Applications",
                 values.get("installed_dji_apps", []),
             )
+            if values:
+                observations.append(_make_observation(evidence_item, [values]))
 
     # Layer 2: ro.serialno, net.hostname, packages.list
     for evidence_item in extracted_files:
-        values = evidence_item.values or {}
+        values = device_metadata.get(str(cast(Path, evidence_item.stored_path)), {})
         name = Path(str(evidence_item.stored_path)).name.lower()
         if name == "ro.serialno":
             _merge_if_empty(backup_info, "Serial Number", values.get("device_serial"))
+            if values:
+                observations.append(_make_observation(evidence_item, [values]))
         elif name == "net.hostname":
             _merge_if_empty(backup_info, "Device Name", values.get("device_hostname"))
+            if values:
+                observations.append(_make_observation(evidence_item, [values]))
         elif name == "packages.list":
             installed = _parse_packages_list(Path(str(evidence_item.stored_path)))
             _merge_list_if_empty(backup_info, "Installed Applications", installed)
             if installed:
-                evidence_item.values = {"installed_dji_apps": installed}
+                observations.append(
+                    _make_observation(
+                        evidence_item,
+                        [{"installed_dji_apps": installed}],
+                    )
+                )
 
     # Layer 3: acquisition PDF
     acquisition_member = None
@@ -439,7 +472,6 @@ def parse_android_source(
             acquisition_values = _extract_android_acquisition_metadata(
                 cast(Path, acquisition_evidence.stored_path)
             )
-            acquisition_evidence.values = acquisition_values
             _merge_if_empty(
                 backup_info, "Product Name", acquisition_values.get("phone_model")
             )
@@ -448,6 +480,10 @@ def parse_android_source(
                 "Last Backup Date",
                 acquisition_values.get("acquisition_date"),
             )
+            if acquisition_values:
+                observations.append(
+                    _make_observation(acquisition_evidence, [acquisition_values])
+                )
 
     # Store derived evidence entries for Phase 2
     parsed_evidence: list[dict[str, Any]] = []
@@ -458,6 +494,9 @@ def parse_android_source(
     state.phase_outputs.setdefault("p2_android_parser", {})[
         "parsed_evidence"
     ] = parsed_evidence
+    state.phase_outputs.setdefault("p2_android_parser", {})["observations"] = [
+        observation.to_dict() for observation in observations
+    ]
 
     backup_info_path = output_root / "backup_info.json"
     backup_info_path.write_text(json.dumps(backup_info, indent=2), encoding="utf-8")
@@ -466,7 +505,7 @@ def parse_android_source(
         tool_name=ACQUISITION_PARSER_ANDROID,
         args=[str(source_evidence.stored_path), str(output_root)],
         return_code=0,
-        stdout=f"Parsed Android source to {output_root}",
+        stdout="Parsed Android source",
         stderr=None,
         output_paths=[str(output_root)],
     )

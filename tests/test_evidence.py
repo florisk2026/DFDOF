@@ -26,6 +26,7 @@ def test_evidence_round_trip(tmp_path: Path) -> None:
     round_tripped = Evidence.from_dict(child.to_dict())
 
     assert round_tripped.to_dict() == child.to_dict()
+    assert "values" not in child.to_dict()
     assert round_tripped.sha256 == child.sha256
     assert round_tripped.sha1 == child.sha1
     assert round_tripped.parent_sha256 == child.parent_sha256

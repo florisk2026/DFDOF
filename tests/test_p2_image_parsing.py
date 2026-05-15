@@ -7,6 +7,7 @@ from pathlib import Path
 import plistlib
 import sqlite3
 import zipfile
+from typing import Any
 
 import config
 from config import DEVICE_AND_BACKUP_INFO
@@ -23,6 +24,14 @@ class FakeConversionResult:
     def __post_init__(self) -> None:
         if self.metadata_evidence is None:
             self.metadata_evidence = []
+
+
+def _observation_for_evidence(phase_output: dict[str, Any], evidence_item: dict[str, Any]) -> dict[str, Any]:
+    return next(
+        item
+        for item in phase_output["observations"]
+        if item["evidence_sha256"] == (evidence_item.get("sha256") or "")
+    )
 
 
 def test_run_phase_2_convert_controller_ios_evidence(
@@ -142,24 +151,31 @@ def test_run_phase_2_convert_controller_ios_evidence(
     assert derived["acquisition_method"] == "parser_ios"
     assert derived["artefact_category"] == DEVICE_AND_BACKUP_INFO
 
-    # Second evidence should be backup_info.json with values
-    backup_info_evidence = next(
+    assert not any(
+        Path(item["stored_path"]).name == "backup_info.json"
+        for item in phase_output["parsed_evidence"]
+    )
+
+    info_plist_evidence = next(
         (
             item
             for item in phase_output["parsed_evidence"]
-            if Path(item["stored_path"]).name == "backup_info.json"
+            if Path(item["stored_path"]).name == "Info.plist"
         ),
         None,
     )
-    assert backup_info_evidence is not None
-    assert backup_info_evidence["source_path"] == str(input_archive)
-    assert backup_info_evidence["values"]["device_name"] == "Test iPhone"
-    assert backup_info_evidence["values"]["product_name"] == "iPhone15,2"
-    assert backup_info_evidence["values"]["product_version"] == "17.4"
-    assert backup_info_evidence["values"]["serial_number"] == "SERIAL-001"
-    assert backup_info_evidence["values"]["unique_identifier"] == "UID-123"
-    assert backup_info_evidence["values"]["backup_date"] == "2026-05-04T12:34:56Z"
-    assert backup_info_evidence["values"]["installed_dji_apps"] == ["com.dji.go"]
+    assert info_plist_evidence is not None
+
+    info_plist_observation = _observation_for_evidence(phase_output, info_plist_evidence)
+    assert info_plist_observation["evidence_category"] == DEVICE_AND_BACKUP_INFO
+    assert info_plist_observation["acquisition_method"] == "parser_ios"
+    assert info_plist_observation["observations"][0]["device_name"] == "Test iPhone"
+    assert info_plist_observation["observations"][0]["product_name"] == "iPhone15,2"
+    assert info_plist_observation["observations"][0]["product_version"] == "17.4"
+    assert info_plist_observation["observations"][0]["serial_number"] == "SERIAL-001"
+    assert info_plist_observation["observations"][0]["unique_identifier"] == "UID-123"
+    assert info_plist_observation["observations"][0]["backup_date"] == "2026-05-04T12:34:56Z"
+    assert info_plist_observation["observations"][0]["installed_dji_apps"] == ["com.dji.go"]
 
     info_plist_evidence = next(
         (
@@ -250,27 +266,16 @@ def test_run_phase_2_processes_android_logical_source(
     )
     assert acquisition_pdf is not None
     assert acquisition_pdf["source_path"] == "backup\\report.pdf"
-    assert acquisition_pdf["values"]["phone_model"] == "DJI RC 2"
-    assert acquisition_pdf["values"]["acquisition_date"] == "2026-05-05"
-
-    backup_info_evidence = next(
-        (
-            item
-            for item in phase_output["parsed_evidence"]
-            if Path(item["stored_path"]).name == "backup_info.json"
-        ),
-        None,
+    acquisition_pdf_observation = _observation_for_evidence(
+        phase_output, acquisition_pdf
     )
-    assert backup_info_evidence is not None
-    assert backup_info_evidence["values"]["device_name"] == "RC Controller"
-    assert backup_info_evidence["values"]["product_name"] == "RC 2"
-    assert backup_info_evidence["values"]["product_version"] == "1.2.3"
-    assert backup_info_evidence["values"]["serial_number"] == "SERIAL-ANDROID-1"
-    assert backup_info_evidence["values"]["backup_date"] == "2026-05-05"
-    assert backup_info_evidence["values"]["installed_dji_apps"] == [
-        "com.dji.go",
-        "dji.go.v4",
-    ]
+    assert acquisition_pdf_observation["observations"][0]["phone_model"] == "DJI RC 2"
+    assert acquisition_pdf_observation["observations"][0]["acquisition_date"] == "2026-05-05"
+
+    assert not any(
+        Path(item["stored_path"]).name == "backup_info.json"
+        for item in phase_output["parsed_evidence"]
+    )
 
     android_tool = next(
         item
@@ -290,10 +295,11 @@ def test_run_phase_2_processes_android_logical_source(
     )
     assert deviceinfo is not None
     assert deviceinfo["source_path"] == "property\\DeviceInfo.xml"
-    assert deviceinfo["values"]["device_name"] == "RC Controller"
-    assert deviceinfo["values"]["model_name"] == "RC 2"
-    assert deviceinfo["values"]["version"] == "1.2.3"
-    assert deviceinfo["values"]["firmware_version"] == "FW-9.9.9"
+    deviceinfo_observation = _observation_for_evidence(phase_output, deviceinfo)
+    assert deviceinfo_observation["observations"][0]["device_name"] == "RC Controller"
+    assert deviceinfo_observation["observations"][0]["model_name"] == "RC 2"
+    assert deviceinfo_observation["observations"][0]["version"] == "1.2.3"
+    assert deviceinfo_observation["observations"][0]["firmware_version"] == "FW-9.9.9"
 
     appinfo = next(
         (
@@ -304,7 +310,8 @@ def test_run_phase_2_processes_android_logical_source(
         None,
     )
     assert appinfo is not None
-    assert appinfo["values"]["installed_dji_apps"] == ["com.dji.go", "dji.go.v4"]
+    appinfo_observation = _observation_for_evidence(phase_output, appinfo)
+    assert appinfo_observation["observations"][0]["installed_dji_apps"] == ["com.dji.go", "dji.go.v4"]
 
     serialno = next(
         (
@@ -315,7 +322,8 @@ def test_run_phase_2_processes_android_logical_source(
         None,
     )
     assert serialno is not None
-    assert serialno["values"]["device_serial"] == "SERIAL-ANDROID-1"
+    serialno_observation = _observation_for_evidence(phase_output, serialno)
+    assert serialno_observation["observations"][0]["device_serial"] == "SERIAL-ANDROID-1"
 
     hostname = next(
         (
@@ -326,7 +334,8 @@ def test_run_phase_2_processes_android_logical_source(
         None,
     )
     assert hostname is not None
-    assert hostname["values"]["device_hostname"] == "hostname-android"
+    hostname_observation = _observation_for_evidence(phase_output, hostname)
+    assert hostname_observation["observations"][0]["device_hostname"] == "hostname-android"
     assert any(
         Path(item["stored_path"]).name == "ApplicationInfo.xml"
         for item in phase_output["parsed_evidence"]
@@ -339,6 +348,7 @@ def test_run_phase_2_processes_android_logical_source(
         Path(item["stored_path"]).name == "net.hostname"
         for item in phase_output["parsed_evidence"]
     )
+    assert len(phase_output["observations"]) >= 5
 
 
 def test_run_phase_2_processes_android_physical_source(
@@ -440,10 +450,11 @@ def test_run_phase_2_processes_android_physical_source(
     )
     assert deviceinfo is not None
     assert deviceinfo["source_path"] == "DeviceInfo.xml"
-    assert deviceinfo["values"]["device_name"] == "Physical RC"
-    assert deviceinfo["values"]["model_name"] == "RC Pro"
-    assert deviceinfo["values"]["version"] == "9.1.0"
-    assert deviceinfo["values"]["firmware_version"] == "FW-1.0"
+    deviceinfo_observation = _observation_for_evidence(phase_output, deviceinfo)
+    assert deviceinfo_observation["observations"][0]["device_name"] == "Physical RC"
+    assert deviceinfo_observation["observations"][0]["model_name"] == "RC Pro"
+    assert deviceinfo_observation["observations"][0]["version"] == "9.1.0"
+    assert deviceinfo_observation["observations"][0]["firmware_version"] == "FW-1.0"
 
     appinfo = next(
         (
@@ -454,7 +465,8 @@ def test_run_phase_2_processes_android_physical_source(
         None,
     )
     assert appinfo is not None
-    assert appinfo["values"]["installed_dji_apps"] == ["dji.pilot"]
+    appinfo_observation = _observation_for_evidence(phase_output, appinfo)
+    assert appinfo_observation["observations"][0]["installed_dji_apps"] == ["dji.pilot"]
 
     serialno = next(
         (
@@ -465,7 +477,8 @@ def test_run_phase_2_processes_android_physical_source(
         None,
     )
     assert serialno is not None
-    assert serialno["values"]["device_serial"] == "SERIAL-PHYSICAL"
+    serialno_observation = _observation_for_evidence(phase_output, serialno)
+    assert serialno_observation["observations"][0]["device_serial"] == "SERIAL-PHYSICAL"
 
     hostname = next(
         (
@@ -476,27 +489,17 @@ def test_run_phase_2_processes_android_physical_source(
         None,
     )
     assert hostname is not None
-    assert hostname["values"]["device_hostname"] == "physical-host"
+    hostname_observation = _observation_for_evidence(phase_output, hostname)
+    assert hostname_observation["observations"][0]["device_hostname"] == "physical-host"
     assert not any(
         Path(item["stored_path"]).name == "report.pdf"
         for item in phase_output["parsed_evidence"]
     )
-
-    backup_info_evidence = next(
-        (
-            item
-            for item in phase_output["parsed_evidence"]
-            if Path(item["stored_path"]).name == "backup_info.json"
-        ),
-        None,
+    assert not any(
+        Path(item["stored_path"]).name == "backup_info.json"
+        for item in phase_output["parsed_evidence"]
     )
-    assert backup_info_evidence is not None
-    assert backup_info_evidence["values"]["device_name"] == "Physical RC"
-    assert backup_info_evidence["values"]["product_name"] == "RC Pro"
-    assert backup_info_evidence["values"]["product_version"] == "9.1.0"
-    assert backup_info_evidence["values"]["serial_number"] == "SERIAL-PHYSICAL"
-    assert backup_info_evidence["values"]["backup_date"] is None
-    assert backup_info_evidence["values"]["installed_dji_apps"] == ["dji.pilot"]
+    assert len(phase_output["observations"]) == 4
     assert all(
         item["artefact_category"] == DEVICE_AND_BACKUP_INFO
         for item in phase_output["parsed_evidence"]

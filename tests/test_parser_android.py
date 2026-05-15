@@ -114,6 +114,15 @@ def test_parse_android_source_logical_builds_backup_info(tmp_path: Path, monkeyp
     parsed_evidence = case_state.phase_outputs["p2_android_parser"]["parsed_evidence"]
     assert any(Path(item["stored_path"]).name == "report.pdf" for item in parsed_evidence)
 
+    observations = case_state.phase_outputs["p2_android_parser"]["observations"]
+    report_observation = next(
+        item
+        for item in observations
+        if item["observations"][0].get("phone_model") == "DJI RC 2"
+    )
+    assert report_observation["observations"][0]["phone_model"] == "DJI RC 2"
+    assert report_observation["observations"][0]["acquisition_date"] == "2026-05-05"
+
     assert case_state.tool_invocation_log
     assert case_state.tool_invocation_log[-1]["tool_name"] == "parser_android"
     assert case_state.tool_invocation_log[-1]["output_paths"] == [str(output_root)]
