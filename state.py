@@ -86,10 +86,16 @@ class State:
         output_paths: list[str] | None = None,
     ) -> None:
         """Record a tool run in a compact but auditable form."""
+        # Build a single summary field for stdout/stderr while preserving
+        # the raw output so information is not lost.
+        std_summary: str | None
+        if stderr:
+            std_summary = "[ERROR]: " + str(stderr)
+        elif stdout:
+            std_summary = "[INFO]: " + str(stdout)
+        else:
+            std_summary = None
 
-        # Normalise empty summaries to null for clarity
-        stdout_summary = summarise_text(stdout) if stdout else None
-        stderr_summary = summarise_text(stderr) if stderr else None
         output_paths_val = output_paths if output_paths else None
 
         entry = {
@@ -98,8 +104,7 @@ class State:
             "version": version,
             "args": args or None,
             "return_code": return_code,
-            "stdout_summary": stdout_summary,
-            "stderr_summary": stderr_summary,
+            "std_summary": std_summary,
             "output_paths": output_paths_val,
         }
         self.tool_invocation_log.append(entry)
