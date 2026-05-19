@@ -11,7 +11,7 @@ from typing import Any
 
 import config
 from config import DEVICE_AND_BACKUP_INFO
-from evidence import Evidence
+from evidence import make_evidence
 from phases import p2_image_parsing as p2_module
 from state import State
 
@@ -29,7 +29,7 @@ class FakeConversionResult:
 def _observation_for_evidence(phase_output: dict[str, Any], evidence_item: dict[str, Any]) -> dict[str, Any]:
     return next(
         item
-        for item in phase_output["observations"]
+        for item in phase_output["derived_observations"]
         if item["evidence_sha256"] == (evidence_item.get("sha256") or "")
     )
 
@@ -79,7 +79,14 @@ def test_run_phase_2_convert_controller_ios_evidence(
         )
 
     state = State(case_id="CASE-001", operator="Floris")
-    ios_evidence = Evidence(input_archive, type="input", skip_hash=True)
+    ios_evidence = make_evidence(
+        source_path=input_archive,
+        stored_path=input_archive,
+        parent=None,
+        acquisition_method="logical",
+        type="input",
+        skip_hash=True,
+    )
     state.input_evidence.append(ios_evidence)
     state.phase_outputs["p1_provenance"] = {
         "identified_evidence": [
@@ -223,8 +230,13 @@ def test_run_phase_2_processes_android_logical_source(
     _create_android_logical_zip(input_archive)
 
     state = State(case_id="CASE-002", operator="Floris")
-    android_evidence = Evidence(
-        input_archive, acquisition_method="logical", type="input", skip_hash=True
+    android_evidence = make_evidence(
+        source_path=input_archive,
+        stored_path=input_archive,
+        parent=None,
+        acquisition_method="logical",
+        type="input",
+        skip_hash=True,
     )
     state.input_evidence.append(android_evidence)
     state.phase_outputs["p1_provenance"] = {
@@ -348,7 +360,7 @@ def test_run_phase_2_processes_android_logical_source(
         Path(item["stored_path"]).name == "net.hostname"
         for item in phase_output["parsed_evidence"]
     )
-    assert len(phase_output["observations"]) >= 5
+    assert len(phase_output["derived_observations"]) >= 5
 
 
 def test_run_phase_2_processes_android_physical_source(
@@ -361,8 +373,13 @@ def test_run_phase_2_processes_android_physical_source(
     input_image.write_bytes(b"image fixture")
 
     state = State(case_id="CASE-003", operator="Floris")
-    android_evidence = Evidence(
-        input_image, acquisition_method="physical", type="input", skip_hash=True
+    android_evidence = make_evidence(
+        source_path=input_image,
+        stored_path=input_image,
+        parent=None,
+        acquisition_method="physical",
+        type="input",
+        skip_hash=True,
     )
     state.input_evidence.append(android_evidence)
     state.phase_outputs["p1_provenance"] = {
@@ -417,7 +434,7 @@ def test_run_phase_2_processes_android_physical_source(
             path = working_dir / name
             path.write_text(contents, encoding="utf-8")
             extracted.append(
-                Evidence(
+                make_evidence(
                     source_path=name,
                     stored_path=path,
                     parent=parent,
@@ -499,7 +516,7 @@ def test_run_phase_2_processes_android_physical_source(
         Path(item["stored_path"]).name == "backup_info.json"
         for item in phase_output["parsed_evidence"]
     )
-    assert len(phase_output["observations"]) == 4
+    assert len(phase_output["derived_observations"]) == 4
     assert all(
         item["artefact_category"] == DEVICE_AND_BACKUP_INFO
         for item in phase_output["parsed_evidence"]

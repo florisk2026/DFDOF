@@ -7,7 +7,6 @@ the case maintaining the digital chain of custody
 from __future__ import annotations
 
 import json
-from functools import lru_cache
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -115,18 +114,20 @@ class State:
         tool_name: str,
         result: subprocess.CompletedProcess[str],
         output_paths: list[str] | None = None,
+        version: str | None = None,
     ) -> None:
         """Convenience method to log a completed subprocess result directly."""
         # Attempt to capture a tool version for known CLI tools when possible.
-        version_val: str | None = None
-        try:
-            if isinstance(result.args, list) and result.args:
-                cmd0 = str(result.args[0])
-                base = Path(cmd0).name.lower()
-                if base in {"mmls", "mmls.exe", "fls", "fls.exe", "icat", "icat.exe"}:
-                    version_val = get_tsk_tool_version(cmd0)
-        except Exception:
-            version_val = None
+        version_val: str | None = version
+        if version_val is None:
+            try:
+                if isinstance(result.args, list) and result.args:
+                    cmd0 = str(result.args[0])
+                    base = Path(cmd0).name.lower()
+                    if base in {"mmls", "mmls.exe", "fls", "fls.exe", "icat", "icat.exe"}:
+                        version_val = get_tsk_tool_version(cmd0)
+            except Exception:
+                version_val = None
 
         self.log_tool_invocation(
             tool_name=tool_name,

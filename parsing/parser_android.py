@@ -20,7 +20,7 @@ from config import (
     EXTENSION_ZIP,
 )
 from evidence import Evidence
-from observation import Content, Observation
+from observation import Observation, make_observation
 from parsing.extract_logical import extract_logical_files, find_acquisition_pdf_member
 from parsing import extract_physical
 from state import State, get_tsk_tool_version
@@ -51,17 +51,6 @@ TARGET_FILES = {
 @dataclass
 class AndroidParserResult:
     output_root: Path
-
-
-def _make_observation(evidence: Evidence, observations: list[Any]) -> Observation:
-    return Observation(
-        content=Content(
-            evidence_sha256=evidence.sha256,
-            evidence_category=evidence.artefact_category,
-            acquisition_method=evidence.acquisition_method,
-            observations=observations,
-        )
-    )
 
 
 def _normalise_key(value: Any) -> str:
@@ -401,10 +390,12 @@ def parse_android_source(
     # Track missing primary sources
     found_names = {Path(str(item.stored_path)).name.lower() for item in extracted_files}
     if "deviceinfo.xml" not in found_names:
-        state.anomaly_flags.append(f"P2: Missing DeviceInfo.xml for {stored_path.name}")
+        state.anomaly_flags.append(
+            f"p2 - controller android: DeviceInfo.xml not found for {stored_path.name} (device and backup info)"
+        )
     if "applicationinfo.xml" not in found_names:
         state.anomaly_flags.append(
-            f"P2: Missing ApplicationInfo.xml for {stored_path.name}"
+            f"p2 - controller android: ApplicationInfo.xml not found for {stored_path.name} (device and backup info)"
         )
 
     # Layered backup_info.json assembly
@@ -422,7 +413,14 @@ def parse_android_source(
                 backup_info, "Build Version", values.get("firmware_version")
             )
             if values:
-                observations.append(_make_observation(evidence_item, [values]))
+                observations.append(
+                    make_observation(
+                        evidence_sha256=evidence_item.sha256,
+                        evidence_category=evidence_item.artefact_category,
+                        acquisition_method=evidence_item.acquisition_method,
+                        observations=[values],
+                    )
+                )
         elif name == "applicationinfo.xml":
             _merge_list_if_empty(
                 backup_info,
@@ -430,7 +428,14 @@ def parse_android_source(
                 values.get("installed_dji_apps", []),
             )
             if values:
-                observations.append(_make_observation(evidence_item, [values]))
+                observations.append(
+                    make_observation(
+                        evidence_sha256=evidence_item.sha256,
+                        evidence_category=evidence_item.artefact_category,
+                        acquisition_method=evidence_item.acquisition_method,
+                        observations=[values],
+                    )
+                )
 
     # Layer 2: ro.serialno, net.hostname, packages.list
     for evidence_item in extracted_files:
@@ -439,19 +444,35 @@ def parse_android_source(
         if name == "ro.serialno":
             _merge_if_empty(backup_info, "Serial Number", values.get("device_serial"))
             if values:
-                observations.append(_make_observation(evidence_item, [values]))
+                observations.append(
+                    make_observation(
+                        evidence_sha256=evidence_item.sha256,
+                        evidence_category=evidence_item.artefact_category,
+                        acquisition_method=evidence_item.acquisition_method,
+                        observations=[values],
+                    )
+                )
         elif name == "net.hostname":
             _merge_if_empty(backup_info, "Device Name", values.get("device_hostname"))
             if values:
-                observations.append(_make_observation(evidence_item, [values]))
+                observations.append(
+                    make_observation(
+                        evidence_sha256=evidence_item.sha256,
+                        evidence_category=evidence_item.artefact_category,
+                        acquisition_method=evidence_item.acquisition_method,
+                        observations=[values],
+                    )
+                )
         elif name == "packages.list":
             installed = _parse_packages_list(Path(str(evidence_item.stored_path)))
             _merge_list_if_empty(backup_info, "Installed Applications", installed)
             if installed:
                 observations.append(
-                    _make_observation(
-                        evidence_item,
-                        [{"installed_dji_apps": installed}],
+                    make_observation(
+                        evidence_sha256=evidence_item.sha256,
+                        evidence_category=evidence_item.artefact_category,
+                        acquisition_method=evidence_item.acquisition_method,
+                        observations=[{"installed_dji_apps": installed}],
                     )
                 )
 
@@ -482,7 +503,12 @@ def parse_android_source(
             )
             if acquisition_values:
                 observations.append(
-                    _make_observation(acquisition_evidence, [acquisition_values])
+                    make_observation(
+                        evidence_sha256=acquisition_evidence.sha256,
+                        evidence_category=acquisition_evidence.artefact_category,
+                        acquisition_method=acquisition_evidence.acquisition_method,
+                        observations=[acquisition_values],
+                    )
                 )
 
     # Store derived evidence entries for Phase 2
@@ -504,8 +530,8 @@ def parse_android_source(
     state.log_tool_invocation(
         tool_name=ACQUISITION_PARSER_ANDROID,
         args=[str(source_evidence.stored_path), str(output_root)],
-        return_code=0,
-        stdout="Parsed Android source",
+        return_code=None,
+        stdout=None,
         stderr=None,
         output_paths=[str(output_root)],
     )

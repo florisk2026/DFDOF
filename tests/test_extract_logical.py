@@ -4,7 +4,7 @@ import zipfile
 from pathlib import Path
 
 from config import DEVICE_AND_BACKUP_INFO
-from evidence import Evidence
+from evidence import make_evidence
 from parsing.extract_logical import extract_logical_files, find_acquisition_pdf_member
 
 
@@ -18,7 +18,13 @@ def test_extract_logical_files_batch_returns_parsed_evidence(tmp_path: Path) -> 
     archive_path = tmp_path / "logical.zip"
     _create_logical_zip(archive_path)
 
-    source = Evidence(archive_path, type="input")
+    source = make_evidence(
+        source_path=archive_path,
+        stored_path=archive_path,
+        parent=None,
+        acquisition_method="logical",
+        type="input",
+    )
     output_dir = tmp_path / "Documents" / "dfdof_results" / "CASE-001"
 
     extracted = extract_logical_files(

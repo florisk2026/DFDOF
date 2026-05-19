@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 from typing import cast
 
-from evidence import Evidence
+from evidence import make_evidence
 from parsing.extract_physical import extract_tsk_image, parse_mmls_offset
 from parsing.utils_parse import sanitise_path
 
@@ -33,7 +33,13 @@ def test_tsk_image_extraction_invokes_icat_for_matching_paths(
 
     commands: list[list[str]] = []
     tool_log: list[dict[str, object]] = []
-    parent = Evidence(image_path, type="input")
+    parent = make_evidence(
+        source_path=image_path,
+        stored_path=image_path,
+        parent=None,
+        acquisition_method="physical",
+        type="input",
+    )
 
     def fake_run(command, capture_output=True, text=True, check=False, stdout=None):
         _ = (capture_output, text, check)

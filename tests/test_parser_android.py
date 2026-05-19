@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from config import DEVICE_AND_BACKUP_INFO
-from evidence import Evidence
+from evidence import make_evidence
 from parsing import parser_android
 from state import State
 
@@ -18,8 +18,10 @@ def test_parse_android_source_logical_builds_backup_info(tmp_path: Path, monkeyp
     _make_source_zip(source_zip)
     output_root = tmp_path / "parsed_android"
 
-    source_evidence = Evidence(
-        source_zip,
+    source_evidence = make_evidence(
+        source_path=source_zip,
+        stored_path=source_zip,
+        parent=None,
         acquisition_method="logical",
         type="input",
         skip_hash=True,
@@ -73,7 +75,7 @@ def test_parse_android_source_logical_builds_backup_info(tmp_path: Path, monkeyp
                 source_path = name
 
             created.append(
-                Evidence(
+                make_evidence(
                     source_path=source_path,
                     stored_path=out_path,
                     parent=source_evidence,
@@ -132,8 +134,10 @@ def test_parse_android_source_flags_missing_key_files(tmp_path: Path, monkeypatc
     source_zip = tmp_path / "android_logical.zip"
     _make_source_zip(source_zip)
 
-    source_evidence = Evidence(
-        source_zip,
+    source_evidence = make_evidence(
+        source_path=source_zip,
+        stored_path=source_zip,
+        parent=None,
         acquisition_method="logical",
         type="input",
         skip_hash=True,
@@ -153,7 +157,7 @@ def test_parse_android_source_flags_missing_key_files(tmp_path: Path, monkeypatc
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text("com.dji.go 1000 0\n", encoding="utf-8")
         return [
-            Evidence(
+            make_evidence(
                 source_path="property\\packages.list",
                 stored_path=out_path,
                 parent=source_evidence,
@@ -169,8 +173,11 @@ def test_parse_android_source_flags_missing_key_files(tmp_path: Path, monkeypatc
 
     parser_android.parse_android_source(source_evidence, tmp_path / "out_missing", case_state)
 
-    assert f"P2: Missing DeviceInfo.xml for {source_zip.name}" in case_state.anomaly_flags
     assert (
-        f"P2: Missing ApplicationInfo.xml for {source_zip.name}"
+        f"p2 - controller android: DeviceInfo.xml not found for {source_zip.name} (device and backup info)"
+        in case_state.anomaly_flags
+    )
+    assert (
+        f"p2 - controller android: ApplicationInfo.xml not found for {source_zip.name} (device and backup info)"
         in case_state.anomaly_flags
     )

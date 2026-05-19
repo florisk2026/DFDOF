@@ -14,13 +14,7 @@ from state import State
 def find_input_evidence_list_by_identification(
     state: State, identification: str
 ) -> list[Evidence]:
-    """Find all input evidence matching an identification from phase 1 output.
-
-    Uses the auto-classification if operator_confirmed is True; otherwise
-    uses the operator's override if present. Prioritizes operator intent.
-
-    Returns a list of matching Evidence objects (may be empty).
-    """
+    """Find all input evidence matching an identification from phase 1 output."""
     source_records = state.phase_outputs.get("p1_provenance", {}).get(
         "identified_evidence", []
     )

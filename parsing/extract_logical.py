@@ -16,7 +16,7 @@ from config import (
     EVIDENCE_TYPE_EXTRACTED,
     EXTENSION_ZIP,
 )
-from evidence import Evidence, hash_file
+from evidence import Evidence, hash_file, make_evidence
 from parsing.utils_parse import normalise_path, to_windows_path, normalise_path_to_posix
 
 
@@ -151,7 +151,7 @@ def extract_logical_files(
                 )
 
             extracted.append(
-                Evidence(
+                make_evidence(
                     source_path=to_windows_path(member_name),
                     stored_path=output_path,
                     parent=source_evidence,

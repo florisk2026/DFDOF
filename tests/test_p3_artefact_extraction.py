@@ -14,7 +14,7 @@ from config import (
     VIDEOS,
     DEVICE_AND_BACKUP_INFO,
 )
-from evidence import Evidence
+from evidence import make_evidence
 from phases import p3_artefact_extraction as p3
 from state import State
 
@@ -54,8 +54,13 @@ def test_run_phase_3_android_logical(tmp_path: Path, monkeypatch) -> None:
     )
 
     state = _build_state(tmp_path, "CASE-P3-1")
-    android_evidence = Evidence(
-        android_zip, acquisition_method="logical", type="input", skip_hash=True
+    android_evidence = make_evidence(
+        source_path=android_zip,
+        stored_path=android_zip,
+        parent=None,
+        acquisition_method="logical",
+        type="input",
+        skip_hash=True,
     )
     state.input_evidence.append(android_evidence)
     state.phase_outputs["p1_provenance"]["identified_evidence"] = [
@@ -125,8 +130,13 @@ def test_run_phase_3_ios_parsed_files(tmp_path: Path, monkeypatch) -> None:
     account_plist.write_text("plist", encoding="utf-8")
 
     state = _build_state(tmp_path, "CASE-P3-2")
-    ios_evidence = Evidence(
-        ios_zip, acquisition_method="logical", type="input", skip_hash=True
+    ios_evidence = make_evidence(
+        source_path=ios_zip,
+        stored_path=ios_zip,
+        parent=None,
+        acquisition_method="logical",
+        type="input",
+        skip_hash=True,
     )
     state.input_evidence.append(ios_evidence)
     state.phase_outputs["p1_provenance"]["identified_evidence"] = [
@@ -171,8 +181,13 @@ def test_run_phase_3_drone_flight_storage_flat_dat(tmp_path: Path, monkeypatch) 
     )
 
     state = _build_state(tmp_path, "CASE-P3-3")
-    flight_evidence = Evidence(
-        flight_zip, acquisition_method="logical", type="input", skip_hash=True
+    flight_evidence = make_evidence(
+        source_path=flight_zip,
+        stored_path=flight_zip,
+        parent=None,
+        acquisition_method="logical",
+        type="input",
+        skip_hash=True,
     )
     state.input_evidence.append(flight_evidence)
     state.phase_outputs["p1_provenance"]["identified_evidence"] = [
@@ -189,7 +204,8 @@ def test_run_phase_3_drone_flight_storage_flat_dat(tmp_path: Path, monkeypatch) 
     artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]
     assert any(item["artefact_category"] == DRONE_LOGS for item in artefacts)
     assert not any(
-        flag.startswith("p3_dji_export_not_recognised") for flag in result.anomaly_flags
+        flag.startswith("p3 - drone flight storage: DJI export not recognised")
+        for flag in result.anomaly_flags
     )
 
 
@@ -205,8 +221,13 @@ def test_run_phase_3_android_physical_filters_extensions(
     android_image.write_bytes(b"image")
 
     state = _build_state(tmp_path, "CASE-P3-4")
-    android_evidence = Evidence(
-        android_image, acquisition_method="physical", type="input", skip_hash=True
+    android_evidence = make_evidence(
+        source_path=android_image,
+        stored_path=android_image,
+        parent=None,
+        acquisition_method="physical",
+        type="input",
+        skip_hash=True,
     )
     state.input_evidence.append(android_evidence)
     state.phase_outputs["p1_provenance"]["identified_evidence"] = [
@@ -231,17 +252,19 @@ def test_run_phase_3_android_physical_filters_extensions(
             bad_db.write_text("db", encoding="utf-8")
             evidence_items.extend(
                 [
-                    Evidence(
-                        good_db.name,
+                    make_evidence(
+                        source_path=good_db.name,
                         stored_path=good_db,
                         parent=android_evidence,
+                        acquisition_method="extract_physical",
                         type="extracted",
                         artefact_category=category,
                     ),
-                    Evidence(
-                        bad_db.name,
+                    make_evidence(
+                        source_path=bad_db.name,
                         stored_path=bad_db,
                         parent=android_evidence,
+                        acquisition_method="extract_physical",
                         type="extracted",
                         artefact_category=category,
                     ),
@@ -254,17 +277,19 @@ def test_run_phase_3_android_physical_filters_extensions(
             bad_bin.write_text("bin", encoding="utf-8")
             evidence_items.extend(
                 [
-                    Evidence(
-                        good_dat.name,
+                    make_evidence(
+                        source_path=good_dat.name,
                         stored_path=good_dat,
                         parent=android_evidence,
+                        acquisition_method="extract_physical",
                         type="extracted",
                         artefact_category=category,
                     ),
-                    Evidence(
-                        bad_bin.name,
+                    make_evidence(
+                        source_path=bad_bin.name,
                         stored_path=bad_bin,
                         parent=android_evidence,
+                        acquisition_method="extract_physical",
                         type="extracted",
                         artefact_category=category,
                     ),
@@ -293,8 +318,13 @@ def test_run_phase_3_drone_sd_physical_single_pass(tmp_path: Path, monkeypatch) 
     sd_image.write_bytes(b"image")
 
     state = _build_state(tmp_path, "CASE-P3-5")
-    sd_evidence = Evidence(
-        sd_image, acquisition_method="physical", type="input", skip_hash=True
+    sd_evidence = make_evidence(
+        source_path=sd_image,
+        stored_path=sd_image,
+        parent=None,
+        acquisition_method="physical",
+        type="input",
+        skip_hash=True,
     )
     state.input_evidence.append(sd_evidence)
     state.phase_outputs["p1_provenance"]["identified_evidence"] = [

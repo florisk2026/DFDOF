@@ -4,7 +4,6 @@ Each file that enters the pipeline is wrapped in an `Evidence` object so that
 hashing, provenance and derived relationships remain explicit.
 
 Construction contract:
-
 - `source_path` (required): the original forensic identifier for the item
         (file path, archive member name, or similar). This must be provided.
 - `stored_path` (optional): path on disk where the evidence is stored. If
@@ -18,9 +17,6 @@ Construction contract:
         and production code should explicitly set `skip_hash=True` only when
         appropriate and later call `compute_hash()` if persistent integrity is
         required.
-
-This contract aims to make `Evidence` construction explicit and consistent
-across phases and tools.
 """
 
 from __future__ import annotations
@@ -72,8 +68,8 @@ class Evidence:
     acquisition_method: str | None = None
     type: str = EVIDENCE_TYPE_INPUT
     artefact_category: str | None = None
-    skip_hash: bool = False
     size: int = field(init=False)
+    skip_hash: bool = False
     sha1: str = field(init=False)
     sha256: str = field(init=False)
     hash_timestamp: str = field(init=False)
@@ -141,3 +137,26 @@ class Evidence:
             instance.stored_path = Path(instance.source_path)
         instance.parent_sha256 = data.get("parent_sha256")
         return instance
+
+
+def make_evidence(
+    *,
+    source_path: str | Path,
+    stored_path: Path,
+    parent: "Evidence | None",
+    acquisition_method: str,
+    type: str,
+    artefact_category: str | None = None,
+    skip_hash: bool = False,
+) -> "Evidence":
+    """Factory: construct and return a fully attributed Evidence object."""
+    evidence = Evidence(
+        source_path=source_path,
+        stored_path=stored_path,
+        parent=parent,
+        acquisition_method=acquisition_method,
+        type=type,
+        artefact_category=artefact_category,
+        skip_hash=skip_hash,
+    )
+    return evidence

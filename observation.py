@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
+import base64
 
 
 def _json_safe(value: Any) -> Any:
@@ -17,6 +18,8 @@ def _json_safe(value: Any) -> Any:
         return [_json_safe(item) for item in value]
     if isinstance(value, tuple):
         return [_json_safe(item) for item in value]
+    if isinstance(value, (bytes, bytearray)):
+        return {"__bytes_base64": base64.b64encode(bytes(value)).decode("ascii")}
     if hasattr(value, "isoformat"):
         try:
             return value.isoformat()
@@ -60,3 +63,21 @@ class Observation:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Observation:
         return cls(content=Content.from_dict(data))
+
+
+def make_observation(
+    *,
+    evidence_sha256: str | None,
+    evidence_category: str | None,
+    acquisition_method: str | None,
+    observations: list,
+) -> "Observation":
+    """Factory: construct and return an Observation with populated Content."""
+    return Observation(
+        content=Content(
+            evidence_sha256=str(evidence_sha256 or ""),
+            evidence_category=evidence_category,
+            acquisition_method=acquisition_method,
+            observations=observations,
+        )
+    )

@@ -36,7 +36,7 @@ from config import (
     ARTEFACT_EXTENSIONS,
     utc_now_iso,
 )
-from evidence import Evidence
+from evidence import make_evidence
 from parsing.utils_parse import normalise_path
 from parsing.extract_physical import list_fls_entries, parse_mmls_offset, run_command
 from state import State
@@ -132,10 +132,11 @@ def _build_tsk_cmd(
     return cmd
 
 
-def _enumerate_image_listing(image_path: Path, state: State) -> list[str]:
+def _enumerate_image_listing(image_path: Path, state: State) -> tuple[list[str], list[str]]:
     """Enumerate file listing from forensic image via a single mmls probe and fls."""
 
     offset: int | None = None
+    anomalies: list[str] = []
 
     # Single mmls attempt - derive partition offset for disk-level images.
     mmls_cmd = _build_tsk_cmd(TSK_MMLS, image_path, None, None)
@@ -146,9 +147,11 @@ def _enumerate_image_listing(image_path: Path, state: State) -> list[str]:
         try:
             offset = parse_mmls_offset(mmls_result.stdout or "")
         except ValueError:
-            state.anomaly_flags.append(f"p1_mmls_parse_failed:{image_path.name}")
+            anomalies.append(f"mmls offset parsing failed for {image_path.name}")
     else:
-        state.anomaly_flags.append(f"p1_mmls_unavailable_fls_direct:{image_path.name}")
+        anomalies.append(
+            f"mmls unavailable; falling back to fls for {image_path.name}"
+        )
 
     # fls enumeration - with offset if available, without if not.
     fls_cmd = _build_tsk_cmd(TSK_FLS, image_path, None, offset, ["-r", "-p"])
@@ -175,7 +178,7 @@ def _enumerate_image_listing(image_path: Path, state: State) -> list[str]:
         "image_metadata", {}
     )[image_path.name] = meta
 
-    return [normalise_path(entry[2]) for entry in entries]
+    return [normalise_path(entry[2]) for entry in entries], anomalies
 
 
 def _enumerate_zip_listing(zip_path: Path) -> list[str]:
@@ -203,21 +206,31 @@ def run_phase_1(state: State, *, confirm_all: bool = True) -> State:
             continue
 
         is_zip = candidate.suffix.lower() == EXTENSION_ZIP[0].lower()
-        evidence = Evidence(
+        evidence = make_evidence(
             source_path=str(candidate),
             stored_path=candidate.resolve(),
+            parent=None,
             acquisition_method=ACQUISITION_LOGICAL if is_zip else ACQUISITION_PHYSICAL,
             type=EVIDENCE_TYPE_INPUT,
             skip_hash=True,
         )
         state.input_evidence.append(evidence)
 
-        listing = (
-            _enumerate_zip_listing(candidate)
-            if is_zip
-            else _enumerate_image_listing(candidate, state)
-        )
+        if is_zip:
+            listing = _enumerate_zip_listing(candidate)
+            anomalies: list[str] = []
+        else:
+            listing, anomalies = _enumerate_image_listing(candidate, state)
         identified_as = identify_source(listing)
+
+        evidence_type = {
+            IDENTIFICATION_CONTROLLER_IOS: "controller ios",
+            IDENTIFICATION_CONTROLLER_ANDROID: "controller android",
+            IDENTIFICATION_DRONE_SD: "drone sd",
+            IDENTIFICATION_DRONE_FLIGHT_STORAGE: "drone flight storage",
+        }.get(identified_as, "drone sd")
+        for message in anomalies:
+            state.anomaly_flags.append(f"p1 - {evidence_type}: {message}")
 
         p1_outputs.append(
             cast(

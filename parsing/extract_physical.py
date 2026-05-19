@@ -18,7 +18,7 @@ from config import (
     EVIDENCE_TYPE_EXTRACTED,
     summarise_text,
 )
-from evidence import Evidence
+from evidence import Evidence, make_evidence
 from parsing.extract_logical import ensure_unique_path
 from parsing.utils_parse import sanitise_path, to_windows_path
 
@@ -210,7 +210,7 @@ def extract_tsk_image(
                 }
             )
         extracted.append(
-            Evidence(
+            make_evidence(
                 source_path=to_windows_path(relative_path),
                 stored_path=out_path,
                 parent=parent,
