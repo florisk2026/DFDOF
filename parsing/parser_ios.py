@@ -93,20 +93,7 @@ def _copy_metadata(zip_file: zipfile.ZipFile, metadata_root: Path) -> list[Path]
     copied: list[Path] = []
     for member in _metadata_members(zip_file):
         output_path = metadata_root / safe_segment(Path(member).name)
-        # Extract while computing SHA-256 of the archive member
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        archive_hasher = hashlib.sha256()
-        with zip_file.open(member) as source_handle, output_path.open(
-            "wb"
-        ) as target_handle:
-            while True:
-                chunk = source_handle.read(1024 * 1024)
-                if not chunk:
-                    break
-                archive_hasher.update(chunk)
-                target_handle.write(chunk)
-
-        archive_hash = archive_hasher.hexdigest()
+        archive_hash = copy_zip_member(zip_file, member, output_path)
 
         # Re-hash the written file and compare to ensure the write matched the archive bytes
         file_hash = hash_file(output_path)[0]

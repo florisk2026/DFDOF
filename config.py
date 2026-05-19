@@ -73,6 +73,7 @@ ACQUISITION_EXTRACT_PHYSICAL = "extract_physical"
 ACQUISITION_DATCON = "datcon"
 ACQUISITION_TXTLOGTOCSV = "txtlogtocsvtool"
 ACQUISITION_EXIFTOOL = "exiftool"
+ACQUISITION_ACCOUNT_DATA_PARSE = "account_data_parse"
 
 # Evidence types
 EVIDENCE_TYPE_INPUT = "input"
@@ -81,13 +82,13 @@ EVIDENCE_TYPE_EXTRACTED = "extracted"
 EVIDENCE_TYPE_DECODED = "decoded"
 
 # For extraction in phase 3
+ACCOUNT_DATA = "account_data"
+DATABASES = "databases"
 DRONE_LOGS = "drone_logs"
-FLIGHT_RECORDS = "flight_records"
 FLIGHT_LOGS = "flight_logs"
+FLIGHT_RECORDS = "flight_records"
 IMAGES = "images"
 VIDEOS = "videos"
-DATABASES = "databases"
-ACCOUNT_DATA = "account_data"
 DEVICE_AND_BACKUP_INFO = "device_and_backup_info"
 
 ARTEFACT_EXTENSIONS = {
@@ -155,7 +156,7 @@ EXIF_IMAGE_FIELDS: set[str] = {
     "File:FileName",
     "File:FileSize",
     "File:FileTypeExtension",
-    "File:FileCreateData",
+    "File:FileCreateDate",
     "File:FileModifyDate",
 }
 
@@ -181,7 +182,7 @@ EXIF_VIDEO_FIELDS: set[str] = {
     "File:FileName",
     "File:FileSize",
     "File:FileTypeExtension",
-    "File:FileCreateData",
+    "File:FileCreateDate",
     "File:FileModifyDate",
 }
 

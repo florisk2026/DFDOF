@@ -83,8 +83,8 @@ def test_run_phase_2_convert_controller_ios_evidence(
         source_path=input_archive,
         stored_path=input_archive,
         parent=None,
-        acquisition_method="logical",
-        type="input",
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
         skip_hash=True,
     )
     state.input_evidence.append(ios_evidence)
@@ -154,8 +154,8 @@ def test_run_phase_2_convert_controller_ios_evidence(
     derived = phase_output["parsed_evidence"][0]
     assert derived["stored_path"] == str(converted_root)
     assert derived["source_path"] == str(input_archive)
-    assert derived["type"] == "parsed"
-    assert derived["acquisition_method"] == "parser_ios"
+    assert derived["type"] == config.EVIDENCE_TYPE_PARSED
+    assert derived["acquisition_method"] == config.ACQUISITION_PARSER_IOS
     assert derived["artefact_category"] == DEVICE_AND_BACKUP_INFO
 
     assert not any(
@@ -175,7 +175,7 @@ def test_run_phase_2_convert_controller_ios_evidence(
 
     info_plist_observation = _observation_for_evidence(phase_output, info_plist_evidence)
     assert info_plist_observation["evidence_category"] == DEVICE_AND_BACKUP_INFO
-    assert info_plist_observation["acquisition_method"] == "parser_ios"
+    assert info_plist_observation["acquisition_method"] == config.ACQUISITION_PARSER_IOS
     assert info_plist_observation["observations"][0]["device_name"] == "Test iPhone"
     assert info_plist_observation["observations"][0]["product_name"] == "iPhone15,2"
     assert info_plist_observation["observations"][0]["product_version"] == "17.4"
@@ -234,8 +234,8 @@ def test_run_phase_2_processes_android_logical_source(
         source_path=input_archive,
         stored_path=input_archive,
         parent=None,
-        acquisition_method="logical",
-        type="input",
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
         skip_hash=True,
     )
     state.input_evidence.append(android_evidence)
@@ -377,8 +377,8 @@ def test_run_phase_2_processes_android_physical_source(
         source_path=input_image,
         stored_path=input_image,
         parent=None,
-        acquisition_method="physical",
-        type="input",
+        acquisition_method=config.ACQUISITION_PHYSICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
         skip_hash=True,
     )
     state.input_evidence.append(android_evidence)
@@ -438,8 +438,8 @@ def test_run_phase_2_processes_android_physical_source(
                     source_path=name,
                     stored_path=path,
                     parent=parent,
-                    acquisition_method="extract_physical",
-                    type="extracted",
+                    acquisition_method=config.ACQUISITION_EXTRACT_PHYSICAL,
+                    type=config.EVIDENCE_TYPE_EXTRACTED,
                     artefact_category=DEVICE_AND_BACKUP_INFO,
                 )
             )

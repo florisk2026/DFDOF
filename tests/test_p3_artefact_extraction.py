@@ -4,6 +4,7 @@ import subprocess
 import zipfile
 from pathlib import Path
 
+import config
 from config import (
     ACCOUNT_DATA,
     DATABASES,
@@ -58,8 +59,8 @@ def test_run_phase_3_android_logical(tmp_path: Path, monkeypatch) -> None:
         source_path=android_zip,
         stored_path=android_zip,
         parent=None,
-        acquisition_method="logical",
-        type="input",
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
         skip_hash=True,
     )
     state.input_evidence.append(android_evidence)
@@ -134,8 +135,8 @@ def test_run_phase_3_ios_parsed_files(tmp_path: Path, monkeypatch) -> None:
         source_path=ios_zip,
         stored_path=ios_zip,
         parent=None,
-        acquisition_method="logical",
-        type="input",
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
         skip_hash=True,
     )
     state.input_evidence.append(ios_evidence)
@@ -185,8 +186,8 @@ def test_run_phase_3_drone_flight_storage_flat_dat(tmp_path: Path, monkeypatch) 
         source_path=flight_zip,
         stored_path=flight_zip,
         parent=None,
-        acquisition_method="logical",
-        type="input",
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
         skip_hash=True,
     )
     state.input_evidence.append(flight_evidence)
@@ -225,8 +226,8 @@ def test_run_phase_3_android_physical_filters_extensions(
         source_path=android_image,
         stored_path=android_image,
         parent=None,
-        acquisition_method="physical",
-        type="input",
+        acquisition_method=config.ACQUISITION_PHYSICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
         skip_hash=True,
     )
     state.input_evidence.append(android_evidence)
@@ -256,16 +257,16 @@ def test_run_phase_3_android_physical_filters_extensions(
                         source_path=good_db.name,
                         stored_path=good_db,
                         parent=android_evidence,
-                        acquisition_method="extract_physical",
-                        type="extracted",
+                        acquisition_method=config.ACQUISITION_EXTRACT_PHYSICAL,
+                        type=config.EVIDENCE_TYPE_EXTRACTED,
                         artefact_category=category,
                     ),
                     make_evidence(
                         source_path=bad_db.name,
                         stored_path=bad_db,
                         parent=android_evidence,
-                        acquisition_method="extract_physical",
-                        type="extracted",
+                        acquisition_method=config.ACQUISITION_EXTRACT_PHYSICAL,
+                        type=config.EVIDENCE_TYPE_EXTRACTED,
                         artefact_category=category,
                     ),
                 ]
@@ -281,16 +282,16 @@ def test_run_phase_3_android_physical_filters_extensions(
                         source_path=good_dat.name,
                         stored_path=good_dat,
                         parent=android_evidence,
-                        acquisition_method="extract_physical",
-                        type="extracted",
+                        acquisition_method=config.ACQUISITION_EXTRACT_PHYSICAL,
+                        type=config.EVIDENCE_TYPE_EXTRACTED,
                         artefact_category=category,
                     ),
                     make_evidence(
                         source_path=bad_bin.name,
                         stored_path=bad_bin,
                         parent=android_evidence,
-                        acquisition_method="extract_physical",
-                        type="extracted",
+                        acquisition_method=config.ACQUISITION_EXTRACT_PHYSICAL,
+                        type=config.EVIDENCE_TYPE_EXTRACTED,
                         artefact_category=category,
                     ),
                 ]
@@ -322,8 +323,8 @@ def test_run_phase_3_drone_sd_physical_single_pass(tmp_path: Path, monkeypatch) 
         source_path=sd_image,
         stored_path=sd_image,
         parent=None,
-        acquisition_method="physical",
-        type="input",
+        acquisition_method=config.ACQUISITION_PHYSICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
         skip_hash=True,
     )
     state.input_evidence.append(sd_evidence)

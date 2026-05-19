@@ -21,8 +21,8 @@ def _add_source(state: State, source_path: Path, identification: str) -> Evidenc
         source_path=source_path,
         stored_path=source_path,
         parent=None,
-        acquisition_method="logical",
-        type="input",
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
     )
     state.input_evidence.append(source)
     state.phase_outputs["p1_provenance"]["identified_evidence"].append(
@@ -72,32 +72,32 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
         source_path=flight_record.name,
         stored_path=flight_record,
         parent=source,
-        acquisition_method="extract_logical",
-        type="extracted",
+        acquisition_method=config.ACQUISITION_EXRACT_LOGICAL,
+        type=config.EVIDENCE_TYPE_EXTRACTED,
         artefact_category=config.FLIGHT_RECORDS,
     )
     account_evidence = make_evidence(
         source_path=account_plist.name,
         stored_path=account_plist,
         parent=source,
-        acquisition_method="extract_logical",
-        type="extracted",
+        acquisition_method=config.ACQUISITION_EXRACT_LOGICAL,
+        type=config.EVIDENCE_TYPE_EXTRACTED,
         artefact_category=config.ACCOUNT_DATA,
     )
     image_evidence = make_evidence(
         source_path=image_file.name,
         stored_path=image_file,
         parent=source,
-        acquisition_method="extract_logical",
-        type="extracted",
+        acquisition_method=config.ACQUISITION_EXRACT_LOGICAL,
+        type=config.EVIDENCE_TYPE_EXTRACTED,
         artefact_category=config.IMAGES,
     )
     drone_log_evidence = make_evidence(
         source_path=drone_log.name,
         stored_path=drone_log,
         parent=source,
-        acquisition_method="extract_logical",
-        type="extracted",
+        acquisition_method=config.ACQUISITION_EXRACT_LOGICAL,
+        type=config.EVIDENCE_TYPE_EXTRACTED,
         artefact_category=config.DRONE_LOGS,
     )
 
@@ -110,7 +110,7 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
         ]
     }
 
-    def fake_datcon(dat_path, output_dir, _state, parent_evidence, _evidence_type):
+    def fake_datcon(dat_path, output_dir, _state, parent_evidence, _identification, _index=None):
         output_dir.mkdir(parents=True, exist_ok=True)
         csv_path = output_dir / f"{dat_path.stem}.csv"
         csv_path.write_text("csv", encoding="utf-8")
@@ -119,13 +119,13 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
                 source_path=dat_path.name,
                 stored_path=csv_path,
                 parent=parent_evidence,
-                acquisition_method="datcon",
-                type="decoded",
+                acquisition_method=config.ACQUISITION_DATCON,
+                type=config.EVIDENCE_TYPE_DECODED,
                 artefact_category=config.DRONE_LOGS,
             )
         ]
 
-    def fake_txtlogtocsv(txt_path, output_dir, _state, parent_evidence, _evidence_type):
+    def fake_txtlogtocsv(txt_path, output_dir, _state, parent_evidence, _identification, _index=None):
         output_dir.mkdir(parents=True, exist_ok=True)
         csv_path = output_dir / f"{txt_path.stem}.csv"
         csv_path.write_text("csv", encoding="utf-8")
@@ -133,12 +133,12 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
             source_path=txt_path.name,
             stored_path=csv_path,
             parent=parent_evidence,
-            acquisition_method="txtlogtocsv",
-            type="decoded",
+            acquisition_method=config.ACQUISITION_TXTLOGTOCSV,
+            type=config.EVIDENCE_TYPE_DECODED,
             artefact_category=config.FLIGHT_RECORDS,
         )
 
-    def fake_exiftool(file_path, output_dir, _state, parent_evidence, artefact_category, _evidence_type):
+    def fake_exiftool(file_path, output_dir, _state, parent_evidence, artefact_category, _identification, _index=None):
         output_dir.mkdir(parents=True, exist_ok=True)
         json_path = output_dir / f"{file_path.stem}_exif.json"
         json_path.write_text("{}", encoding="utf-8")
@@ -146,14 +146,14 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
             source_path=file_path.name,
             stored_path=json_path,
             parent=parent_evidence,
-            acquisition_method="exiftool",
-            type="decoded",
+            acquisition_method=config.ACQUISITION_EXIFTOOL,
+            type=config.EVIDENCE_TYPE_DECODED,
             artefact_category=artefact_category,
         )
         observation = make_observation(
             evidence_sha256=parent_evidence.sha256,
             evidence_category=artefact_category,
-            acquisition_method="exiftool",
+            acquisition_method=config.ACQUISITION_EXIFTOOL,
             observations=[{"tag": "value"}],
         )
         return evidence, observation
@@ -190,8 +190,8 @@ def test_run_phase_4_records_anomalies(tmp_path: Path, monkeypatch) -> None:
         source_path=empty_account.name,
         stored_path=empty_account,
         parent=source,
-        acquisition_method="extract_logical",
-        type="extracted",
+        acquisition_method=config.ACQUISITION_EXRACT_LOGICAL,
+        type=config.EVIDENCE_TYPE_EXTRACTED,
         artefact_category=config.ACCOUNT_DATA,
     )
     missing_payload = {
@@ -223,7 +223,7 @@ def test_run_phase_4_records_anomalies(tmp_path: Path, monkeypatch) -> None:
     phase_dir = config.output_dir() / state.case_id / "p4_decision_and_orchestration"
 
     assert "p4 - controller ios: input artefact missing: missing.txt" in anomalies
-    assert "p4 - controller ios: account data file is empty: empty.plist (account data)" in anomalies
+    assert "p4 - controller ios - account data: account data file is empty: empty.plist" in anomalies
     assert "p4 - controller android: source evidence not found" in anomalies
     assert "p4 - drone sd: source evidence not found" in anomalies
     assert not (phase_dir / "controller_ios" / "account_data").exists()

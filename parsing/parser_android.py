@@ -1,6 +1,9 @@
-"""Android parser for Phase 2 image parsing.
+"""DFDOF Android Controller Parser.
 
-Extracts device metadata and backup info from Android acquisitions.
+Extracts device metadata and backup info from Android controller acquisitions via:
+- DeviceInfo.xml and ApplicationInfo.xml for device identity and installed apps,
+- ro.serialno, net.hostname, packages.list for serial, hostname, and package-level app list,
+- acquisition PDF (if present) for phone model and acquisition date.
 """
 
 from __future__ import annotations
@@ -13,15 +16,21 @@ from typing import Any, cast
 
 from config import (
     ACQUISITION_EXTRACT_PHYSICAL,
+    ACQUISITION_LOGICAL,
     ACQUISITION_PARSER_ANDROID,
     BACKUP_INFO_SCHEMA,
     DEVICE_AND_BACKUP_INFO,
     DJI_APP_DOMAINS,
     EXTENSION_ZIP,
+    IDENTIFICATION_CONTROLLER_ANDROID,
 )
 from evidence import Evidence
 from observation import Observation, make_observation
-from parsing.extract_logical import extract_logical_files, find_acquisition_pdf_member
+from parsing.extract_logical import (
+    ensure_unique_path,
+    extract_logical_files,
+    find_acquisition_pdf_member,
+)
 from parsing import extract_physical
 from state import State, get_tsk_tool_version
 from parsing.utils_parse import (
@@ -51,6 +60,8 @@ TARGET_FILES = {
 @dataclass
 class AndroidParserResult:
     output_root: Path
+    parsed_evidence: list[Evidence]
+    observations: list[Observation]
 
 
 def _normalise_key(value: Any) -> str:
@@ -285,20 +296,6 @@ def _merge_list_if_empty(target: dict[str, Any], key: str, value: list[str]) -> 
         target[key] = value
 
 
-def _ensure_unique_path(destination: Path) -> Path:
-    """Return a unique destination path if the target already exists."""
-    if not destination.exists():
-        return destination
-    stem = destination.stem
-    suffix = destination.suffix
-    parent = destination.parent
-    for idx in range(1, 1000):
-        candidate = parent / f"{stem}_{idx}{suffix}"
-        if not candidate.exists():
-            return candidate
-    return parent / f"{stem}_overflow{suffix}"
-
-
 def _flatten_extracted_files(
     output_root: Path, extracted_files: list[Evidence]
 ) -> None:
@@ -307,7 +304,7 @@ def _flatten_extracted_files(
         stored_path = Path(str(evidence_item.stored_path))
         if stored_path.parent == output_root:
             continue
-        target_path = _ensure_unique_path(output_root / stored_path.name)
+        target_path = ensure_unique_path(output_root / stored_path.name)
         target_path.parent.mkdir(parents=True, exist_ok=True)
         stored_path.replace(target_path)
         evidence_item.stored_path = target_path
@@ -336,7 +333,7 @@ def parse_android_source(
     )
     is_logical = (
         stored_path.suffix.lower() == EXTENSION_ZIP[0]
-        or "logical" in acquisition_method
+        or ACQUISITION_LOGICAL in acquisition_method
     )
 
     output_root.mkdir(parents=True, exist_ok=True)
@@ -390,13 +387,9 @@ def parse_android_source(
     # Track missing primary sources
     found_names = {Path(str(item.stored_path)).name.lower() for item in extracted_files}
     if "deviceinfo.xml" not in found_names:
-        state.anomaly_flags.append(
-            f"p2 - controller android: DeviceInfo.xml not found for {stored_path.name} (device and backup info)"
-        )
+        state.raise_anomaly(2, IDENTIFICATION_CONTROLLER_ANDROID, f"DeviceInfo.xml not found for {stored_path.name}", category=DEVICE_AND_BACKUP_INFO)
     if "applicationinfo.xml" not in found_names:
-        state.anomaly_flags.append(
-            f"p2 - controller android: ApplicationInfo.xml not found for {stored_path.name} (device and backup info)"
-        )
+        state.raise_anomaly(2, IDENTIFICATION_CONTROLLER_ANDROID, f"ApplicationInfo.xml not found for {stored_path.name}", category=DEVICE_AND_BACKUP_INFO)
 
     # Layered backup_info.json assembly
     backup_info: dict[str, Any] = BACKUP_INFO_SCHEMA.copy()
@@ -511,19 +504,6 @@ def parse_android_source(
                     )
                 )
 
-    # Store derived evidence entries for Phase 2
-    parsed_evidence: list[dict[str, Any]] = []
-    for item in extracted_files:
-        parsed_evidence.append(item.to_dict())
-    if acquisition_evidence is not None:
-        parsed_evidence.append(acquisition_evidence.to_dict())
-    state.phase_outputs.setdefault("p2_android_parser", {})[
-        "parsed_evidence"
-    ] = parsed_evidence
-    state.phase_outputs.setdefault("p2_android_parser", {})["observations"] = [
-        observation.to_dict() for observation in observations
-    ]
-
     backup_info_path = output_root / "backup_info.json"
     backup_info_path.write_text(json.dumps(backup_info, indent=2), encoding="utf-8")
 
@@ -536,4 +516,12 @@ def parse_android_source(
         output_paths=[str(output_root)],
     )
 
-    return AndroidParserResult(output_root=output_root)
+    all_evidence: list[Evidence] = list(extracted_files)
+    if acquisition_evidence is not None:
+        all_evidence.append(acquisition_evidence)
+
+    return AndroidParserResult(
+        output_root=output_root,
+        parsed_evidence=all_evidence,
+        observations=observations,
+    )

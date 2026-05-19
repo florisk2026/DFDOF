@@ -32,7 +32,8 @@ def run_exiftool(
 	state: State,
 	parent_evidence: Evidence,
 	artefact_category: str,
-	evidence_type: str,
+	identification: str,
+	index: int | None = None,
 ) -> tuple[Evidence | None, Observation | None]:
 	json_path = output_dir / f"{file_path.stem}_exif.json"
 
@@ -49,9 +50,7 @@ def run_exiftool(
 			stderr=str(exc),
 			output_paths=None,
 		)
-		state.anomaly_flags.append(
-			f"p4 - {evidence_type}: ExifTool failed on {file_path.name} ({artefact_category.replace('_', ' ')})"
-		)
+		state.raise_anomaly(4, identification, f"ExifTool failed on {file_path.name}", category=artefact_category, index=index)
 		return None, None
 
 	metadata = _filter_metadata(metadata_list[0] if metadata_list else {})

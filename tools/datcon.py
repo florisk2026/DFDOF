@@ -45,7 +45,8 @@ def run_datcon(
 	output_dir: Path,
 	state: State,
 	parent_evidence: Evidence,
-	evidence_type: str,
+	identification: str,
+	index: int | None = None,
 ) -> list[Evidence]:
 	print(_datcon_settings_block(dat_path, output_dir))
 	output_dir.mkdir(parents=True, exist_ok=True)
@@ -64,9 +65,7 @@ def run_datcon(
 		)
 		if output_dir.exists() and not any(output_dir.iterdir()):
 			output_dir.rmdir()
-		state.anomaly_flags.append(
-			f"p4 - {evidence_type}: DatCon not found for {dat_path.name} (drone logs)"
-		)
+		state.raise_anomaly(4, identification, f"DatCon not found for {dat_path.name}", category=DRONE_LOGS, index=index)
 		return []
 
 	input("Once the export is finished, type 'done' and press Enter: ")
@@ -91,9 +90,7 @@ def run_datcon(
 	if not output_files:
 		if output_dir.exists() and not any(output_dir.iterdir()):
 			output_dir.rmdir()
-		state.anomaly_flags.append(
-			f"p4 - {evidence_type}: DatCon produced no output for {dat_path.name} (drone logs)"
-		)
+		state.raise_anomaly(4, identification, f"DatCon produced no output for {dat_path.name}", category=DRONE_LOGS, index=index)
 		return []
 
 	evidence_list: list[Evidence] = []

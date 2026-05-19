@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import config
 from config import IMAGES
 from evidence import Evidence, make_evidence
 from state import State
@@ -15,15 +16,15 @@ def test_evidence_round_trip(tmp_path: Path) -> None:
         source_path=sample_file,
         stored_path=sample_file,
         parent=None,
-        acquisition_method="logical",
-        type="input",
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
     )
     child = make_evidence(
         source_path=sample_file,
         stored_path=sample_file,
         parent=parent,
         acquisition_method="zip",
-        type="extracted",
+        type=config.EVIDENCE_TYPE_EXTRACTED,
         artefact_category=IMAGES,
     )
 
@@ -52,8 +53,8 @@ def test_evidence_directory_size_uses_recursive_content(tmp_path: Path) -> None:
         source_path=parsed_root,
         stored_path=parsed_root,
         parent=None,
-        acquisition_method="parser_ios",
-        type="parsed",
+        acquisition_method=config.ACQUISITION_PARSER_IOS,
+        type=config.EVIDENCE_TYPE_PARSED,
         skip_hash=True,
     )
 

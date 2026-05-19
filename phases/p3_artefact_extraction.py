@@ -17,6 +17,8 @@ from typing import Any, Iterable
 
 from config import (
     ACCOUNT_DATA,
+    ACQUISITION_LOGICAL,
+    ACQUISITION_PHYSICAL,
     ARTEFACT_DATABASES_INCLUDES,
     ARTEFACT_EXTENSIONS,
     ARTEFACT_EXTENSIONS_DRONE_SD,
@@ -39,10 +41,10 @@ from config import (
     IMAGES,
     TSK_ICAT,
     VIDEOS,
-    clear_and_make,
-    output_dir,
-    utc_now_iso,
     VERSION_DJI_EXTRACT,
+	output_dir,
+	clear_and_make,
+	utc_now_iso,
 )
 from evidence import Evidence, make_evidence
 from parsing.extract_logical import ensure_unique_path, extract_logical_files
@@ -57,11 +59,6 @@ from phases.utils_phase import find_input_evidence_list_by_identification
 from state import State, get_tsk_tool_version
 
 _DJI_EXPORT_RE = re.compile(r"^DJI_ASSISTANT_EXPORT_FILE_.*\.DAT$", re.IGNORECASE)
-
-
-def _format_anomaly(message: str, evidence_type: str, category: str | None = None) -> str:
-    suffix = f" ({category.replace('_', ' ')})" if category else ""
-    return f"p3 - {evidence_type}: {message}{suffix}"
 
 
 def _build_path_category_index() -> dict[str, list[str]]:
@@ -388,16 +385,12 @@ def run_phase_3(state: State) -> State:
                 break
 
     if ios_source is None:
-        state.anomaly_flags.append(
-            _format_anomaly("source evidence not found", "controller ios")
-        )
+        state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, "source evidence not found")
     elif ios_parsed_root is None:
-        state.anomaly_flags.append(
-            _format_anomaly("parsed iOS root was not found", "controller ios")
-        )
+        state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, "parsed iOS root was not found")
     else:
         ios_acquisition = normalise_acquisition_method(ios_source.acquisition_method)
-        if ios_acquisition == "physical":
+        if ios_acquisition == ACQUISITION_PHYSICAL:
             ios_acquisition_method = ACQUISITION_EXTRACT_PHYSICAL
         else:
             ios_acquisition_method = ACQUISITION_EXRACT_LOGICAL
@@ -431,21 +424,9 @@ def run_phase_3(state: State) -> State:
                     )
                     extracted.extend(evidence_list)
                 else:
-                    state.anomaly_flags.append(
-                        _format_anomaly(
-                            "no artefacts found",
-                            "controller ios",
-                            category,
-                        )
-                    )
+                    state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, "no artefacts found", category=category)
             except Exception as exc:
-                state.anomaly_flags.append(
-                    _format_anomaly(
-                        f"extraction failed: {exc}",
-                        "controller ios",
-                        category,
-                    )
-                )
+                state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, f"extraction failed: {exc}", category=category)
 
     # Controller Android
     android_sources = find_input_evidence_list_by_identification(
@@ -453,9 +434,7 @@ def run_phase_3(state: State) -> State:
     )
     android_source = android_sources[0] if android_sources else None
     if android_source is None:
-        state.anomaly_flags.append(
-            _format_anomaly("source evidence not found", "controller android")
-        )
+        state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, "source evidence not found")
     else:
         controller_android_dir = phase_dir / "controller_android"
         clear_and_make(controller_android_dir)
@@ -465,7 +444,7 @@ def run_phase_3(state: State) -> State:
             android_source.acquisition_method
         )
         is_logical = (
-            acquisition_method == "logical"
+            acquisition_method == ACQUISITION_LOGICAL
             or android_archive.suffix.lower() == EXTENSION_ZIP[0]
         )
         categories = [
@@ -503,21 +482,9 @@ def run_phase_3(state: State) -> State:
                         )
                         extracted.extend(evidence_list)
                     else:
-                        state.anomaly_flags.append(
-                            _format_anomaly(
-                                "no artefacts found",
-                                "controller android",
-                                category,
-                            )
-                        )
+                        state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, "no artefacts found", category=category)
                 except Exception as exc:
-                    state.anomaly_flags.append(
-                        _format_anomaly(
-                            f"extraction failed: {exc}",
-                            "controller android",
-                            category,
-                        )
-                    )
+                    state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, f"extraction failed: {exc}", category=category)
         else:
             precomputed_entries = _get_cached_entries(state, android_archive)
             offset_sectors = _get_cached_offset(state, android_archive)
@@ -568,30 +535,16 @@ def run_phase_3(state: State) -> State:
                     if filtered:
                         extracted.extend(filtered)
                     else:
-                        state.anomaly_flags.append(
-                            _format_anomaly(
-                                "no artefacts found",
-                                "controller android",
-                                category,
-                            )
-                        )
+                        state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, "no artefacts found", category=category)
                 except Exception as exc:
-                    state.anomaly_flags.append(
-                        _format_anomaly(
-                            f"extraction failed: {exc}",
-                            "controller android",
-                            category,
-                        )
-                    )
+                    state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, f"extraction failed: {exc}", category=category)
 
     # Drone SD
     sd_sources = find_input_evidence_list_by_identification(
         state, IDENTIFICATION_DRONE_SD
     )
     if not sd_sources:
-        state.anomaly_flags.append(
-            _format_anomaly("source evidence not found", "drone sd")
-        )
+        state.raise_anomaly(3, IDENTIFICATION_DRONE_SD, "source evidence not found")
     else:
         for idx, sd_source in enumerate(sd_sources):
             drone_sd_dir = phase_dir / f"drone_sd_{idx + 1}"
@@ -602,15 +555,10 @@ def run_phase_3(state: State) -> State:
                 sd_source.acquisition_method
             )
             if (
-                acquisition_method != "physical"
+                acquisition_method != ACQUISITION_PHYSICAL
                 and sd_archive.suffix.lower() == EXTENSION_ZIP[0]
             ):
-                state.anomaly_flags.append(
-                    _format_anomaly(
-                        "physical acquisition required",
-                        f"drone sd {idx + 1}",
-                    )
-                )
+                state.raise_anomaly(3, IDENTIFICATION_DRONE_SD, "physical acquisition required", index=idx + 1)
             else:
                 try:
                     evidence_list = _extract_drone_sd_physical(
@@ -618,19 +566,9 @@ def run_phase_3(state: State) -> State:
                     )
                     extracted.extend(evidence_list)
                     if not evidence_list:
-                        state.anomaly_flags.append(
-                            _format_anomaly(
-                                "no artefacts found",
-                                f"drone sd {idx + 1}",
-                            )
-                        )
+                        state.raise_anomaly(3, IDENTIFICATION_DRONE_SD, "no artefacts found", index=idx + 1)
                 except Exception as exc:
-                    state.anomaly_flags.append(
-                        _format_anomaly(
-                            f"extraction failed: {exc}",
-                            f"drone sd {idx + 1}",
-                        )
-                    )
+                    state.raise_anomaly(3, IDENTIFICATION_DRONE_SD, f"extraction failed: {exc}", index=idx + 1)
 
     # Drone flight storage
     flight_sources = find_input_evidence_list_by_identification(
@@ -638,9 +576,7 @@ def run_phase_3(state: State) -> State:
     )
     flight_source = flight_sources[0] if flight_sources else None
     if flight_source is None:
-        state.anomaly_flags.append(
-            _format_anomaly("source evidence not found", "drone flight storage")
-        )
+        state.raise_anomaly(3, IDENTIFICATION_DRONE_FLIGHT_STORAGE, "source evidence not found")
     else:
         drone_flight_dir = phase_dir / "drone_flight_storage"
         clear_and_make(drone_flight_dir)
@@ -684,23 +620,11 @@ def run_phase_3(state: State) -> State:
 
                 confirm = input().strip().lower()
                 if confirm != "yes":
-                    state.anomaly_flags.append(
-                        _format_anomaly(
-                            f"DJI export aborted for {flight_archive.name}",
-                            "drone flight storage",
-                            DRONE_LOGS,
-                        )
-                    )
+                    state.raise_anomaly(3, IDENTIFICATION_DRONE_FLIGHT_STORAGE, f"DJI export aborted for {flight_archive.name}", category=DRONE_LOGS)
                 else:
                     generated = list(drone_flight_dir.rglob("*.DAT"))
                     if not generated:
-                        state.anomaly_flags.append(
-                            _format_anomaly(
-                                f"DJI export produced no DAT files for {flight_archive.name}",
-                                "drone flight storage",
-                                DRONE_LOGS,
-                            )
-                        )
+                        state.raise_anomaly(3, IDENTIFICATION_DRONE_FLIGHT_STORAGE, f"DJI export produced no DAT files for {flight_archive.name}", category=DRONE_LOGS)
                     else:
                         for dat_path in generated:
                             target_path = ensure_unique_path(
@@ -722,13 +646,7 @@ def run_phase_3(state: State) -> State:
                     name for name in member_names if Path(name).suffix.lower() == ".dat"
                 ]
                 if not dat_members:
-                    state.anomaly_flags.append(
-                        _format_anomaly(
-                            f"DJI export not recognised for {flight_archive.name}",
-                            "drone flight storage",
-                            DRONE_LOGS,
-                        )
-                    )
+                    state.raise_anomaly(3, IDENTIFICATION_DRONE_FLIGHT_STORAGE, f"DJI export not recognised for {flight_archive.name}", category=DRONE_LOGS)
                 else:
                     evidence_list = extract_logical_files(
                         flight_source,
@@ -739,21 +657,9 @@ def run_phase_3(state: State) -> State:
                     )
                     extracted.extend(evidence_list)
                     if not evidence_list:
-                        state.anomaly_flags.append(
-                            _format_anomaly(
-                                "no artefacts found",
-                                "drone flight storage",
-                                DRONE_LOGS,
-                            )
-                        )
+                        state.raise_anomaly(3, IDENTIFICATION_DRONE_FLIGHT_STORAGE, "no artefacts found", category=DRONE_LOGS)
         else:
-            state.anomaly_flags.append(
-                _format_anomaly(
-                    f"DJI export not recognised for {flight_archive.name}",
-                    "drone flight storage",
-                    DRONE_LOGS,
-                )
-            )
+            state.raise_anomaly(3, IDENTIFICATION_DRONE_FLIGHT_STORAGE, f"DJI export not recognised for {flight_archive.name}", category=DRONE_LOGS)
 
     state.phase_outputs["p3_artefact_extraction"] = {
         "completed_at": utc_now_iso(),

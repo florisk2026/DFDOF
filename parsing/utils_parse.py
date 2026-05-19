@@ -74,6 +74,34 @@ def parse_plist_file(path: Path) -> dict[str, Any]:
     return parsed if isinstance(parsed, dict) else {}
 
 
+def parse_plist_strict(path: Path) -> dict[str, Any]:
+    """Parse a plist file, raising on failure. Wraps non-dict roots as {"value": data}."""
+    with path.open("rb") as fh:
+        data = plistlib.load(fh)
+    return data if isinstance(data, dict) else {"value": data}
+
+
+def parse_xml_flat(path: Path) -> dict[str, Any]:
+    """Parse an XML file into a flat tag→value dict; repeated tags become lists."""
+    import xml.etree.ElementTree as ET
+    tree = ET.parse(path)
+    root = tree.getroot()
+    parsed: dict[str, Any] = {}
+    for element in root.iter():
+        text = (element.text or "").strip()
+        if not text:
+            continue
+        if element.tag in parsed:
+            existing = parsed[element.tag]
+            if isinstance(existing, list):
+                existing.append(text)
+            else:
+                parsed[element.tag] = [existing, text]
+        else:
+            parsed[element.tag] = text
+    return parsed
+
+
 def match_labeled_value(text: str, labels: tuple[str, ...]) -> str | None:
     """Find the first value matching any label in plain or plist-style XML text."""
     patterns: list[str] = []

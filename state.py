@@ -12,7 +12,11 @@ from pathlib import Path
 from typing import Any
 import subprocess
 
-from config import summarise_text, utc_now_iso
+from config import (
+    IDENTIFICATION_DRONE_SD,
+    summarise_text,
+    utc_now_iso,
+)
 from evidence import Evidence
 
 
@@ -45,6 +49,25 @@ class State:
     tool_invocation_log: list[dict[str, Any]] = field(default_factory=list)
     anomaly_flags: list[str] = field(default_factory=list)
     completed_phases: list[str] = field(default_factory=list)
+
+    def raise_anomaly(
+        self,
+        phase: int,
+        identification: str,
+        message: str,
+        *,
+        category: str | None = None,
+        index: int | None = None,
+    ) -> None:
+        """Append a uniformly formatted anomaly flag.
+
+        Format: p<N> - <evidence type>[- <category>]: <message>
+        """
+        base = identification.replace("_", " ")
+        if identification == IDENTIFICATION_DRONE_SD and index is not None:
+            base = f"drone sd {index}"
+        cat_part = f" - {category.replace('_', ' ')}" if category else ""
+        self.anomaly_flags.append(f"[p{phase} - {base}{cat_part}]: {message}")
 
     def to_dict(self) -> dict[str, Any]:
         # Preserve a human-friendly, stable ordering for the serialized state

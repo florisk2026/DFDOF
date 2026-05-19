@@ -14,7 +14,7 @@ from config import (
     TSK_FLS,
     TSK_ICAT,
     TSK_MMLS,
-        ACQUISITION_EXTRACT_PHYSICAL,
+    ACQUISITION_EXTRACT_PHYSICAL,
     EVIDENCE_TYPE_EXTRACTED,
     summarise_text,
 )

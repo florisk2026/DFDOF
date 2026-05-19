@@ -223,14 +223,8 @@ def run_phase_1(state: State, *, confirm_all: bool = True) -> State:
             listing, anomalies = _enumerate_image_listing(candidate, state)
         identified_as = identify_source(listing)
 
-        evidence_type = {
-            IDENTIFICATION_CONTROLLER_IOS: "controller ios",
-            IDENTIFICATION_CONTROLLER_ANDROID: "controller android",
-            IDENTIFICATION_DRONE_SD: "drone sd",
-            IDENTIFICATION_DRONE_FLIGHT_STORAGE: "drone flight storage",
-        }.get(identified_as, "drone sd")
         for message in anomalies:
-            state.anomaly_flags.append(f"p1 - {evidence_type}: {message}")
+            state.raise_anomaly(1, identified_as, message)
 
         p1_outputs.append(
             cast(

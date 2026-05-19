@@ -3,6 +3,7 @@ from __future__ import annotations
 import zipfile
 from pathlib import Path
 
+import config
 from config import DEVICE_AND_BACKUP_INFO
 from evidence import make_evidence
 from parsing.extract_logical import extract_logical_files, find_acquisition_pdf_member
@@ -22,8 +23,8 @@ def test_extract_logical_files_batch_returns_parsed_evidence(tmp_path: Path) -> 
         source_path=archive_path,
         stored_path=archive_path,
         parent=None,
-        acquisition_method="logical",
-        type="input",
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
     )
     output_dir = tmp_path / "Documents" / "dfdof_results" / "CASE-001"
 
@@ -36,8 +37,8 @@ def test_extract_logical_files_batch_returns_parsed_evidence(tmp_path: Path) -> 
     assert len(extracted) == 2
     assert (output_dir / "deviceinfo.xml").exists()
     assert (output_dir / "other.txt").exists()
-    assert extracted[0].acquisition_method == "extract_logical"
-    assert extracted[0].type == "extracted"
+    assert extracted[0].acquisition_method == config.ACQUISITION_EXRACT_LOGICAL
+    assert extracted[0].type == config.EVIDENCE_TYPE_EXTRACTED
     assert extracted[0].artefact_category == DEVICE_AND_BACKUP_INFO
     assert extracted[0].parent_sha256 == source.sha256
     assert extracted[0].source_path == "folder\\deviceinfo.xml"

@@ -5,10 +5,47 @@ Shared helpers used across phases for evidence source matching and identificatio
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import base64
+import json
+from pathlib import Path
+from typing import Any
 
 from evidence import Evidence
 from state import State
+
+
+def json_safe(value: Any) -> Any:
+    """Recursively convert a value to a JSON-serializable form.
+
+    - bytes/bytearray  → {"__bytes_base64": "<b64>"}
+    - dict             → keys coerced to str, values recursed
+    - list/tuple       → list with values recursed
+    - objects with .isoformat() → ISO string
+    - str/int/float/bool/None   → unchanged
+    - anything else    → str() fallback, None on failure
+    """
+    if isinstance(value, (bytes, bytearray)):
+        return {"__bytes_base64": base64.b64encode(bytes(value)).decode("ascii")}
+    if isinstance(value, dict):
+        return {str(k): json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [json_safe(v) for v in value]
+    if hasattr(value, "isoformat"):
+        try:
+            return value.isoformat()
+        except Exception:
+            return str(value)
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return value
+    try:
+        return str(value)
+    except Exception:
+        return None
+
+
+def write_json(path: Path, payload: Any) -> None:
+    """Write payload to path as indented JSON, sanitizing via json_safe."""
+    path.write_text(json.dumps(json_safe(payload), indent=2), encoding="utf-8")
 
 
 def find_input_evidence_list_by_identification(

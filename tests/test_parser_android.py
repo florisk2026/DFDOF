@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import config
 from config import DEVICE_AND_BACKUP_INFO
 from evidence import make_evidence
 from parsing import parser_android
@@ -22,8 +23,8 @@ def test_parse_android_source_logical_builds_backup_info(tmp_path: Path, monkeyp
         source_path=source_zip,
         stored_path=source_zip,
         parent=None,
-        acquisition_method="logical",
-        type="input",
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
         skip_hash=True,
     )
     case_state = State(case_id="CASE-AND-1", operator="Floris")
@@ -79,8 +80,8 @@ def test_parse_android_source_logical_builds_backup_info(tmp_path: Path, monkeyp
                     source_path=source_path,
                     stored_path=out_path,
                     parent=source_evidence,
-                    acquisition_method="extract_logical",
-                    type="extracted",
+                    acquisition_method=config.ACQUISITION_EXRACT_LOGICAL,
+                    type=config.EVIDENCE_TYPE_EXTRACTED,
                     artefact_category=artefact_category,
                     skip_hash=True,
                 )
@@ -113,17 +114,15 @@ def test_parse_android_source_logical_builds_backup_info(tmp_path: Path, monkeyp
     assert backup_info["Last Backup Date"] == "2026-05-05"
     assert backup_info["Installed Applications"] == ["com.dji.go", "dji.go.v4"]
 
-    parsed_evidence = case_state.phase_outputs["p2_android_parser"]["parsed_evidence"]
-    assert any(Path(item["stored_path"]).name == "report.pdf" for item in parsed_evidence)
+    assert any(Path(str(item.stored_path)).name == "report.pdf" for item in result.parsed_evidence)
 
-    observations = case_state.phase_outputs["p2_android_parser"]["observations"]
     report_observation = next(
-        item
-        for item in observations
-        if item["observations"][0].get("phone_model") == "DJI RC 2"
+        obs
+        for obs in result.observations
+        if obs.content.observations[0].get("phone_model") == "DJI RC 2"
     )
-    assert report_observation["observations"][0]["phone_model"] == "DJI RC 2"
-    assert report_observation["observations"][0]["acquisition_date"] == "2026-05-05"
+    assert report_observation.content.observations[0]["phone_model"] == "DJI RC 2"
+    assert report_observation.content.observations[0]["acquisition_date"] == "2026-05-05"
 
     assert case_state.tool_invocation_log
     assert case_state.tool_invocation_log[-1]["tool_name"] == "parser_android"
@@ -138,8 +137,8 @@ def test_parse_android_source_flags_missing_key_files(tmp_path: Path, monkeypatc
         source_path=source_zip,
         stored_path=source_zip,
         parent=None,
-        acquisition_method="logical",
-        type="input",
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
         skip_hash=True,
     )
     case_state = State(case_id="CASE-AND-2", operator="Floris")
@@ -174,10 +173,10 @@ def test_parse_android_source_flags_missing_key_files(tmp_path: Path, monkeypatc
     parser_android.parse_android_source(source_evidence, tmp_path / "out_missing", case_state)
 
     assert (
-        f"p2 - controller android: DeviceInfo.xml not found for {source_zip.name} (device and backup info)"
+        f"p2 - controller android - device and backup info: DeviceInfo.xml not found for {source_zip.name}"
         in case_state.anomaly_flags
     )
     assert (
-        f"p2 - controller android: ApplicationInfo.xml not found for {source_zip.name} (device and backup info)"
+        f"p2 - controller android - device and backup info: ApplicationInfo.xml not found for {source_zip.name}"
         in case_state.anomaly_flags
     )

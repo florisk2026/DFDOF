@@ -20,9 +20,9 @@ from config import (
     EVIDENCE_TYPE_PARSED,
     IDENTIFICATION_CONTROLLER_ANDROID,
     IDENTIFICATION_CONTROLLER_IOS,
-    clear_and_make,
-    output_dir,
-    utc_now_iso,
+	output_dir,
+	clear_and_make,
+	utc_now_iso,
 )
 from evidence import Evidence, make_evidence
 from observation import make_observation
@@ -98,11 +98,6 @@ def _normalise_backup_info_values(backup_info_path: Path) -> dict[str, Any]:
     return values
 
 
-def _append_evidence(parsed_evidence: list[dict[str, Any]], evidence: Evidence) -> None:
-    """Append an Evidence object to the parsed evidence list as a dictionary."""
-    parsed_evidence.append(evidence.to_dict())
-
-
 def _process_ios_source(
     state: State,
     ios_source: Evidence,
@@ -128,7 +123,7 @@ def _process_ios_source(
         artefact_category=DEVICE_AND_BACKUP_INFO,
         skip_hash=True,
     )
-    _append_evidence(parsed_evidence, converted_root_evidence)
+    parsed_evidence.append(converted_root_evidence.to_dict())
 
     if info_plist_path.exists():
         info_plist_evidence = make_evidence(
@@ -139,7 +134,7 @@ def _process_ios_source(
             type=EVIDENCE_TYPE_PARSED,
             artefact_category=DEVICE_AND_BACKUP_INFO,
         )
-        _append_evidence(parsed_evidence, info_plist_evidence)
+        parsed_evidence.append(info_plist_evidence.to_dict())
 
         if backup_info_path.exists():
             info_plist_metadata = _normalise_backup_info_values(backup_info_path)
@@ -151,9 +146,7 @@ def _process_ios_source(
             )
             observations.append(info_plist_observation.to_dict())
     elif not backup_info_path.exists():
-        state.anomaly_flags.append(
-            f"p2 - controller ios: backup_info.json not found for {ios_stored_path.name} (device and backup info)"
-        )
+        state.raise_anomaly(2, IDENTIFICATION_CONTROLLER_IOS, f"backup_info.json not found for {ios_stored_path.name}", category=DEVICE_AND_BACKUP_INFO)
 
     state.log_tool_invocation(
         tool_name=ACQUISITION_PARSER_IOS,
@@ -184,7 +177,7 @@ def run_phase_2(state: State) -> State:
     )
     ios_source = ios_sources[0] if ios_sources else None
     if ios_source is None:
-        state.anomaly_flags.append("p2 - controller ios: source evidence not found")
+        state.raise_anomaly(2, IDENTIFICATION_CONTROLLER_IOS, "source evidence not found")
     else:
         try:
             print("Parsing controller iOS")
@@ -199,16 +192,14 @@ def run_phase_2(state: State) -> State:
                 observations,
             )
         except Exception as exc:
-            state.anomaly_flags.append(
-                f"p2 - controller ios: Failed to convert {cast(Path, ios_source.stored_path)}"
-            )
+            state.raise_anomaly(2, IDENTIFICATION_CONTROLLER_IOS, f"failed to convert {cast(Path, ios_source.stored_path).name}")
 
     android_sources = find_input_evidence_list_by_identification(
         state, IDENTIFICATION_CONTROLLER_ANDROID
     )
     android_source = android_sources[0] if android_sources else None
     if android_source is None:
-        state.anomaly_flags.append("p2 - controller android: source evidence not found")
+        state.raise_anomaly(2, IDENTIFICATION_CONTROLLER_ANDROID, "source evidence not found")
     else:
         try:
             print("Parsing controller Android")
@@ -218,19 +209,13 @@ def run_phase_2(state: State) -> State:
             result = parse_android_source(android_source, android_output_dir, state)
             backup_info_path = result.output_root / "backup_info.json"
             if not backup_info_path.exists():
-                state.anomaly_flags.append(
-                    f"p2 - controller android: backup_info.json not found for {cast(Path, android_source.stored_path).name} (device and backup info)"
-                )
+                state.raise_anomaly(2, IDENTIFICATION_CONTROLLER_ANDROID, f"backup_info.json not found for {cast(Path, android_source.stored_path).name}", category=DEVICE_AND_BACKUP_INFO)
 
-            android_parser_phase = state.phase_outputs.pop("p2_android_parser", {})
-            parsed_evidence.extend(android_parser_phase.get("parsed_evidence", []))
-
-            android_observation_dicts = android_parser_phase.get("observations", [])
-            observations.extend(android_observation_dicts)
+            for item in result.parsed_evidence:
+                parsed_evidence.append(item.to_dict())
+            observations.extend(obs.to_dict() for obs in result.observations)
         except Exception as exc:
-            state.anomaly_flags.append(
-                f"p2 - controller android: Failed to parse {cast(Path, android_source.stored_path)}"
-            )
+            state.raise_anomaly(2, IDENTIFICATION_CONTROLLER_ANDROID, f"failed to parse {cast(Path, android_source.stored_path).name}")
 
     now = utc_now_iso()
     state.phase_outputs["p2_image_parsing"] = {
