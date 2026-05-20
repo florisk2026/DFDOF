@@ -8,6 +8,7 @@ import config
 from evidence import make_evidence
 from parsing.extract_physical import extract_tsk_image, parse_mmls_offset
 from parsing.utils_parse import sanitise_path
+from state import State
 
 
 def test_parse_mmls_offset_prefers_data_partition() -> None:
@@ -33,7 +34,7 @@ def test_tsk_image_extraction_invokes_icat_for_matching_paths(
     working_dir = tmp_path / "working"
 
     commands: list[list[str]] = []
-    tool_log: list[dict[str, object]] = []
+    state = State(case_id="CASE-EXTRACT-1", operator="Tester")
     parent = make_evidence(
         source_path=image_path,
         stored_path=image_path,
@@ -79,7 +80,7 @@ d/d 1236: FlightRecord/
         working_dir,
         include_paths=["FlightRecord/"],
         parent=parent,
-        tool_log=tool_log.append,
+        state=state,
     )
 
     assert len(extracted) == 1
@@ -88,7 +89,7 @@ d/d 1236: FlightRecord/
     assert extracted_path.name == "DJIFlightRecord_2024-01-01.txt"
     assert extracted[0].parent_sha256 == parent.sha256
     assert extracted[0].source_path == "FlightRecord\\DJIFlightRecord_2024-01-01.txt"
-    assert tool_log
+    assert state.tool_invocation_log
     assert any(Path(command[0]).name.lower().startswith("icat") for command in commands)
 
 

@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 import subprocess
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Iterable
 
 from config import (
     TSK_FLS,
@@ -16,14 +16,34 @@ from config import (
     TSK_MMLS,
     ACQUISITION_EXTRACT_PHYSICAL,
     EVIDENCE_TYPE_EXTRACTED,
-    summarise_text,
+    
 )
 from evidence import Evidence, make_evidence
 from parsing.extract_logical import ensure_unique_path
-from parsing.utils_parse import sanitise_path, to_windows_path
+from parsing.utils_parse import normalise_path, sanitise_path, to_windows_path
+from state import State
 
 _FLS_LINE_RE = re.compile(r"^([rd]/[rd])\s+(\d+)(?:-\d+)?:\s+(.+)$")
 _MMLS_ROW_RE = re.compile(r"^\s*\d+:\s+\S+\s+(\d+)\s+(\d+)\s+(\d+)\s+\S+\s+(.+)$")
+
+
+def build_tsk_cmd(
+    tool: Path,
+    image_path: Path,
+    image_type: str | None,
+    offset: int | None,
+    extra_flags: list[str] | None = None,
+) -> list[str]:
+    """Build a TSK command line."""
+    cmd = [str(tool)]
+    if image_type:
+        cmd.extend(["-i", image_type])
+    if extra_flags:
+        cmd.extend(extra_flags)
+    if offset is not None:
+        cmd.extend(["-o", str(offset)])
+    cmd.append(str(image_path))
+    return cmd
 
 
 def run_command(
@@ -33,15 +53,6 @@ def run_command(
     return subprocess.run(
         command, capture_output=capture_output, text=True, check=False, stdout=stdout
     )
-
-
-def _command_summary(result: subprocess.CompletedProcess[str]) -> dict[str, Any]:
-    """Summarise a subprocess result for logging."""
-    return {
-        "return_code": result.returncode,
-        "stdout": (summarise_text(result.stdout) if result.stdout else None),
-        "stderr": (summarise_text(result.stderr) if result.stderr else None),
-    }
 
 
 def parse_mmls_offset(output: str) -> int:
@@ -87,14 +98,64 @@ def list_fls_entries(output: str) -> list[tuple[str, int, str]]:
     return entries
 
 
+def enumerate_image_listing(
+    image_path: Path, state: State
+) -> tuple[list[str], list[str]]:
+    """Enumerate file listing from forensic image via a single mmls probe and fls."""
+    offset: int | None = None
+    anomalies: list[str] = []
+
+    # Single mmls attempt - derive partition offset for disk-level images.
+    mmls_cmd = build_tsk_cmd(TSK_MMLS, image_path, None, None)
+    mmls_result = run_command(mmls_cmd)
+    state.log_command_result(tool_name="mmls", result=mmls_result)
+
+    if mmls_result.returncode == 0:
+        try:
+            offset = parse_mmls_offset(mmls_result.stdout or "")
+        except ValueError:
+            anomalies.append(f"mmls offset parsing failed for {image_path.name}")
+    else:
+        anomalies.append(
+            f"mmls unavailable; falling back to fls for {image_path.name}"
+        )
+
+    # fls enumeration - with offset if available, without if not.
+    fls_cmd = build_tsk_cmd(TSK_FLS, image_path, None, offset, ["-r", "-p"])
+    fls_result = run_command(fls_cmd)
+    state.log_command_result(tool_name="fls", result=fls_result)
+
+    if fls_result.returncode != 0:
+        raise RuntimeError(
+            f"fls failed for {image_path.name}: {fls_result.stderr or fls_result.stdout}. "
+            "Verify Sleuth Kit installation and EWF support."
+        )
+
+    entries = list_fls_entries(fls_result.stdout or "")
+
+    # Persist image metadata into state.phase_outputs for later phases to reuse.
+    meta = {
+        "offset_sectors": offset,
+        "entries": [
+            {"kind": kind, "inode": inode, "path": normalise_path(path)}
+            for (kind, inode, path) in entries
+        ],
+    }
+    state.phase_outputs.setdefault("p1_provenance", {}).setdefault(
+        "image_metadata", {}
+    )[image_path.name] = meta
+
+    return [normalise_path(entry[2]) for entry in entries], anomalies
+
+
 def extract_tsk_image(
     image_path: Path | str,
     working_dir: Path | str,
     *,
     include_paths: Iterable[str] | None = None,
-        acquisition_method: str = ACQUISITION_EXTRACT_PHYSICAL,
+    acquisition_method: str = ACQUISITION_EXTRACT_PHYSICAL,
     parent: Evidence | None = None,
-    tool_log: Callable[[dict[str, Any]], None] | None = None,
+    state: State,
     artefact_category: str | None = None,
     precomputed_entries: Iterable[tuple[str, int, str]] | None = None,
     offset_sectors: int | None = None,
@@ -125,17 +186,10 @@ def extract_tsk_image(
                 raise RuntimeError(
                     f"mmls failed for {image_path}: {mmls_result.stderr or mmls_result.stdout}"
                 )
-            if tool_log is not None:
-                tool_log(
-                    {
-                        "tool_name": "mmls",
-                        "source_path": str(image_path),
-                        **_command_summary(mmls_result),
-                    }
-                )
+            state.log_command_result(tool_name="mmls", result=mmls_result)
             offset_sectors = parse_mmls_offset(mmls_result.stdout or "")
 
-        # Run fls with the resolved offset
+        # Run fls with the resolved offset.
         fls_result = run_command(
             [
                 str(TSK_FLS),
@@ -150,15 +204,7 @@ def extract_tsk_image(
             raise RuntimeError(
                 f"fls failed for {image_path}: {fls_result.stderr or fls_result.stdout}"
             )
-        if tool_log is not None:
-            tool_log(
-                {
-                    "tool_name": "fls",
-                    "source_path": str(image_path),
-                    "offset_sectors": offset_sectors,
-                    **_command_summary(fls_result),
-                }
-            )
+        state.log_command_result(tool_name="fls", result=fls_result)
         entries = [
             entry
             for entry in list_fls_entries(fls_result.stdout or "")
@@ -169,7 +215,7 @@ def extract_tsk_image(
                 f"fls returned no file entries for {image_path}; the offset may be incorrect"
             )
 
-    # Apply include_paths filter to both precomputed and dynamically-enumerated entries
+    # Apply include_paths filter to both precomputed and dynamically-enumerated entries.
     if include_paths:
         include_tokens = tuple(include_paths)
         entries = [
@@ -197,18 +243,11 @@ def extract_tsk_image(
             )
         if icat_result.returncode != 0:
             raise RuntimeError(f"icat failed for inode {inode} in {image_path}")
-        if tool_log is not None:
-            tool_log(
-                {
-                    "tool_name": "icat",
-                    "source_path": str(image_path),
-                    "offset_sectors": offset_sectors,
-                    "inode": inode,
-                    "output_path": str(out_path),
-                    "cmd": str(TSK_ICAT),
-                    **_command_summary(icat_result),
-                }
-            )
+        state.log_command_result(
+            tool_name="icat",
+            result=icat_result,
+            output_paths=[str(out_path)],
+        )
         extracted.append(
             make_evidence(
                 source_path=to_windows_path(relative_path),

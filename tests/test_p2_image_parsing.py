@@ -410,7 +410,7 @@ def test_run_phase_2_processes_android_physical_source(
         include_paths=None,
         acquisition_method="extract_physical",
         parent=None,
-        tool_log=None,
+        state=None,
         artefact_category=None,
     ):
         _ = (
@@ -418,7 +418,7 @@ def test_run_phase_2_processes_android_physical_source(
             include_paths,
             acquisition_method,
             parent,
-            tool_log,
+            state,
             artefact_category,
         )
         working_dir = Path(working_dir)

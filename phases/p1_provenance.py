@@ -9,15 +9,12 @@ This phase:
 from __future__ import annotations
 
 import re
-import zipfile
 from pathlib import Path
 from typing import TypedDict, cast
 
 from config import (
     SOURCE_IDENTIFICATION_TYPES,
     SUPPORTED_IMAGE_EXTENSIONS,
-    TSK_FLS,
-    TSK_MMLS,
     IDENTIFICATION_CONTROLLER_IOS,
     IDENTIFICATION_CONTROLLER_ANDROID,
     IDENTIFICATION_DRONE_SD,
@@ -38,7 +35,8 @@ from config import (
 )
 from evidence import make_evidence
 from parsing.utils_parse import normalise_path
-from parsing.extract_physical import list_fls_entries, parse_mmls_offset, run_command
+from parsing.extract_physical import enumerate_image_listing
+from parsing.extract_logical import enumerate_zip_listing
 from state import State
 
 _SUPPORTED_INPUT_EXTS = {ext.lower() for ext in SUPPORTED_IMAGE_EXTENSIONS}
@@ -113,80 +111,6 @@ def identify_source(listing: list[str]) -> str:
     return IDENTIFICATION_UNCLASSIFIED
 
 
-def _build_tsk_cmd(
-    tool: Path,
-    image_path: Path,
-    image_type: str | None,
-    offset: int | None,
-    extra_flags: list[str] | None = None,
-) -> list[str]:
-    """Build a TSK command line."""
-    cmd = [str(tool)]
-    if image_type:
-        cmd.extend(["-i", image_type])
-    if extra_flags:
-        cmd.extend(extra_flags)
-    if offset is not None:
-        cmd.extend(["-o", str(offset)])
-    cmd.append(str(image_path))
-    return cmd
-
-
-def _enumerate_image_listing(image_path: Path, state: State) -> tuple[list[str], list[str]]:
-    """Enumerate file listing from forensic image via a single mmls probe and fls."""
-
-    offset: int | None = None
-    anomalies: list[str] = []
-
-    # Single mmls attempt - derive partition offset for disk-level images.
-    mmls_cmd = _build_tsk_cmd(TSK_MMLS, image_path, None, None)
-    mmls_result = run_command(mmls_cmd)
-    state.log_command_result(tool_name="mmls", result=mmls_result)
-
-    if mmls_result.returncode == 0:
-        try:
-            offset = parse_mmls_offset(mmls_result.stdout or "")
-        except ValueError:
-            anomalies.append(f"mmls offset parsing failed for {image_path.name}")
-    else:
-        anomalies.append(
-            f"mmls unavailable; falling back to fls for {image_path.name}"
-        )
-
-    # fls enumeration - with offset if available, without if not.
-    fls_cmd = _build_tsk_cmd(TSK_FLS, image_path, None, offset, ["-r", "-p"])
-    fls_result = run_command(fls_cmd)
-    state.log_command_result(tool_name="fls", result=fls_result)
-
-    if fls_result.returncode != 0:
-        raise RuntimeError(
-            f"fls failed for {image_path.name}: {fls_result.stderr or fls_result.stdout}. "
-            "Verify Sleuth Kit installation and EWF support."
-        )
-
-    entries = list_fls_entries(fls_result.stdout or "")
-
-    # Persist image metadata into state.phase_outputs for later phases to reuse
-    meta = {
-        "offset_sectors": offset,
-        "entries": [
-            {"kind": kind, "inode": inode, "path": normalise_path(path)}
-            for (kind, inode, path) in entries
-        ],
-    }
-    state.phase_outputs.setdefault("p1_provenance", {}).setdefault(
-        "image_metadata", {}
-    )[image_path.name] = meta
-
-    return [normalise_path(entry[2]) for entry in entries], anomalies
-
-
-def _enumerate_zip_listing(zip_path: Path) -> list[str]:
-    """Enumerate file listing from ZIP archive."""
-    with zipfile.ZipFile(zip_path) as archive:
-        return [normalise_path(name) for name in archive.namelist()]
-
-
 def run_phase_1(state: State, *, confirm_all: bool = True) -> State:
     """Run Phase 1 classification over supported inputs in the evidence directory."""
     if not state.evidence_directory:
@@ -214,10 +138,10 @@ def run_phase_1(state: State, *, confirm_all: bool = True) -> State:
         state.input_evidence.append(evidence)
 
         if is_zip:
-            listing = _enumerate_zip_listing(candidate)
+            listing = enumerate_zip_listing(candidate)
             anomalies: list[str] = []
         else:
-            listing, anomalies = _enumerate_image_listing(candidate, state)
+            listing, anomalies = enumerate_image_listing(candidate, state)
         identified_as = identify_source(listing)
 
         for message in anomalies:
@@ -236,7 +160,7 @@ def run_phase_1(state: State, *, confirm_all: bool = True) -> State:
             )
         )
 
-    # Enforce no unidentified sources if confirm_all
+    # Enforce no unidentified sources if confirm_all.
     if confirm_all and p1_outputs:
         for record in p1_outputs:
             if not record["identified"]:
@@ -275,7 +199,7 @@ def _show_summary(sources: list[SourceRecord]) -> None:
         print("No evidence sources detected.")
         return
 
-    # Calculate maximum lengths for alignment
+    # Calculate maximum lengths for alignment.
     max_filename_len = max(
         len(Path(_record_source_path(cast(dict[str, object], record))).name)
         for record in sources
@@ -355,7 +279,7 @@ def prompt_phase_1_summary_and_confirm(state: State) -> bool:
             continue
         continue
 
-    # Finalize confirmations
+    # Finalize confirmations.
     for record in sources:
         record["operator_confirmed"] = accepted
 

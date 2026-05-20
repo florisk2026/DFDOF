@@ -95,7 +95,7 @@ def _copy_metadata(zip_file: zipfile.ZipFile, metadata_root: Path) -> list[Path]
         output_path = metadata_root / safe_segment(Path(member).name)
         archive_hash = copy_zip_member(zip_file, member, output_path)
 
-        # Re-hash the written file and compare to ensure the write matched the archive bytes
+        # Re-hash the written file and compare to ensure the write matched the archive bytes.
         file_hash = hash_file(output_path)[0]
 
         if archive_hash != file_hash:

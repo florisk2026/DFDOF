@@ -68,6 +68,7 @@ class Evidence:
     acquisition_method: str | None = None
     type: str = EVIDENCE_TYPE_INPUT
     artefact_category: str | None = None
+    hash_note: str | None = None
     size: int = field(init=False)
     skip_hash: bool = False
     sha1: str = field(init=False)
@@ -103,7 +104,7 @@ class Evidence:
         """Return a JSON-friendly representation of the evidence object."""
 
         stored_path = cast(Path, self.stored_path)
-        return {
+        result = {
             "source_path": str(self.source_path),
             "stored_path": str(stored_path),
             "parent_sha256": (self.parent_sha256 if self.parent_sha256 else None),
@@ -115,6 +116,9 @@ class Evidence:
             "sha256": (self.sha256 if self.sha256 else None),
             "hash_timestamp": (self.hash_timestamp if self.hash_timestamp else None),
         }
+        if self.hash_note:
+            result["hash_note"] = self.hash_note
+        return result
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Evidence:
@@ -130,6 +134,7 @@ class Evidence:
         instance.sha1 = data.get("sha1") or ""
         instance.sha256 = data.get("sha256") or ""
         instance.hash_timestamp = data.get("hash_timestamp") or ""
+        instance.hash_note = data.get("hash_note") or None
         raw_stored_path = data.get("stored_path")
         if raw_stored_path is not None:
             instance.stored_path = Path(raw_stored_path)
@@ -148,6 +153,7 @@ def make_evidence(
     type: str,
     artefact_category: str | None = None,
     skip_hash: bool = False,
+    hash_note: str | None = None,
 ) -> "Evidence":
     """Factory: construct and return a fully attributed Evidence object."""
     evidence = Evidence(
@@ -158,5 +164,6 @@ def make_evidence(
         type=type,
         artefact_category=artefact_category,
         skip_hash=skip_hash,
+        hash_note=hash_note,
     )
     return evidence

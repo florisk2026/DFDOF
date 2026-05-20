@@ -32,7 +32,7 @@ from parsing.extract_logical import (
     find_acquisition_pdf_member,
 )
 from parsing import extract_physical
-from state import State, get_tsk_tool_version
+from state import State
 from parsing.utils_parse import (
     match_labeled_value,
     normalise_scalar,
@@ -41,7 +41,7 @@ from parsing.utils_parse import (
 
 try:
     from pypdf import PdfReader
-except Exception:  # pragma: no cover - optional dependency fallback
+except Exception:  # pragma: no cover - optional dependency fallback.
     PdfReader = None
 
 _DATE_RE = re.compile(
@@ -233,43 +233,6 @@ def _p1_image_metadata(state: State, image_name: str) -> dict[str, Any] | None:
     )
 
 
-def _log_tsk_tool(state: State, log_dict: dict[str, Any]) -> None:
-    """Convert TSK tool callbacks into log_tool_invocation entries."""
-    tool_name = log_dict.get("tool_name") or "unknown"
-    output_path = log_dict.get("output_path")
-    output_paths = [str(output_path)] if output_path else None
-
-    args_val: list[str] | None = None
-    cmd = log_dict.get("cmd")
-    if cmd is not None:
-        cmd_list = cmd if isinstance(cmd, list) else [cmd]
-        if tool_name == "icat" and cmd_list:
-            offset = log_dict.get("offset_sectors") or ""
-            source = log_dict.get("source_path") or ""
-            inode = log_dict.get("inode") or ""
-            args_val = [cmd_list[0], "-o", str(offset), str(source), str(inode)]
-        else:
-            args_val = [str(v) for v in cmd_list]
-
-    version_val = None
-    if cmd:
-        cmd_path = (
-            cmd if isinstance(cmd, str) else (cmd[0] if isinstance(cmd, list) else None)
-        )
-        if cmd_path:
-            version_val = get_tsk_tool_version(str(cmd_path))
-
-    state.log_tool_invocation(
-        tool_name=tool_name,
-        version=version_val,
-        args=args_val,
-        return_code=log_dict.get("return_code"),
-        stdout=log_dict.get("stdout"),
-        stderr=log_dict.get("stderr"),
-        output_paths=output_paths,
-    )
-
-
 def _parse_packages_list(path: Path) -> list[str]:
     """Parse packages.list to find DJI package names."""
     allowed = {key.lower() for key in DJI_APP_DOMAINS["android"].keys()}
@@ -344,6 +307,7 @@ def parse_android_source(
             source_evidence,
             output_root,
             TARGET_FILES,
+            state=state,
             artefact_category=DEVICE_AND_BACKUP_INFO,
             missing_ok=True,
         )
@@ -363,7 +327,7 @@ def parse_android_source(
             "parent": source_evidence,
             "acquisition_method": ACQUISITION_EXTRACT_PHYSICAL,
             "artefact_category": DEVICE_AND_BACKUP_INFO,
-            "tool_log": lambda log_dict: _log_tsk_tool(state, log_dict),
+            "state": state,
         }
         if precomputed_entries is not None:
             extract_kwargs["precomputed_entries"] = precomputed_entries
@@ -374,8 +338,7 @@ def parse_android_source(
             stored_path, output_root, **extract_kwargs
         )
 
-    # Only flatten when physical extraction returned nested paths; logical
-    # extraction now writes flat basenames so no flattening is required.
+    # Only flatten when physical extraction returned nested paths; logical extraction writes flat basenames.
     if not is_logical:
         _flatten_extracted_files(output_root, extracted_files)
 
@@ -384,17 +347,17 @@ def parse_android_source(
     # Collect per-file metadata for later observations and backup-info synthesis.
     device_metadata = _extract_android_device_metadata(extracted_files)
 
-    # Track missing primary sources
+    # Track missing primary sources.
     found_names = {Path(str(item.stored_path)).name.lower() for item in extracted_files}
     if "deviceinfo.xml" not in found_names:
         state.raise_anomaly(2, IDENTIFICATION_CONTROLLER_ANDROID, f"DeviceInfo.xml not found for {stored_path.name}", category=DEVICE_AND_BACKUP_INFO)
     if "applicationinfo.xml" not in found_names:
         state.raise_anomaly(2, IDENTIFICATION_CONTROLLER_ANDROID, f"ApplicationInfo.xml not found for {stored_path.name}", category=DEVICE_AND_BACKUP_INFO)
 
-    # Layered backup_info.json assembly
+    # Layered backup_info.json assembly.
     backup_info: dict[str, Any] = BACKUP_INFO_SCHEMA.copy()
 
-    # Layer 1: DeviceInfo.xml + ApplicationInfo.xml
+    # Layer 1: DeviceInfo.xml + ApplicationInfo.xml.
     for evidence_item in extracted_files:
         values = device_metadata.get(str(cast(Path, evidence_item.stored_path)), {})
         name = Path(str(evidence_item.stored_path)).name.lower()
@@ -469,7 +432,7 @@ def parse_android_source(
                     )
                 )
 
-    # Layer 3: acquisition PDF
+    # Layer 3: acquisition PDF.
     acquisition_member = None
     acquisition_evidence: Evidence | None = None
     if is_logical:
@@ -479,6 +442,7 @@ def parse_android_source(
                 source_evidence,
                 output_root,
                 [acquisition_member],
+                state=state,
                 artefact_category=DEVICE_AND_BACKUP_INFO,
                 missing_ok=False,
             )

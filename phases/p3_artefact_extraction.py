@@ -55,7 +55,7 @@ from parsing.utils_parse import (
 )
 from parsing.extract_physical import extract_tsk_image, run_command
 from phases.utils_phase import find_input_evidence_list_by_identification
-from state import State, get_tsk_tool_version
+from state import State
 
 _DJI_EXPORT_RE = re.compile(r"^DJI_ASSISTANT_EXPORT_FILE_.*\.DAT$", re.IGNORECASE)
 
@@ -120,45 +120,6 @@ def _lookup_cached_image_metadata(
         except Exception:
             continue
     return None
-
-
-def _log_tsk_tool(state: State, log_dict: dict[str, Any]) -> None:
-    """Log TSK tool invocations from physical_reader callbacks."""
-    tool_name = str(log_dict.get("tool_name") or "unknown")
-    if tool_name not in {"mmls", "fls", "icat"}:
-        return
-
-    args_val: list[str] | None = None
-    cmd = log_dict.get("cmd")
-    if cmd is not None:
-        cmd_list = cmd if isinstance(cmd, list) else [cmd]
-        if tool_name == "icat" and cmd_list:
-            offset = log_dict.get("offset_sectors") or ""
-            source = log_dict.get("source_path") or ""
-            inode = log_dict.get("inode") or ""
-            args_val = [str(cmd_list[0]), "-o", str(offset), str(source), str(inode)]
-        else:
-            args_val = [str(value) for value in cmd_list]
-
-    version_val = None
-    if cmd:
-        cmd_path = (
-            cmd if isinstance(cmd, str) else (cmd[0] if isinstance(cmd, list) else None)
-        )
-        if cmd_path:
-            version_val = get_tsk_tool_version(str(cmd_path))
-
-    output_path = log_dict.get("output_path")
-    output_paths = [str(output_path)] if output_path else None
-    state.log_tool_invocation(
-        tool_name=tool_name,
-        version=version_val,
-        args=args_val,
-        return_code=log_dict.get("return_code"),
-        stdout=log_dict.get("stdout"),
-        stderr=log_dict.get("stderr"),
-        output_paths=output_paths,
-    )
 
 
 def _account_targets(os_key: str) -> set[str]:
@@ -361,7 +322,7 @@ def run_phase_3(state: State) -> State:
 
     extracted: list[Evidence] = []
 
-    # Controller Android
+    # Controller Android.
     android_sources = find_input_evidence_list_by_identification(
         state, IDENTIFICATION_CONTROLLER_ANDROID
     )
@@ -402,6 +363,7 @@ def run_phase_3(state: State) -> State:
                             android_source,
                             output_dir_cat,
                             members,
+                            state=state,
                             artefact_category=category,
                             missing_ok=True,
                         )
@@ -430,7 +392,7 @@ def run_phase_3(state: State) -> State:
                         artefact_category=category,
                         precomputed_entries=precomputed_entries,
                         offset_sectors=offset_sectors,
-                        tool_log=lambda log_dict: _log_tsk_tool(state, log_dict),
+                        state=state,
                     )
 
                     filtered: list[Evidence] = []
@@ -464,7 +426,7 @@ def run_phase_3(state: State) -> State:
                 except Exception as exc:
                     state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, f"extraction failed: {exc}", category=category)
 
-    # Controller iOS
+    # Controller iOS.
     ios_sources = find_input_evidence_list_by_identification(
         state, IDENTIFICATION_CONTROLLER_IOS
     )
@@ -522,7 +484,7 @@ def run_phase_3(state: State) -> State:
             except Exception as exc:
                 state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, f"extraction failed: {exc}", category=category)
 
-    # Drone SD
+    # Drone SD.
     sd_sources = find_input_evidence_list_by_identification(
         state, IDENTIFICATION_DRONE_SD
     )
@@ -553,7 +515,7 @@ def run_phase_3(state: State) -> State:
                 except Exception as exc:
                     state.raise_anomaly(3, IDENTIFICATION_DRONE_SD, f"extraction failed: {exc}", index=idx + 1)
 
-    # Drone flight storage
+    # Drone flight storage.
     flight_sources = find_input_evidence_list_by_identification(
         state, IDENTIFICATION_DRONE_FLIGHT_STORAGE
     )
@@ -582,6 +544,7 @@ def run_phase_3(state: State) -> State:
                     flight_source,
                     export_input_dir,
                     export_members,
+                    state=state,
                     artefact_category=DRONE_LOGS,
                     missing_ok=True,
                 )
@@ -635,6 +598,7 @@ def run_phase_3(state: State) -> State:
                         flight_source,
                         drone_flight_dir,
                         dat_members,
+                        state=state,
                         artefact_category=DRONE_LOGS,
                         missing_ok=True,
                     )

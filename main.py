@@ -66,7 +66,7 @@ def run_phases(
 ) -> State:
     """Orchestrate the forensic analysis phases."""
 
-    # Case Intake
+    # Case intake.
     print("Case intake:")
     operator_value = _prompt_if_missing(operator, "Operator name: ")
     case_value = _prompt_if_missing(case_id, "Case identifier: ")
@@ -84,7 +84,7 @@ def run_phases(
     print(f"  Case: {state.case_id} | Operator: {state.operator}")
     print(f"  Evidence: {state.evidence_directory}\n")
 
-    # Phase 1: Provenance and Integrity
+    # Phase 1: Provenance and integrity.
     print("[Phase 1] Provenance and integrity:")
     state = run_phase_1(state, confirm_all=False)
     _compute_evidence_hashes(state)
@@ -93,27 +93,27 @@ def run_phases(
     state.save(state_path)
     print()
 
-    # Phase 2: Image Parsing
+    # Phase 2: Image parsing.
     print("[Phase 2] Image parsing:")
     state = run_phase_2(state)
     state.save(state_path)
     print()
 
-    # Phase 3: Artefact Extraction
+    # Phase 3: Artefact extraction.
     print("[Phase 3] Artefact extraction:")
     state = run_phase_3(state)
     state.save(state_path)
     print()
 
-    # Phase 4: Decision and Orchestration
+    # Phase 4: Decision and orchestration.
     print("[Phase 4] Decision and Orchestration:")
     state = run_phase_4(state)
     state.save(state_path)
     print()
 
-    # Future phases
+    # Future phases.
 
-    # Save final state
+    # Save final state.
     state.save(state_path)
     print(f"Workflow complete. State written to {state_path}\n")
     return state

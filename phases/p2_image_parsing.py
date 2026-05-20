@@ -122,6 +122,7 @@ def _process_ios_source(
         type=EVIDENCE_TYPE_PARSED,
         artefact_category=DEVICE_AND_BACKUP_INFO,
         skip_hash=True,
+        hash_note="directory - integrity anchored to parent_sha256 of source ZIP",
     )
     parsed_evidence.append(converted_root_evidence.to_dict())
 

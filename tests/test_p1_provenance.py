@@ -77,7 +77,7 @@ r/r 1235: MISC/THM/100/DJI_0001.THM
             )
         raise AssertionError(f"unexpected command: {command}")
 
-    monkeypatch.setattr("phases.p1_provenance.run_command", fake_run)
+    monkeypatch.setattr("parsing.extract_physical.run_command", fake_run)
 
     state = State(case_id="CASE-1", operator="op", evidence_directory=str(tmp_path))
     state = run_phase_1(state, confirm_all=True)
@@ -132,7 +132,7 @@ r/r 1236: MISC/THM/100/DJI_0001.THM
             )
         raise AssertionError(f"unexpected command: {command}")
 
-    monkeypatch.setattr("phases.p1_provenance.run_command", fake_run)
+    monkeypatch.setattr("parsing.extract_physical.run_command", fake_run)
 
     state = State(case_id="CASE-2", operator="op", evidence_directory=str(tmp_path))
     state = run_phase_1(state, confirm_all=True)
@@ -175,7 +175,7 @@ DOS Partition Table
             )
         raise AssertionError(f"unexpected command: {command}")
 
-    monkeypatch.setattr("phases.p1_provenance.run_command", fake_run)
+    monkeypatch.setattr("parsing.extract_physical.run_command", fake_run)
 
     state = State(case_id="CASE-3", operator="op", evidence_directory=str(tmp_path))
     state = run_phase_1(state, confirm_all=True)
@@ -212,7 +212,7 @@ def test_run_phase_1_reports_clear_mmls_failure(tmp_path: Path, monkeypatch) -> 
             )
         return subprocess.CompletedProcess(command, 1, stdout="", stderr="fls failed")
 
-    monkeypatch.setattr("phases.p1_provenance.run_command", fake_run)
+    monkeypatch.setattr("parsing.extract_physical.run_command", fake_run)
 
     state = State(case_id="CASE-4", operator="op", evidence_directory=str(tmp_path))
     try:
@@ -241,7 +241,7 @@ def test_run_phase_1_fallbacks_to_fls_without_mmls(tmp_path: Path, monkeypatch) 
             )
         raise AssertionError(f"unexpected command: {command}")
 
-    monkeypatch.setattr("phases.p1_provenance.run_command", fake_run)
+    monkeypatch.setattr("parsing.extract_physical.run_command", fake_run)
 
     state = State(case_id="CASE-5", operator="op", evidence_directory=str(tmp_path))
     state = run_phase_1(state, confirm_all=True)
@@ -285,7 +285,7 @@ r/r 1235: other_data/file.bin
             )
         raise AssertionError(f"unexpected command: {command}")
 
-    monkeypatch.setattr("phases.p1_provenance.run_command", fake_run)
+    monkeypatch.setattr("parsing.extract_physical.run_command", fake_run)
 
     state = State(case_id="CASE-6", operator="op", evidence_directory=str(tmp_path))
     try:

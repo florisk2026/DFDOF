@@ -28,7 +28,7 @@ def run_txtlogtocsv(
 ) -> Evidence | None:
     csv_path = output_dir / f"{txt_path.stem}.csv"
 
-    # Resolve executable: prefer configured path, fall back to PATH lookup
+    # Resolve executable: prefer configured path, fall back to PATH lookup.
     exe_path = Path(TXTLOGTOCSV)
     resolved_exe = None
 

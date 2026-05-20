@@ -70,8 +70,8 @@ class State:
         self.anomaly_flags.append(f"[p{phase} - {base}{cat_part}]: {message}")
 
     def to_dict(self) -> dict[str, Any]:
-        # Preserve a human-friendly, stable ordering for the serialized state
-        # to make case-level metadata appear at the top of the file.
+        # Preserve a human-friendly, stable ordering for the serialized state.
+        # Make case-level metadata appear at the top of the file.
         return {
             "operator": self.operator,
             "case_id": self.case_id,
@@ -90,8 +90,8 @@ class State:
         target_path = Path(path)
         temp_path = target_path.with_suffix(target_path.suffix + ".tmp")
         with temp_path.open("w", encoding="utf-8") as file_handle:
-            # Keep the key order produced by `to_dict()` rather than sorting
-            # alphabetically so top-level case metadata remains prominent.
+            # Keep the key order produced by `to_dict()` rather than sorting.
+            # Preserve top-level case metadata prominence.
             json.dump(self.to_dict(), file_handle, indent=2)
             file_handle.write("\n")
         temp_path.replace(target_path)
@@ -108,8 +108,8 @@ class State:
         output_paths: list[str] | None = None,
     ) -> None:
         """Record a tool run in a compact but auditable form."""
-        # Build a single summary field for stdout/stderr while preserving
-        # the raw output so information is not lost.
+        # Build a single summary field for stdout/stderr while preserving.
+        # Preserve the raw output so information is not lost.
         std_summary: str | None
         if stderr:
             std_summary = summarise_text("[ERROR]: " + str(stderr))

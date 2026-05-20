@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 import shutil
 
-# For identification in phase 1
+# For identification in phase 1.
 CONTROLLER_IOS_INCLUDES = {"Manifest.db", "Info.plist"}
 CONTROLLER_ANDROID_INCLUDES = {
     "data/data/dji",
@@ -21,7 +21,7 @@ CONTROLLER_ANDROID_INCLUDES = {
 DRONE_FLIGHT_STORAGE_INCLUDES = {"FLY", "DJI_ASSISTANT_EXPORT_FILE"}
 DRONE_SD_INCLUDES = {"DCIM", "MISC"}
 
-# For future reference
+# For future reference.
 IDENTIFICATION_CONTROLLER_IOS = "controller_ios"
 IDENTIFICATION_CONTROLLER_ANDROID = "controller_android"
 IDENTIFICATION_DRONE_SD = "drone_sd"
@@ -35,7 +35,7 @@ SOURCE_IDENTIFICATION_TYPES = [
     IDENTIFICATION_DRONE_FLIGHT_STORAGE,
 ]
 
-# For parsing in phase 2
+# For parsing in phase 2.
 DJI_APP_DOMAINS = {
     "ios": {
         "com.dji.pilot": "DJI GO",
@@ -62,7 +62,7 @@ BACKUP_INFO_SCHEMA = {
     "Unique Identifier": None,
 }
 
-# Acquisition methods and tools
+# Acquisition methods and tools.
 ACQUISITION_LOGICAL = "logical"
 ACQUISITION_PHYSICAL = "physical"
 ACQUISITION_PARSER_IOS = "parser_ios"
@@ -74,13 +74,13 @@ ACQUISITION_TXTLOGTOCSV = "txtlogtocsvtool"
 ACQUISITION_EXIFTOOL = "exiftool"
 ACQUISITION_SELECT_ACCOUNT_DATA = "p4_decision_and_orchestration"
 
-# Evidence types
+# Evidence types.
 EVIDENCE_TYPE_INPUT = "input"
 EVIDENCE_TYPE_PARSED = "parsed"
 EVIDENCE_TYPE_EXTRACTED = "extracted"
 EVIDENCE_TYPE_DECODED = "decoded"
 
-# For extraction in phase 3
+# For extraction in phase 3.
 ACCOUNT_DATA = "account_data"
 DATABASES = "databases"
 DEVICE_AND_BACKUP_INFO = "device_and_backup_info"
@@ -101,9 +101,9 @@ CONTROLLER_ARTEFACT_CATEGORIES = [
 ]
 
 ARTEFACT_EXTENSIONS = {
-    # ACCOUNT_DATA: For Android .xml and for iOS .plist
+    # ACCOUNT_DATA: For Android .xml and for iOS .plist.
     DATABASES: {".db"},
-    # DEVICE_AND_BACKUP_INFO: already handled in phase 2
+    # DEVICE_AND_BACKUP_INFO: already handled in phase 2.
     DRONE_LOGS: {".DAT"},
     FLIGHT_LOGS: {".txt", ".dat"},
     FLIGHT_RECORDS: {".txt"},
@@ -111,7 +111,7 @@ ARTEFACT_EXTENSIONS = {
     VIDEOS: {".mp4", ".mov", ".info"},
 }
 
-# Controller only
+# Controller only.
 ARTEFACT_PATHS = {
     # ACCOUNT_DATA: derived via DJI_APP_DOMAINS
     DATABASES: {"db/", "dbData/", ".space_db/", },
@@ -136,7 +136,7 @@ EXTENSION_ZIP = [".zip"]
 EXTENSION_PHYSICAL = [".E01", ".001"]
 SUPPORTED_IMAGE_EXTENSIONS = tuple(EXTENSION_PHYSICAL) + tuple(EXTENSION_ZIP)
 
-# For exif metadata in phase 4
+# For exif metadata in phase 4.
 EXIF_IMAGE_FIELDS: set[str] = {
     "EXIF:DateTimeOriginal",
     "EXIF:GPSLatitude",
@@ -196,7 +196,7 @@ EXIF_VIDEO_FIELDS: set[str] = {
 }
 
 
-# Default functions
+# Default functions.
 def _env_path(name: str, default: str) -> Path:
     """Helper to get a Path from an environment variable, with a default fallback."""
     return Path(os.environ.get(name, default))
@@ -230,8 +230,8 @@ def clear_and_make(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
-# Default tool locations
-# ADJUST TO YOUR ENVIRONMENT
+# Default tool locations.
+# ADJUST TO YOUR ENVIRONMENT.
 SLEUTH_KIT_BIN = _env_path(
     "DFDOF_SLEUTH_KIT_BIN",
     r"C:\Users\Floris\Documents\sleuthkit\bin",
@@ -269,8 +269,8 @@ EXIFTOOL = _env_path(
 )
 
 
-# Tool Versions (not CLI obtainable)
-# ADJUST TO YOUR ENVIRONMENT
+# Tool Versions (not CLI obtainable).
+# ADJUST TO YOUR ENVIRONMENT.
 VERSION_DJI_EXTRACT = "1.4.3"
 VERSION_DATCON = "4.3.0"
 VERSION_TXTLOGTOCSV = "2018-06-11"

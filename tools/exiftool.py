@@ -35,14 +35,14 @@ def run_exiftool(
 ) -> tuple[Evidence | None, Observation | None]:
 	json_path = output_dir / f"{file_path.stem}_exif.json"
 
-	# Probe exiftool version
+	# Probe exiftool version.
 	try:
 		ver_proc = subprocess.run([str(EXIFTOOL), "-ver"], capture_output=True, text=True, timeout=5)
 		version = ver_proc.stdout.strip() if ver_proc.stdout else None
 	except Exception:
 		version = None
 
-	# Run exiftool with JSON output and capture complete process
+	# Run exiftool with JSON output and capture complete process.
 	try:
 		proc = subprocess.run(
 			[str(EXIFTOOL), "-json", str(file_path)],
@@ -63,7 +63,7 @@ def run_exiftool(
 		state.raise_anomaly(4, identification, f"ExifTool failed on {file_path.name}", category=artefact_category, index=index)
 		return None, None
 
-	# Parse JSON stdout if available
+	# Parse JSON stdout if available.
 	metadata_list = []
 	if proc.stdout:
 		try:
@@ -88,13 +88,13 @@ def run_exiftool(
 	)
 
 	output_dir.mkdir(parents=True, exist_ok=True)
-	# Write full raw metadata to disk (unfiltered)
+	# Write full raw metadata to disk (unfiltered).
 	try:
 		json_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
 	except Exception:
 		pass
 
-	# Log the subprocess result with details
+	# Log the subprocess result with details.
 	state.log_command_result(
 		tool_name=ACQUISITION_EXIFTOOL,
 		result=proc,

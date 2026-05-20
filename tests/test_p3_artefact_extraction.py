@@ -243,6 +243,7 @@ def test_run_phase_3_android_physical_filters_extensions(
 
     def fake_extract_tsk_image(*_args, **kwargs):
         working_dir = Path(kwargs.get("working_dir") or _args[1])
+        _ = kwargs.get("state")
         working_dir.mkdir(parents=True, exist_ok=True)
         category = kwargs.get("artefact_category")
         evidence_items: list[Evidence] = []
