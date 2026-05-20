@@ -80,7 +80,7 @@ def test_parse_android_source_logical_builds_backup_info(tmp_path: Path, monkeyp
                     source_path=source_path,
                     stored_path=out_path,
                     parent=source_evidence,
-                    acquisition_method=config.ACQUISITION_EXRACT_LOGICAL,
+                    acquisition_method=config.ACQUISITION_EXTRACT_LOGICAL,
                     type=config.EVIDENCE_TYPE_EXTRACTED,
                     artefact_category=artefact_category,
                     skip_hash=True,

@@ -128,7 +128,7 @@ def run_phase_4(state: State) -> State:
 	extracted_artefacts = list(p3_output.get("extracted_artefacts", []))
 	artefacts_by_parent = _group_artefacts_by_parent(extracted_artefacts)
 
-	for identification in sorted(SOURCE_IDENTIFICATION_TYPES):
+	for identification in SOURCE_IDENTIFICATION_TYPES:
 		sources = find_input_evidence_list_by_identification(state, identification)
 		if not sources:
 			state.raise_anomaly(4, identification, "source evidence not found")
@@ -144,7 +144,7 @@ def run_phase_4(state: State) -> State:
 			source_dir = phase_dir / identification
 			artefacts = artefacts_by_parent.get(parent_hash, [])
 
-			for artefact in artefacts:
+			for artefact in sorted(artefacts, key=lambda a: str(a.get("artefact_category") or "")):
 				stored_path = Path(str(artefact.get("stored_path") or ""))
 				if not stored_path.exists():
 					state.raise_anomaly(4, identification, f"input artefact missing: {stored_path.name}", index=evidence_index)

@@ -245,6 +245,14 @@ def run_phase_1(state: State, *, confirm_all: bool = True) -> State:
                 )
             record["operator_confirmed"] = True
 
+    _order = {v: i for i, v in enumerate(SOURCE_IDENTIFICATION_TYPES)}
+    p1_outputs.sort(
+        key=lambda r: _order.get(
+            str(r.get("identified_by_operator_as") or r.get("identified_as", "")),
+            len(_order),
+        )
+    )
+
     previous_p1 = state.phase_outputs.get("p1_provenance", {})
     image_metadata = (
         previous_p1.get("image_metadata", {}) if isinstance(previous_p1, dict) else {}

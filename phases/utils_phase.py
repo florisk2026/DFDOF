@@ -57,14 +57,11 @@ def find_input_evidence_list_by_identification(
     )
     matching_evidence: list[Evidence] = []
     for record in source_records:
-        # Determine effective identification: auto if confirmed, else operator override
-        if record.get("operator_confirmed"):
-            recorded_identification = str(record.get("identified_as", ""))
-        else:
-            recorded_identification = str(
-                record.get("identified_by_operator_as")
-                or record.get("identified_as", "")
-            )
+        # Operator override always takes precedence when set; fall back to auto-identification
+        recorded_identification = str(
+            record.get("identified_by_operator_as")
+            or record.get("identified_as", "")
+        )
 
         if recorded_identification != identification:
             continue

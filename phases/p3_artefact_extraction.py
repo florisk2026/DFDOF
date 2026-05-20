@@ -23,8 +23,9 @@ from config import (
     ARTEFACT_EXTENSIONS,
     ARTEFACT_EXTENSIONS_DRONE_SD,
     ARTEFACT_PATHS,
-    ACQUISITION_EXRACT_LOGICAL,
+    ACQUISITION_EXTRACT_LOGICAL,
     ACQUISITION_EXTRACT_PHYSICAL,
+    CONTROLLER_ARTEFACT_CATEGORIES,
     DATABASES,
     DEVICE_AND_BACKUP_INFO,
     DJI_APP_DOMAINS,
@@ -32,8 +33,6 @@ from config import (
     EVIDENCE_TYPE_EXTRACTED,
     EXTRACT_DJI_EXE,
     EXTENSION_ZIP,
-    FLIGHT_LOGS,
-    FLIGHT_RECORDS,
     IDENTIFICATION_CONTROLLER_ANDROID,
     IDENTIFICATION_CONTROLLER_IOS,
     IDENTIFICATION_DRONE_FLIGHT_STORAGE,
@@ -362,72 +361,6 @@ def run_phase_3(state: State) -> State:
 
     extracted: list[Evidence] = []
 
-    # Controller iOS
-    ios_sources = find_input_evidence_list_by_identification(
-        state, IDENTIFICATION_CONTROLLER_IOS
-    )
-    ios_source = ios_sources[0] if ios_sources else None
-    ios_parsed_root: Path | None = None
-    if ios_source is not None:
-        p2_records = state.phase_outputs.get("p2_image_parsing", {}).get(
-            "parsed_evidence", []
-        )
-        for record in p2_records:
-            if not isinstance(record, dict):
-                continue
-            if record.get("artefact_category") != DEVICE_AND_BACKUP_INFO:
-                continue
-            if str(record.get("source_path")) != str(ios_source.source_path):
-                continue
-            stored_path = Path(str(record.get("stored_path")))
-            if stored_path.exists() and stored_path.is_dir():
-                ios_parsed_root = stored_path
-                break
-
-    if ios_source is None:
-        state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, "source evidence not found")
-    elif ios_parsed_root is None:
-        state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, "parsed iOS root was not found")
-    else:
-        ios_acquisition = normalise_acquisition_method(ios_source.acquisition_method)
-        if ios_acquisition == ACQUISITION_PHYSICAL:
-            ios_acquisition_method = ACQUISITION_EXTRACT_PHYSICAL
-        else:
-            ios_acquisition_method = ACQUISITION_EXRACT_LOGICAL
-        controller_ios_dir = phase_dir / "controller_ios"
-        clear_and_make(controller_ios_dir)
-        print("Extracting from controller_ios")
-        categories = [
-            DRONE_LOGS,
-            FLIGHT_RECORDS,
-            FLIGHT_LOGS,
-            IMAGES,
-            VIDEOS,
-            DATABASES,
-            ACCOUNT_DATA,
-        ]
-        for category in categories:
-            try:
-                if category == ACCOUNT_DATA:
-                    matched_files = _collect_account_files(ios_parsed_root, "ios")
-                else:
-                    matched_files = _collect_parsed_files(ios_parsed_root, category)
-                if matched_files:
-                    output_dir_cat = controller_ios_dir / safe_segment(category)
-                    evidence_list = _copy_parsed_files(
-                        ios_parsed_root,
-                        matched_files,
-                        output_dir_cat,
-                        ios_source,
-                        category,
-                        ios_acquisition_method,
-                    )
-                    extracted.extend(evidence_list)
-                else:
-                    state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, "no artefacts found", category=category)
-            except Exception as exc:
-                state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, f"extraction failed: {exc}", category=category)
-
     # Controller Android
     android_sources = find_input_evidence_list_by_identification(
         state, IDENTIFICATION_CONTROLLER_ANDROID
@@ -447,15 +380,7 @@ def run_phase_3(state: State) -> State:
             acquisition_method == ACQUISITION_LOGICAL
             or android_archive.suffix.lower() == EXTENSION_ZIP[0]
         )
-        categories = [
-            DRONE_LOGS,
-            FLIGHT_RECORDS,
-            FLIGHT_LOGS,
-            IMAGES,
-            VIDEOS,
-            DATABASES,
-            ACCOUNT_DATA,
-        ]
+        categories = CONTROLLER_ARTEFACT_CATEGORIES
         if is_logical:
             member_names = _member_names(android_archive)
             members_by_category = _collect_members_by_category(
@@ -538,6 +463,64 @@ def run_phase_3(state: State) -> State:
                         state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, "no artefacts found", category=category)
                 except Exception as exc:
                     state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, f"extraction failed: {exc}", category=category)
+
+    # Controller iOS
+    ios_sources = find_input_evidence_list_by_identification(
+        state, IDENTIFICATION_CONTROLLER_IOS
+    )
+    ios_source = ios_sources[0] if ios_sources else None
+    ios_parsed_root: Path | None = None
+    if ios_source is not None:
+        p2_records = state.phase_outputs.get("p2_image_parsing", {}).get(
+            "parsed_evidence", []
+        )
+        for record in p2_records:
+            if not isinstance(record, dict):
+                continue
+            if record.get("artefact_category") != DEVICE_AND_BACKUP_INFO:
+                continue
+            if str(record.get("source_path")) != str(ios_source.source_path):
+                continue
+            stored_path = Path(str(record.get("stored_path")))
+            if stored_path.exists() and stored_path.is_dir():
+                ios_parsed_root = stored_path
+                break
+
+    if ios_source is None:
+        state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, "source evidence not found")
+    elif ios_parsed_root is None:
+        state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, "parsed iOS root was not found")
+    else:
+        ios_acquisition = normalise_acquisition_method(ios_source.acquisition_method)
+        if ios_acquisition == ACQUISITION_PHYSICAL:
+            ios_acquisition_method = ACQUISITION_EXTRACT_PHYSICAL
+        else:
+            ios_acquisition_method = ACQUISITION_EXTRACT_LOGICAL
+        controller_ios_dir = phase_dir / "controller_ios"
+        clear_and_make(controller_ios_dir)
+        print("Extracting from controller_ios")
+        categories = CONTROLLER_ARTEFACT_CATEGORIES
+        for category in categories:
+            try:
+                if category == ACCOUNT_DATA:
+                    matched_files = _collect_account_files(ios_parsed_root, "ios")
+                else:
+                    matched_files = _collect_parsed_files(ios_parsed_root, category)
+                if matched_files:
+                    output_dir_cat = controller_ios_dir / safe_segment(category)
+                    evidence_list = _copy_parsed_files(
+                        ios_parsed_root,
+                        matched_files,
+                        output_dir_cat,
+                        ios_source,
+                        category,
+                        ios_acquisition_method,
+                    )
+                    extracted.extend(evidence_list)
+                else:
+                    state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, "no artefacts found", category=category)
+            except Exception as exc:
+                state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, f"extraction failed: {exc}", category=category)
 
     # Drone SD
     sd_sources = find_input_evidence_list_by_identification(

@@ -12,7 +12,7 @@ from typing import Iterable
 
 from config import (
     DEVICE_AND_BACKUP_INFO,
-    ACQUISITION_EXRACT_LOGICAL,
+    ACQUISITION_EXTRACT_LOGICAL,
     EVIDENCE_TYPE_EXTRACTED,
     EXTENSION_ZIP,
 )
@@ -155,7 +155,7 @@ def extract_logical_files(
                     source_path=to_windows_path(member_name),
                     stored_path=output_path,
                     parent=source_evidence,
-                    acquisition_method=ACQUISITION_EXRACT_LOGICAL,
+                    acquisition_method=ACQUISITION_EXTRACT_LOGICAL,
                     type=EVIDENCE_TYPE_EXTRACTED,
                     artefact_category=artefact_category,
                 )

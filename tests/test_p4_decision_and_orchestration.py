@@ -72,7 +72,7 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
         source_path=flight_record.name,
         stored_path=flight_record,
         parent=source,
-        acquisition_method=config.ACQUISITION_EXRACT_LOGICAL,
+        acquisition_method=config.ACQUISITION_EXTRACT_LOGICAL,
         type=config.EVIDENCE_TYPE_EXTRACTED,
         artefact_category=config.FLIGHT_RECORDS,
     )
@@ -80,7 +80,7 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
         source_path=account_plist.name,
         stored_path=account_plist,
         parent=source,
-        acquisition_method=config.ACQUISITION_EXRACT_LOGICAL,
+        acquisition_method=config.ACQUISITION_EXTRACT_LOGICAL,
         type=config.EVIDENCE_TYPE_EXTRACTED,
         artefact_category=config.ACCOUNT_DATA,
     )
@@ -88,7 +88,7 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
         source_path=image_file.name,
         stored_path=image_file,
         parent=source,
-        acquisition_method=config.ACQUISITION_EXRACT_LOGICAL,
+        acquisition_method=config.ACQUISITION_EXTRACT_LOGICAL,
         type=config.EVIDENCE_TYPE_EXTRACTED,
         artefact_category=config.IMAGES,
     )
@@ -96,7 +96,7 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
         source_path=drone_log.name,
         stored_path=drone_log,
         parent=source,
-        acquisition_method=config.ACQUISITION_EXRACT_LOGICAL,
+        acquisition_method=config.ACQUISITION_EXTRACT_LOGICAL,
         type=config.EVIDENCE_TYPE_EXTRACTED,
         artefact_category=config.DRONE_LOGS,
     )
@@ -190,7 +190,7 @@ def test_run_phase_4_records_anomalies(tmp_path: Path, monkeypatch) -> None:
         source_path=empty_account.name,
         stored_path=empty_account,
         parent=source,
-        acquisition_method=config.ACQUISITION_EXRACT_LOGICAL,
+        acquisition_method=config.ACQUISITION_EXTRACT_LOGICAL,
         type=config.EVIDENCE_TYPE_EXTRACTED,
         artefact_category=config.ACCOUNT_DATA,
     )

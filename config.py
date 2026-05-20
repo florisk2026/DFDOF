@@ -28,13 +28,12 @@ IDENTIFICATION_DRONE_SD = "drone_sd"
 IDENTIFICATION_DRONE_FLIGHT_STORAGE = "drone_flight_storage"
 IDENTIFICATION_UNCLASSIFIED = "not_identified"
 
-SOURCE_IDENTIFICATION_TYPES = {
-    IDENTIFICATION_CONTROLLER_IOS,
+SOURCE_IDENTIFICATION_TYPES = [
     IDENTIFICATION_CONTROLLER_ANDROID,
+    IDENTIFICATION_CONTROLLER_IOS,
     IDENTIFICATION_DRONE_SD,
     IDENTIFICATION_DRONE_FLIGHT_STORAGE,
-}
-SOURCE_IDENTIFICATION_TYPES = frozenset(SOURCE_IDENTIFICATION_TYPES)
+]
 
 # For parsing in phase 2
 DJI_APP_DOMAINS = {
@@ -91,27 +90,37 @@ FLIGHT_RECORDS = "flight_records"
 IMAGES = "images"
 VIDEOS = "videos"
 
+CONTROLLER_ARTEFACT_CATEGORIES = [
+    ACCOUNT_DATA,
+    DATABASES,
+    DRONE_LOGS,
+    FLIGHT_LOGS,
+    FLIGHT_RECORDS,
+    IMAGES,
+    VIDEOS,
+]
+
 ARTEFACT_EXTENSIONS = {
+    # ACCOUNT_DATA: For Android .xml and for iOS .plist
+    DATABASES: {".db"},
+    # DEVICE_AND_BACKUP_INFO: already handled in phase 2
     DRONE_LOGS: {".DAT"},
-    FLIGHT_RECORDS: {".txt"},
     FLIGHT_LOGS: {".txt", ".dat"},
+    FLIGHT_RECORDS: {".txt"},
     IMAGES: {".jpg", ".jpeg", ".thumbnail"},
     VIDEOS: {".mp4", ".mov", ".info"},
-    DATABASES: {".db"},
-    # ACCOUNT_DATA: For Android .xml and for iOS .plist
-    # DEVICE_AND_BACKUP_INFO: already handled in phase 2
 }
 
 # Controller only
 ARTEFACT_PATHS = {
+    # ACCOUNT_DATA: derived via DJI_APP_DOMAINS
+    DATABASES: {"db/", "dbData/", ".space_db/", },
+    # DEVICE_AND_BACKUP_INFO: already handled in phase 2
     DRONE_LOGS: {"FlightRecords/", "FlightRecords/MCDatFlightRecords/"},
-    FLIGHT_RECORDS: {"FlightRecord", "FlightRecords/"},
     FLIGHT_LOGS: {"FlightLogs/", "LOG/", "Logs/"},
+    FLIGHT_RECORDS: {"FlightRecord", "FlightRecords/"},
     IMAGES: {"CACHE_IMAGE/", "videoCache/"},
     VIDEOS: {"DJI_RECORD/", "videoCache/"},
-    DATABASES: {"db/", "dbData/", ".space_db/", },
-    # ACCOUNT_DATA: derived via DJI_APP_DOMAINS
-    # DEVICE_AND_BACKUP_INFO: already handled in phase 2
 }
 
 ARTEFACT_EXTENSIONS_DRONE_SD = {".MP4", ".THM"}

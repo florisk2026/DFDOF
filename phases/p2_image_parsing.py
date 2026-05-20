@@ -172,28 +172,6 @@ def run_phase_2(state: State) -> State:
     parsed_evidence: list[dict[str, Any]] = []
     observations: list[dict[str, Any]] = []
 
-    ios_sources = find_input_evidence_list_by_identification(
-        state, IDENTIFICATION_CONTROLLER_IOS
-    )
-    ios_source = ios_sources[0] if ios_sources else None
-    if ios_source is None:
-        state.raise_anomaly(2, IDENTIFICATION_CONTROLLER_IOS, "source evidence not found")
-    else:
-        try:
-            print("Parsing controller iOS")
-            ios_output_dir = phase_dir / "controller_ios_parsed"
-            clear_and_make(ios_output_dir)
-
-            _process_ios_source(
-                state,
-                ios_source,
-                ios_output_dir,
-                parsed_evidence,
-                observations,
-            )
-        except Exception as exc:
-            state.raise_anomaly(2, IDENTIFICATION_CONTROLLER_IOS, f"failed to convert {cast(Path, ios_source.stored_path).name}")
-
     android_sources = find_input_evidence_list_by_identification(
         state, IDENTIFICATION_CONTROLLER_ANDROID
     )
@@ -216,6 +194,28 @@ def run_phase_2(state: State) -> State:
             observations.extend(obs.to_dict() for obs in result.observations)
         except Exception as exc:
             state.raise_anomaly(2, IDENTIFICATION_CONTROLLER_ANDROID, f"failed to parse {cast(Path, android_source.stored_path).name}")
+
+    ios_sources = find_input_evidence_list_by_identification(
+        state, IDENTIFICATION_CONTROLLER_IOS
+    )
+    ios_source = ios_sources[0] if ios_sources else None
+    if ios_source is None:
+        state.raise_anomaly(2, IDENTIFICATION_CONTROLLER_IOS, "source evidence not found")
+    else:
+        try:
+            print("Parsing controller iOS")
+            ios_output_dir = phase_dir / "controller_ios_parsed"
+            clear_and_make(ios_output_dir)
+
+            _process_ios_source(
+                state,
+                ios_source,
+                ios_output_dir,
+                parsed_evidence,
+                observations,
+            )
+        except Exception as exc:
+            state.raise_anomaly(2, IDENTIFICATION_CONTROLLER_IOS, f"failed to convert {cast(Path, ios_source.stored_path).name}")
 
     now = utc_now_iso()
     state.phase_outputs["p2_image_parsing"] = {
