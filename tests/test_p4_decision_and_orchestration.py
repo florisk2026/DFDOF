@@ -222,8 +222,8 @@ def test_run_phase_4_records_anomalies(tmp_path: Path, monkeypatch) -> None:
     anomalies = result.anomaly_flags
     phase_dir = config.output_dir() / state.case_id / "p4_decision_and_orchestration"
 
-    assert "p4 - controller ios: input artefact missing: missing.txt" in anomalies
-    assert "p4 - controller ios - account data: account data file is empty: empty.plist" in anomalies
-    assert "p4 - controller android: source evidence not found" in anomalies
-    assert "p4 - drone sd: source evidence not found" in anomalies
+    assert "[p4 - controller ios]: input artefact missing: missing.txt" in anomalies
+    assert "[p4 - controller ios - account data]: account data file is empty: empty.plist" in anomalies
+    assert "[p4 - controller android]: source evidence not found" in anomalies
+    assert "[p4 - drone sd]: source evidence not found" in anomalies
     assert not (phase_dir / "controller_ios" / "account_data").exists()

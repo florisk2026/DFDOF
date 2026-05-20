@@ -173,10 +173,10 @@ def test_parse_android_source_flags_missing_key_files(tmp_path: Path, monkeypatc
     parser_android.parse_android_source(source_evidence, tmp_path / "out_missing", case_state)
 
     assert (
-        f"p2 - controller android - device and backup info: DeviceInfo.xml not found for {source_zip.name}"
+        f"[p2 - controller android - device and backup info]: DeviceInfo.xml not found for {source_zip.name}"
         in case_state.anomaly_flags
     )
     assert (
-        f"p2 - controller android - device and backup info: ApplicationInfo.xml not found for {source_zip.name}"
+        f"[p2 - controller android - device and backup info]: ApplicationInfo.xml not found for {source_zip.name}"
         in case_state.anomaly_flags
     )

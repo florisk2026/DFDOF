@@ -118,3 +118,85 @@ def match_labeled_value(text: str, labels: tuple[str, ...]) -> str | None:
         if match:
             return normalise_scalar(match.group(1))
     return None
+
+
+def decode_base64(value: str) -> str | None:
+    """Decode a base64 string. Return None if decoding fails or result is empty."""
+    import base64
+    try:
+        result = base64.b64decode(value.strip()).decode("utf-8", errors="replace").strip()
+        return result or None
+    except Exception:
+        return None
+
+
+def ieee754_long_to_degrees(value: str) -> str | None:
+    """Convert a Java long-as-int64 IEEE754 bit pattern to a decimal degree string."""
+    import struct
+    try:
+        raw = int(value)
+        packed = struct.pack(">q", raw)
+        degrees = struct.unpack(">d", packed)[0]
+        return str(round(degrees, 8))
+    except Exception:
+        return None
+
+
+def parse_android_xml_map(path: Path) -> dict[str, str]:
+    """Parse Android SharedPreferences XML <map> into a flat name→value dict."""
+    import xml.etree.ElementTree as ET
+    try:
+        root = ET.parse(path).getroot()
+        result: dict[str, str] = {}
+        for child in root:
+            name = child.get("name")
+            if not name:
+                continue
+            if child.tag == "string":
+                text = (child.text or "").strip()
+                if text:
+                    result[name] = text
+            elif child.tag in {"boolean", "int", "long", "float"}:
+                val = child.get("value")
+                if val is not None:
+                    result[name] = val
+        return result
+    except Exception:
+        return {}
+
+
+def parse_json_file(path: Path) -> dict:
+    """Load a JSON file and return the top-level dict. Return {} on failure."""
+    import json
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def extract_fields(raw: dict, field_map: dict) -> dict[str, str | None]:
+    """Apply a declarative field map to a raw dict.
+
+    field_map structure: {"canonical_name": ([key1, key2, ...], decode_fn_or_None)}
+    For each canonical field: try source keys in order; take the first non-None,
+    non-empty string value; apply decode_fn if not None. Never raise.
+    """
+    out: dict[str, str | None] = {}
+    for canonical, (keys, decode_fn) in field_map.items():
+        for key in keys:
+            raw_val = raw.get(key)
+            if raw_val is None:
+                continue
+            val = str(raw_val).strip() if not isinstance(raw_val, str) else raw_val.strip()
+            if not val:
+                continue
+            if decode_fn is not None:
+                try:
+                    val = decode_fn(val)
+                except Exception:
+                    val = None
+            if val:
+                out[canonical] = val
+                break
+    return out

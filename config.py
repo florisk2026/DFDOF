@@ -73,7 +73,7 @@ ACQUISITION_EXTRACT_PHYSICAL = "extract_physical"
 ACQUISITION_DATCON = "datcon"
 ACQUISITION_TXTLOGTOCSV = "txtlogtocsvtool"
 ACQUISITION_EXIFTOOL = "exiftool"
-ACQUISITION_ACCOUNT_DATA_PARSE = "account_data_parse"
+ACQUISITION_SELECT_ACCOUNT_DATA = "p4_decision_and_orchestration"
 
 # Evidence types
 EVIDENCE_TYPE_INPUT = "input"

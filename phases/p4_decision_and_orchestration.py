@@ -13,9 +13,10 @@ from typing import Any
 
 from config import (
 	ACCOUNT_DATA,
-	ACQUISITION_ACCOUNT_DATA_PARSE,
+	ACQUISITION_SELECT_ACCOUNT_DATA,
 	DATABASES,
 	DRONE_LOGS,
+	EVIDENCE_TYPE_PARSED,
 	FLIGHT_LOGS,
 	FLIGHT_RECORDS,
 	IDENTIFICATION_CONTROLLER_ANDROID,
@@ -31,12 +32,79 @@ from config import (
 )
 from evidence import Evidence, make_evidence
 from observation import Observation, make_observation
-from parsing.utils_parse import normalise_acquisition_method, parse_plist_strict, parse_xml_flat, to_windows_path
+from parsing.utils_parse import (
+	decode_base64,
+	extract_fields,
+	ieee754_long_to_degrees,
+	normalise_acquisition_method,
+	parse_android_xml_map,
+	parse_json_file,
+	parse_plist_strict,
+	to_windows_path,
+)
 from phases.utils_phase import find_input_evidence_list_by_identification, write_json
 from state import State
 from tools.datcon import run_datcon
 from tools.exiftool import run_exiftool
 from tools.txtlogtocsv import run_txtlogtocsv
+
+_IOS_DJI_FIELDS: dict[str, tuple] = {
+	"account_email":       (["DJIACCOUNTMANAGER_LASTUSEREMAIL"], None),
+	"aircraft_sn":         (["AIRCRAFT_FLIGHT_LOG_DEVICE_SN", "cached_sn_key"], None),
+	"cached_product_name": (["cached_product_name_key"], None),
+	"app_version":         (["appVersion_pack", "DJIAppLaunchTimeReportVersionKey"], None),
+	"last_launch":         (["LastLaunchDate"], None),
+	"last_flight_date":    (["Last_Flight_Record_Date_Key"], None),
+	"last_country_code":   (["DJILastCountryCodeName", "supervisor_country_code_cache_key"], None),
+	"device_platform":     (["machinePlatForm"], None),
+}
+
+_ANDROID_DJI_GO4_FIELDS: dict[str, tuple] = {
+	"account_email":    (["key_account_email"], decode_base64),
+	"account_uid":      (["key_account_uid"], decode_base64),
+	"account_nickname": (["key_account_nickname"], decode_base64),
+	"account_token":    (["key_account_token"], decode_base64),
+	"aircraft_sn":      (["device_sn", "key_last_flyforbid_flyc_sn"], None),
+	"firmware_version": (["cur_firmware_ver"], None),
+	"last_country_code":(["key_country_code_local"], None),
+	"last_latitude":    (["fmd_latitude"], None),
+	"last_longitude":   (["fmd_longitude"], None),
+}
+
+_ANDROID_DJI_PILOT_FIELDS: dict[str, tuple] = {
+	"account_uid":      (["key_account_uid"], decode_base64),
+	"account_token":    (["key_account_token"], decode_base64),
+	"aircraft_sn":      (["key_last_flyforbid_flyc_sn", "djiPopupKeyLastSn"], None),
+	"firmware_version": (["cur_firmware_ver", "djiPopupKeyFirmware"], None),
+	"device_uuid":      (["key_uuid_for_account_center"], None),
+	"last_latitude":    (["KEY_CC_LAST_FLYC_LAT"], ieee754_long_to_degrees),
+	"last_longitude":   (["KEY_CC_LAST_FLYC_LNG"], ieee754_long_to_degrees),
+}
+
+
+def _parse_account_file(file_path: Path) -> tuple[dict, dict]:
+	"""Parse a DJI account data file. Return (full_raw_dict, filtered_forensic_fields)."""
+	suffix = file_path.suffix.lower()
+	try:
+		if suffix == ".plist":
+			raw = parse_plist_strict(file_path)
+			field_map = _IOS_DJI_FIELDS
+		elif suffix == ".xml":
+			raw = parse_android_xml_map(file_path)
+			field_map = (
+				_ANDROID_DJI_PILOT_FIELDS
+				if "pilot" in file_path.stem.lower()
+				else _ANDROID_DJI_GO4_FIELDS
+			)
+		elif suffix == ".json":
+			raw = parse_json_file(file_path)
+			field_map = _IOS_DJI_FIELDS
+		else:
+			return {}, {}
+	except Exception:
+		return {}, {}
+
+	return raw, extract_fields(raw, field_map)
 
 
 def _group_artefacts_by_parent(
@@ -134,27 +202,21 @@ def run_phase_4(state: State) -> State:
 						state.raise_anomaly(4, identification, f"account data file is empty: {stored_path.name}", category=ACCOUNT_DATA, index=evidence_index)
 						continue
 
-					try:
-						if identification == IDENTIFICATION_CONTROLLER_IOS:
-							parsed = parse_plist_strict(stored_path)
-						elif identification == IDENTIFICATION_CONTROLLER_ANDROID:
-							parsed = parse_xml_flat(stored_path)
-						else:
-							continue
-					except Exception:
+					raw, filtered = _parse_account_file(stored_path)
+					if not raw:
 						state.raise_anomaly(4, identification, f"account data parse failed for {stored_path.name}", category=ACCOUNT_DATA, index=evidence_index)
 						continue
 
 					tool_output_dir.mkdir(parents=True, exist_ok=True)
 					json_path = tool_output_dir / f"{stored_path.stem}.json"
-					write_json(json_path, parsed)
+					write_json(json_path, raw)
 					orchestrated.append(
 						make_evidence(
 							source_path=to_windows_path(str(stored_path)),
 							stored_path=json_path,
 							parent=parent_evidence,
-							acquisition_method=ACQUISITION_ACCOUNT_DATA_PARSE,
-							type="decoded",
+							acquisition_method=ACQUISITION_SELECT_ACCOUNT_DATA,
+							type=EVIDENCE_TYPE_PARSED,
 							artefact_category=ACCOUNT_DATA,
 						)
 					)
@@ -162,8 +224,8 @@ def run_phase_4(state: State) -> State:
 						make_observation(
 							evidence_sha256=parent_evidence.sha256,
 							evidence_category=ACCOUNT_DATA,
-							acquisition_method=ACQUISITION_ACCOUNT_DATA_PARSE,
-							observations=[parsed],
+							acquisition_method=ACQUISITION_SELECT_ACCOUNT_DATA,
+							observations=[filtered],
 						)
 					)
 					continue

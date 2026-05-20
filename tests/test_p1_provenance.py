@@ -251,7 +251,7 @@ def test_run_phase_1_fallbacks_to_fls_without_mmls(tmp_path: Path, monkeypatch) 
     assert record["identified"] is True
     assert record["operator_confirmed"] is True
     assert any(
-        flag.startswith("p1 - drone sd: mmls unavailable; falling back to fls")
+        flag.startswith("[p1 - drone sd]: mmls unavailable; falling back to fls")
         for flag in state.anomaly_flags
     )
 
