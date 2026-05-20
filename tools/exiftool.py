@@ -55,10 +55,11 @@ def run_exiftool(
 
 	metadata = _filter_metadata(metadata_list[0] if metadata_list else {})
 	field_filter = EXIF_IMAGE_FIELDS if artefact_category == IMAGES else EXIF_VIDEO_FIELDS
+	_ZERO_DATE = "0000:00:00 00:00:00"
 	filtered_metadata = {
 		key: value
 		for key, value in metadata.items()
-		if key in field_filter and value not in (None, "")
+		if key in field_filter and value not in (None, "", _ZERO_DATE)
 	}
 	observation = make_observation(
 		evidence_sha256=parent_evidence.sha256,

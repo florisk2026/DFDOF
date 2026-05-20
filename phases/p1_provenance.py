@@ -195,9 +195,6 @@ def run_phase_1(state: State, *, confirm_all: bool = True) -> State:
         )
 
     evidence_dir = Path(state.evidence_directory)
-    if not evidence_dir.exists() or not evidence_dir.is_dir():
-        raise FileNotFoundError(f"Evidence directory not found: {evidence_dir}")
-
     now = utc_now_iso()
     p1_outputs: list[SourceRecord] = []
 

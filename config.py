@@ -68,7 +68,7 @@ ACQUISITION_LOGICAL = "logical"
 ACQUISITION_PHYSICAL = "physical"
 ACQUISITION_PARSER_IOS = "parser_ios"
 ACQUISITION_PARSER_ANDROID = "parser_android"
-ACQUISITION_EXRACT_LOGICAL = "extract_logical"
+ACQUISITION_EXTRACT_LOGICAL = "extract_logical"
 ACQUISITION_EXTRACT_PHYSICAL = "extract_physical"
 ACQUISITION_DATCON = "datcon"
 ACQUISITION_TXTLOGTOCSV = "txtlogtocsvtool"
@@ -84,12 +84,12 @@ EVIDENCE_TYPE_DECODED = "decoded"
 # For extraction in phase 3
 ACCOUNT_DATA = "account_data"
 DATABASES = "databases"
+DEVICE_AND_BACKUP_INFO = "device_and_backup_info"
 DRONE_LOGS = "drone_logs"
 FLIGHT_LOGS = "flight_logs"
 FLIGHT_RECORDS = "flight_records"
 IMAGES = "images"
 VIDEOS = "videos"
-DEVICE_AND_BACKUP_INFO = "device_and_backup_info"
 
 ARTEFACT_EXTENSIONS = {
     DRONE_LOGS: {".DAT"},
