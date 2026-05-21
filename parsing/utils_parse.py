@@ -5,8 +5,12 @@ Unified handling of path sanitization to ensure consistency.
 
 from __future__ import annotations
 
+import base64
+import json
 import plistlib
 import re
+import struct
+import xml.etree.ElementTree as ET
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -83,7 +87,6 @@ def parse_plist_strict(path: Path) -> dict[str, Any]:
 
 def parse_xml_flat(path: Path) -> dict[str, Any]:
     """Parse an XML file into a flat tag→value dict; repeated tags become lists."""
-    import xml.etree.ElementTree as ET
     tree = ET.parse(path)
     root = tree.getroot()
     parsed: dict[str, Any] = {}
@@ -122,7 +125,6 @@ def match_labeled_value(text: str, labels: tuple[str, ...]) -> str | None:
 
 def decode_base64(value: str) -> str | None:
     """Decode a base64 string. Return None if decoding fails or result is empty."""
-    import base64
     try:
         result = base64.b64decode(value.strip()).decode("utf-8", errors="replace").strip()
         return result or None
@@ -132,7 +134,6 @@ def decode_base64(value: str) -> str | None:
 
 def ieee754_long_to_degrees(value: str) -> str | None:
     """Convert a Java long-as-int64 IEEE754 bit pattern to a decimal degree string."""
-    import struct
     try:
         raw = int(value)
         packed = struct.pack(">q", raw)
@@ -144,7 +145,6 @@ def ieee754_long_to_degrees(value: str) -> str | None:
 
 def parse_android_xml_map(path: Path) -> dict[str, str]:
     """Parse Android SharedPreferences XML <map> into a flat name→value dict."""
-    import xml.etree.ElementTree as ET
     try:
         root = ET.parse(path).getroot()
         result: dict[str, str] = {}
@@ -165,9 +165,37 @@ def parse_android_xml_map(path: Path) -> dict[str, str]:
         return {}
 
 
+def decode_cllocation_bplist(value: str) -> dict[str, str] | None:
+    """Decode a base64 NSKeyedArchive binary plist of CLLocation; return canonical coordinate fields."""
+    _KEY_MAP = {
+        "kCLLocationCodingKeyCoordinateLatitude":  "find_aircraft_last_latitude",
+        "kCLLocationCodingKeyCoordinateLongitude": "find_aircraft_last_longitude",
+        "kCLLocationCodingKeyAltitude":            "find_aircraft_last_altitude",
+        "kCLLocationCodingKeyHorizontalAccuracy":  "find_aircraft_last_hacc",
+    }
+    try:
+        data = base64.b64decode(value.strip())
+        archive = plistlib.loads(data)
+        objects = archive.get("$objects", [])
+        if len(objects) < 2 or not isinstance(objects[1], dict):
+            return None
+        obj = objects[1]
+        out = {}
+        for archive_key, canonical in _KEY_MAP.items():
+            uid = obj.get(archive_key)
+            if uid is None:
+                continue
+            idx = uid.data if hasattr(uid, "data") else int(uid)
+            val = objects[idx] if 0 <= idx < len(objects) else None
+            if val is not None:
+                out[canonical] = str(round(float(val), 8))
+        return out or None
+    except Exception:
+        return None
+
+
 def parse_json_file(path: Path) -> dict:
     """Load a JSON file and return the top-level dict. Return {} on failure."""
-    import json
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
         return data if isinstance(data, dict) else {}

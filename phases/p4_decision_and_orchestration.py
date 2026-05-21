@@ -34,6 +34,7 @@ from evidence import Evidence, make_evidence
 from observation import Observation, make_observation
 from parsing.utils_parse import (
 	decode_base64,
+	decode_cllocation_bplist,
 	extract_fields,
 	ieee754_long_to_degrees,
 	normalise_acquisition_method,
@@ -45,11 +46,12 @@ from parsing.utils_parse import (
 from phases.utils_phase import drone_sd_label, find_input_evidence_list_by_identification, write_json
 from state import State
 
-_PHASE_NAME = Path(__file__).stem
 from tools.datcon import run_datcon
 from tools.extractdji import run_extractdji
 from tools.exiftool import run_exiftool
 from tools.txtlogtocsv import run_txtlogtocsv
+
+_PHASE_NAME = Path(__file__).stem
 
 _IOS_DJI_FIELDS: dict[str, tuple] = {
 	"account_email":       (["DJIACCOUNTMANAGER_LASTUSEREMAIL"], None),
@@ -85,6 +87,28 @@ _ANDROID_DJI_PILOT_FIELDS: dict[str, tuple] = {
 }
 
 
+def _extract_find_aircraft_location(raw: dict) -> dict:
+	"""Extract FIND_AIRCRAFT_LAST_LOCATION fields from a raw iOS/JSON account dict."""
+	block = raw.get("FIND_AIRCRAFT_LAST_LOCATION")
+	if not isinstance(block, dict):
+		return {}
+	out = {}
+	heading = block.get("LAST_HEADING")
+	if heading is not None:
+		try:
+			out["find_aircraft_last_heading"] = str(round(float(heading), 8))
+		except Exception:
+			pass
+	loc = block.get("LAST_LOCATION")
+	if isinstance(loc, dict):
+		b64 = loc.get("__bytes_base64")
+		if b64:
+			coords = decode_cllocation_bplist(b64)
+			if coords:
+				out.update(coords)
+	return out
+
+
 def _parse_account_file(file_path: Path) -> tuple[dict, dict]:
 	"""Parse a DJI account data file. Return (full_raw_dict, filtered_forensic_fields)."""
 	suffix = file_path.suffix.lower()
@@ -107,7 +131,10 @@ def _parse_account_file(file_path: Path) -> tuple[dict, dict]:
 	except Exception:
 		return {}, {}
 
-	return raw, extract_fields(raw, field_map)
+	filtered = extract_fields(raw, field_map)
+	if suffix in {".plist", ".json"}:
+		filtered.update(_extract_find_aircraft_location(raw))
+	return raw, filtered
 
 
 def _group_artefacts_by_parent(
