@@ -42,9 +42,12 @@ from parsing.utils_parse import (
 	parse_plist_strict,
 	to_windows_path,
 )
-from phases.utils_phase import find_input_evidence_list_by_identification, write_json
+from phases.utils_phase import drone_sd_label, find_input_evidence_list_by_identification, write_json
 from state import State
+
+_PHASE_NAME = Path(__file__).stem
 from tools.datcon import run_datcon
+from tools.extractdji import run_extractdji
 from tools.exiftool import run_exiftool
 from tools.txtlogtocsv import run_txtlogtocsv
 
@@ -118,7 +121,7 @@ def _group_artefacts_by_parent(
 
 
 def run_phase_4(state: State) -> State:
-	phase_dir = output_dir() / state.case_id / "p4_decision_and_orchestration"
+	phase_dir = output_dir() / state.case_id / _PHASE_NAME
 	clear_and_make(phase_dir)
 
 	orchestrated: list[Evidence] = []
@@ -135,13 +138,16 @@ def run_phase_4(state: State) -> State:
 			continue
 
 		for idx, source in enumerate(sources, start=1):
-			evidence_index = idx if identification == IDENTIFICATION_DRONE_SD and len(sources) > 1 else None
+			evidence_index = idx if identification == IDENTIFICATION_DRONE_SD else None
 			parent_hash = source.sha256
 			if not parent_hash:
 				state.raise_anomaly(4, identification, "parent hash is missing", index=evidence_index)
 				continue
 
-			source_dir = phase_dir / identification
+			if identification == IDENTIFICATION_DRONE_SD:
+				source_dir = phase_dir / drone_sd_label(idx)
+			else:
+				source_dir = phase_dir / identification
 			artefacts = artefacts_by_parent.get(parent_hash, [])
 
 			for artefact in sorted(artefacts, key=lambda a: str(a.get("artefact_category") or "")):
@@ -164,8 +170,9 @@ def run_phase_4(state: State) -> State:
 					}:
 						continue
 					tool_output_dir = source_dir / DRONE_LOGS
-					orchestrated.extend(
-						run_datcon(
+					source_name = Path(str(artefact.get("source_path") or stored_path.name)).name
+					if "ASSISTANT_EXPORT" in source_name.upper():
+						converted = run_extractdji(
 							stored_path,
 							tool_output_dir,
 							state,
@@ -173,7 +180,29 @@ def run_phase_4(state: State) -> State:
 							identification,
 							evidence_index,
 						)
-					)
+						for converted_evidence in converted:
+							orchestrated.append(converted_evidence)
+							orchestrated.extend(
+								run_datcon(
+									Path(str(converted_evidence.stored_path)),
+									tool_output_dir,
+									state,
+									converted_evidence,
+									identification,
+									evidence_index,
+								)
+							)
+					else:
+						orchestrated.extend(
+							run_datcon(
+								stored_path,
+								tool_output_dir,
+								state,
+								parent_evidence,
+								identification,
+								evidence_index,
+							)
+						)
 					continue
 
 				if category_key == FLIGHT_RECORDS:
@@ -256,10 +285,10 @@ def run_phase_4(state: State) -> State:
 				if category_key in {DATABASES, FLIGHT_LOGS}:
 					continue
 
-	state.phase_outputs["p4_decision_and_orchestration"] = {
+	state.phase_outputs[_PHASE_NAME] = {
 		"completed_at": utc_now_iso(),
 		"decision_and_orchestration_artefacts": [item.to_dict() for item in orchestrated],
 		"derived_observations": [item.to_dict() for item in observations],
 	}
-	state.completed_phases.append("p4_decision_and_orchestration")
+	state.completed_phases.append(_PHASE_NAME)
 	return state

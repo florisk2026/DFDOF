@@ -38,9 +38,7 @@ def test_parse_android_source_logical_builds_backup_info(tmp_path: Path, monkeyp
         include_paths,
         artefact_category,
         missing_ok,
-        state,
     ):
-        _ = state
         created: list[Evidence] = []
         for token in include_paths:
             name = Path(str(token)).name
@@ -151,9 +149,7 @@ def test_parse_android_source_flags_missing_key_files(tmp_path: Path, monkeypatc
         include_paths,
         artefact_category,
         missing_ok,
-        state,
     ):
-        _ = state
         assert missing_ok is True
         assert "packages.list" in include_paths
         out_path = dest_root / "packages.list"

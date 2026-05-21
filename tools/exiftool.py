@@ -10,14 +10,39 @@ from config import (
 	ACQUISITION_EXIFTOOL,
 	EVIDENCE_TYPE_PARSED,
 	EXIFTOOL,
-	EXIF_IMAGE_FIELDS,
-	EXIF_VIDEO_FIELDS,
 	IMAGES,
 )
+
 from evidence import Evidence, make_evidence
 from observation import Observation, make_observation
 from parsing.utils_parse import to_windows_path
 from state import State
+
+_EXIF_IMAGE_FIELDS: set[str] = {
+	"DateTimeOriginal",
+	"GPSLatitude", "GPSLongitude", "GPSAltitude",
+	"GPSLatitudeRef", "GPSLongitudeRef", "GPSAltitudeRef",
+	"Make", "Model", "Software",
+	"ImageWidth", "ImageHeight", "Orientation",
+	"AbsoluteAltitude", "RelativeAltitude",
+	"GimbalRollDegree", "GimbalYawDegree", "GimbalPitchDegree",
+	"FlightRollDegree", "FlightYawDegree", "FlightPitchDegree",
+	"CalibratedFocalLength", "CalibratedOpticalCenterX", "CalibratedOpticalCenterY",
+	"FileName", "FileType", "FileSize", "FileTypeExtension",
+	"FileCreateDate", "FileModifyDate", "MIMEType",
+}
+
+_EXIF_VIDEO_FIELDS: set[str] = {
+	"CreateDate", "ModifyDate", "Duration", "VideoFrameRate",
+	"ImageWidth", "ImageHeight",
+	"Make", "Model", "Software", "GPSCoordinates",
+	"AbsoluteAltitude", "RelativeAltitude",
+	"GimbalRollDegree", "GimbalYawDegree", "GimbalPitchDegree",
+	"FlightRollDegree", "FlightYawDegree", "FlightPitchDegree",
+	"FileName", "FileType", "FileSize", "FileTypeExtension",
+	"FileCreateDate", "FileModifyDate", "MIMEType",
+	"MajorBrand", "CompatibleBrands", "Encoder", "MediaDuration",
+}
 
 
 def _filter_metadata(metadata: dict) -> dict:
@@ -45,7 +70,7 @@ def run_exiftool(
 	# Run exiftool with JSON output and capture complete process.
 	try:
 		proc = subprocess.run(
-			[str(EXIFTOOL), "-json", str(file_path)],
+			[str(EXIFTOOL), "-json", "-n", str(file_path)],
 			capture_output=True,
 			text=True,
 			timeout=30,
@@ -72,7 +97,7 @@ def run_exiftool(
 			metadata_list = []
 
 	metadata = _filter_metadata(metadata_list[0] if metadata_list else {})
-	field_filter = EXIF_IMAGE_FIELDS if artefact_category == IMAGES else EXIF_VIDEO_FIELDS
+	field_filter = _EXIF_IMAGE_FIELDS if artefact_category == IMAGES else _EXIF_VIDEO_FIELDS
 	_ZERO_DATE = "0000:00:00 00:00:00"
 	filtered_metadata = {
 		key: value

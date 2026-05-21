@@ -204,10 +204,49 @@ def test_run_phase_3_drone_flight_storage_flat_dat(tmp_path: Path, monkeypatch) 
     result = p3.run_phase_3(state)
     artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]
     assert any(item["artefact_category"] == DRONE_LOGS for item in artefacts)
-    assert not any(
-        flag.startswith("p3 - drone flight storage: DJI export not recognised")
-        for flag in result.anomaly_flags
+    assert not any("drone flight storage" in flag for flag in result.anomaly_flags)
+
+
+def test_run_phase_3_drone_flight_storage_export_dat(tmp_path: Path, monkeypatch) -> None:
+    project_root = tmp_path
+    documents_dir = project_root / "Documents"
+    documents_dir.mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    flight_zip = tmp_path / "flight_storage.zip"
+    _write_zip(
+        flight_zip,
+        {
+            "DJI_ASSISTANT_EXPORT_FILE_001.DAT": "export dat",
+            "note.txt": "note",
+        },
     )
+
+    state = _build_state(tmp_path, "CASE-P3-3B")
+    flight_evidence = make_evidence(
+        source_path=flight_zip,
+        stored_path=flight_zip,
+        parent=None,
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
+        skip_hash=True,
+    )
+    state.input_evidence.append(flight_evidence)
+    state.phase_outputs["p1_provenance"]["identified_evidence"] = [
+        {
+            "source_path": str(flight_zip),
+            "identified": True,
+            "identified_as": "drone_flight_storage",
+            "operator_confirmed": True,
+            "identified_by_operator_as": None,
+        }
+    ]
+
+    result = p3.run_phase_3(state)
+    artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]
+    assert any(item["artefact_category"] == DRONE_LOGS for item in artefacts)
+    assert any("ASSISTANT_EXPORT" in item["source_path"].upper() for item in artefacts)
+    assert not any("drone flight storage" in flag for flag in result.anomaly_flags)
 
 
 def test_run_phase_3_android_physical_filters_extensions(

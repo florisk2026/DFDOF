@@ -48,6 +48,11 @@ def write_json(path: Path, payload: Any) -> None:
     path.write_text(json.dumps(json_safe(payload), indent=2), encoding="utf-8")
 
 
+def drone_sd_label(idx: int) -> str:
+    """Return the canonical directory label for a drone SD source (1-indexed)."""
+    return f"drone_sd_{idx}"
+
+
 def find_input_evidence_list_by_identification(
     state: State, identification: str
 ) -> list[Evidence]:

@@ -67,6 +67,8 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
     image_file.write_text("image", encoding="utf-8")
     drone_log = artefact_dir / "log.DAT"
     drone_log.write_text("dat", encoding="utf-8")
+    export_log = artefact_dir / "DJI_ASSISTANT_EXPORT_FILE_001.DAT"
+    export_log.write_text("export", encoding="utf-8")
 
     flight_evidence = make_evidence(
         source_path=flight_record.name,
@@ -100,6 +102,14 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
         type=config.EVIDENCE_TYPE_EXTRACTED,
         artefact_category=config.DRONE_LOGS,
     )
+    export_log_evidence = make_evidence(
+        source_path=export_log.name,
+        stored_path=export_log,
+        parent=source,
+        acquisition_method=config.ACQUISITION_EXTRACT_LOGICAL,
+        type=config.EVIDENCE_TYPE_EXTRACTED,
+        artefact_category=config.DRONE_LOGS,
+    )
 
     state.phase_outputs["p3_artefact_extraction"] = {
         "extracted_artefacts": [
@@ -107,6 +117,7 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
             account_evidence.to_dict(),
             image_evidence.to_dict(),
             drone_log_evidence.to_dict(),
+            export_log_evidence.to_dict(),
         ]
     }
 
@@ -121,6 +132,21 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
                 parent=parent_evidence,
                 acquisition_method=config.ACQUISITION_DATCON,
                 type=config.EVIDENCE_TYPE_DECODED,
+                artefact_category=config.DRONE_LOGS,
+            )
+        ]
+
+    def fake_extractdji(dat_path, output_dir, _state, parent_evidence, _identification, _index=None):
+        output_dir.mkdir(parents=True, exist_ok=True)
+        converted_path = output_dir / "FLY001.DAT"
+        converted_path.write_text("converted", encoding="utf-8")
+        return [
+            make_evidence(
+                source_path=dat_path.name,
+                stored_path=converted_path,
+                parent=parent_evidence,
+                acquisition_method=config.ACQUISITION_EXTRACT_DJI,
+                type=config.EVIDENCE_TYPE_EXTRACTED,
                 artefact_category=config.DRONE_LOGS,
             )
         ]
@@ -159,6 +185,7 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
         return evidence, observation
 
     monkeypatch.setattr(p4, "run_datcon", fake_datcon)
+    monkeypatch.setattr(p4, "run_extractdji", fake_extractdji)
     monkeypatch.setattr(p4, "run_txtlogtocsv", fake_txtlogtocsv)
     monkeypatch.setattr(p4, "run_exiftool", fake_exiftool)
 
@@ -166,7 +193,9 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
     phase_output = result.phase_outputs["p4_decision_and_orchestration"]
 
     assert result.completed_phases[-1] == "p4_decision_and_orchestration"
-    assert len(phase_output["decision_and_orchestration_artefacts"]) == 4
+    # flight_record→txtlogtocsv(1) + account(1) + image→exiftool(1)
+    # + drone_log→datcon(1) + export_log→extractdji(1)+datcon(1) = 6
+    assert len(phase_output["decision_and_orchestration_artefacts"]) == 6
     assert len(phase_output["derived_observations"]) == 2
 
 

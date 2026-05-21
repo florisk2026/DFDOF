@@ -301,13 +301,21 @@ def parse_android_source(
 
     output_root.mkdir(parents=True, exist_ok=True)
 
+    state.log_tool_invocation(
+        tool_name=ACQUISITION_PARSER_ANDROID,
+        args=[str(source_evidence.stored_path), str(output_root)],
+        return_code=None,
+        stdout=None,
+        stderr=None,
+        output_paths=[str(output_root)],
+    )
+
     extracted_files: list[Evidence] = []
     if is_logical:
         extracted_files = extract_logical_files(
             source_evidence,
             output_root,
             TARGET_FILES,
-            state=state,
             artefact_category=DEVICE_AND_BACKUP_INFO,
             missing_ok=True,
         )
@@ -442,7 +450,6 @@ def parse_android_source(
                 source_evidence,
                 output_root,
                 [acquisition_member],
-                state=state,
                 artefact_category=DEVICE_AND_BACKUP_INFO,
                 missing_ok=False,
             )
@@ -470,15 +477,6 @@ def parse_android_source(
 
     backup_info_path = output_root / "backup_info.json"
     backup_info_path.write_text(json.dumps(backup_info, indent=2), encoding="utf-8")
-
-    state.log_tool_invocation(
-        tool_name=ACQUISITION_PARSER_ANDROID,
-        args=[str(source_evidence.stored_path), str(output_root)],
-        return_code=None,
-        stdout=None,
-        stderr=None,
-        output_paths=[str(output_root)],
-    )
 
     all_evidence: list[Evidence] = list(extracted_files)
     if acquisition_evidence is not None:

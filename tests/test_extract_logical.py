@@ -7,7 +7,6 @@ import config
 from config import DEVICE_AND_BACKUP_INFO
 from evidence import make_evidence
 from parsing.extract_logical import extract_logical_files, find_acquisition_pdf_member
-from state import State
 
 
 def _create_logical_zip(zip_path: Path) -> None:
@@ -28,13 +27,11 @@ def test_extract_logical_files_batch_returns_parsed_evidence(tmp_path: Path) -> 
         type=config.EVIDENCE_TYPE_INPUT,
     )
     output_dir = tmp_path / "Documents" / "dfdof_results" / "CASE-001"
-    state = State(case_id="CASE-LOG-1", operator="Tester")
 
     extracted = extract_logical_files(
         source,
         output_dir,
         ["folder/deviceinfo.xml", "logs/other.txt"],
-        state=state,
     )
 
     assert len(extracted) == 2
@@ -50,8 +47,6 @@ def test_extract_logical_files_batch_returns_parsed_evidence(tmp_path: Path) -> 
     assert extracted[0].sha1
     assert extracted[0].hash_timestamp
     assert extracted[0].size == len(b"device info contents")
-    assert state.tool_invocation_log
-    assert state.tool_invocation_log[0]["tool_name"] == config.ACQUISITION_EXTRACT_LOGICAL
 
 
 def test_find_acquisition_pdf_member_prefers_depth_folder_with_txt(

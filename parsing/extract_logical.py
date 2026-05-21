@@ -18,7 +18,6 @@ from config import (
 )
 from evidence import Evidence, hash_file, make_evidence
 from parsing.utils_parse import normalise_path, to_windows_path, normalise_path_to_posix
-from state import State
 
 
 def ensure_unique_path(target: Path) -> Path:
@@ -117,7 +116,6 @@ def extract_logical_files(
     output_dir: Path | str,
     search_members: Iterable[str],
     *,
-    state: State,
     artefact_category: str = DEVICE_AND_BACKUP_INFO,
     missing_ok: bool = False,
 ) -> list[Evidence]:
@@ -136,7 +134,6 @@ def extract_logical_files(
     output_dir.mkdir(parents=True, exist_ok=True)
     requested_members = list(search_members)
     extracted: list[Evidence] = []
-    output_paths: list[str] = []
 
     with zipfile.ZipFile(archive_path) as archive:
         archive_names = archive.namelist()
@@ -170,15 +167,5 @@ def extract_logical_files(
                     artefact_category=artefact_category,
                 )
             )
-            output_paths.append(str(output_path))
-
-    state.log_tool_invocation(
-        tool_name=ACQUISITION_EXTRACT_LOGICAL,
-        args=[str(archive_path), str(output_dir), *requested_members],
-        return_code=None,
-        stdout=None,
-        stderr=None,
-        output_paths=output_paths or None,
-    )
 
     return extracted

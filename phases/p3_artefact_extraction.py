@@ -8,9 +8,7 @@ This phase:
 
 from __future__ import annotations
 
-import re
 import shutil
-import subprocess
 import zipfile
 from pathlib import Path
 from typing import Any, Iterable
@@ -31,7 +29,6 @@ from config import (
     DJI_APP_DOMAINS,
     DRONE_LOGS,
     EVIDENCE_TYPE_EXTRACTED,
-    EXTRACT_DJI_EXE,
     EXTENSION_ZIP,
     IDENTIFICATION_CONTROLLER_ANDROID,
     IDENTIFICATION_CONTROLLER_IOS,
@@ -40,7 +37,6 @@ from config import (
     IMAGES,
     TSK_ICAT,
     VIDEOS,
-    VERSION_DJI_EXTRACT,
 	output_dir,
 	clear_and_make,
 	utc_now_iso,
@@ -54,10 +50,10 @@ from parsing.utils_parse import (
     normalise_acquisition_method,
 )
 from parsing.extract_physical import extract_tsk_image, run_command
-from phases.utils_phase import find_input_evidence_list_by_identification
+from phases.utils_phase import drone_sd_label, find_input_evidence_list_by_identification
 from state import State
 
-_DJI_EXPORT_RE = re.compile(r"^DJI_ASSISTANT_EXPORT_FILE_.*\.DAT$", re.IGNORECASE)
+_PHASE_NAME = Path(__file__).stem
 
 
 def _build_path_category_index() -> dict[str, list[str]]:
@@ -199,6 +195,7 @@ def _extract_drone_sd_physical(
             )
         )
 
+    extracted.sort(key=lambda e: e.artefact_category or "")
     return extracted
 
 
@@ -317,7 +314,7 @@ def run_phase_3(state: State) -> State:
     if "p1_provenance" not in state.phase_outputs:
         raise ValueError("Phase 3 requires Phase 1 outputs. Run Phase 1 first.")
 
-    phase_dir = output_dir() / state.case_id / "p3_artefact_extraction"
+    phase_dir = output_dir() / state.case_id / _PHASE_NAME
     clear_and_make(phase_dir)
 
     extracted: list[Evidence] = []
@@ -363,7 +360,6 @@ def run_phase_3(state: State) -> State:
                             android_source,
                             output_dir_cat,
                             members,
-                            state=state,
                             artefact_category=category,
                             missing_ok=True,
                         )
@@ -492,7 +488,7 @@ def run_phase_3(state: State) -> State:
         state.raise_anomaly(3, IDENTIFICATION_DRONE_SD, "source evidence not found")
     else:
         for idx, sd_source in enumerate(sd_sources):
-            drone_sd_dir = phase_dir / f"drone_sd_{idx + 1}"
+            drone_sd_dir = phase_dir / drone_sd_label(idx + 1)
             clear_and_make(drone_sd_dir)
             print(f"Extracting from drone_sd {idx + 1}")
             sd_archive = Path(str(sd_source.stored_path))
@@ -529,91 +525,43 @@ def run_phase_3(state: State) -> State:
         flight_archive = Path(str(flight_source.stored_path))
         if flight_archive.suffix.lower() == EXTENSION_ZIP[0]:
             member_names = _member_names(flight_archive)
-            export_members = [
-                name for name in member_names if _DJI_EXPORT_RE.match(Path(name).name)
+            dat_members = [
+                name for name in member_names if Path(name).suffix.lower() == ".dat"
             ]
-            if export_members:
-                print("DJI Export found. DJI Export Assistant is being launched.")
-                print("Please click GO in the application window.")
-                print(
-                    "Once finished, close the application and type 'yes' to continue: "
+            if not dat_members:
+                state.raise_anomaly(
+                    3, IDENTIFICATION_DRONE_FLIGHT_STORAGE,
+                    f"no DAT files found in {flight_archive.name}",
+                    category=DRONE_LOGS,
                 )
-                export_input_dir = drone_flight_dir / "_dji_export_input"
-                export_input_dir.mkdir(parents=True, exist_ok=True)
-                extracted_exports = extract_logical_files(
+            else:
+                evidence_list = extract_logical_files(
                     flight_source,
-                    export_input_dir,
-                    export_members,
-                    state=state,
+                    drone_flight_dir,
+                    dat_members,
                     artefact_category=DRONE_LOGS,
                     missing_ok=True,
                 )
-
-                for evidence_item in extracted_exports:
-                    source_dat = Path(str(evidence_item.stored_path))
-                    result = subprocess.run(
-                        [str(EXTRACT_DJI_EXE), str(source_dat), str(drone_flight_dir)],
-                        capture_output=True,
-                        text=True,
-                        check=False,
+                extracted.extend(evidence_list)
+                if not evidence_list:
+                    state.raise_anomaly(
+                        3, IDENTIFICATION_DRONE_FLIGHT_STORAGE,
+                        "no artefacts extracted",
+                        category=DRONE_LOGS,
                     )
-                    state.log_command_result(
-                        tool_name=Path(EXTRACT_DJI_EXE).name,
-                        result=result,
-                        output_paths=[str(drone_flight_dir)],
-                        version=VERSION_DJI_EXTRACT,
-                    )
-
-                confirm = input().strip().lower()
-                if confirm != "yes":
-                    state.raise_anomaly(3, IDENTIFICATION_DRONE_FLIGHT_STORAGE, f"DJI export aborted for {flight_archive.name}", category=DRONE_LOGS)
-                else:
-                    generated = list(drone_flight_dir.rglob("*.DAT"))
-                    if not generated:
-                        state.raise_anomaly(3, IDENTIFICATION_DRONE_FLIGHT_STORAGE, f"DJI export produced no DAT files for {flight_archive.name}", category=DRONE_LOGS)
-                    else:
-                        for dat_path in generated:
-                            target_path = ensure_unique_path(
-                                drone_flight_dir / dat_path.name
-                            )
-                            if dat_path != target_path:
-                                dat_path.replace(target_path)
-                            evidence_item = make_evidence(
-                                source_path=to_windows_path(target_path.name),
-                                stored_path=target_path,
-                                parent=flight_source,
-                                acquisition_method="extract_dji",
-                                type=EVIDENCE_TYPE_EXTRACTED,
-                                artefact_category=DRONE_LOGS,
-                            )
-                            extracted.append(evidence_item)
-            else:
-                dat_members = [
-                    name for name in member_names if Path(name).suffix.lower() == ".dat"
-                ]
-                if not dat_members:
-                    state.raise_anomaly(3, IDENTIFICATION_DRONE_FLIGHT_STORAGE, f"DJI export not recognised for {flight_archive.name}", category=DRONE_LOGS)
-                else:
-                    evidence_list = extract_logical_files(
-                        flight_source,
-                        drone_flight_dir,
-                        dat_members,
-                        state=state,
-                        artefact_category=DRONE_LOGS,
-                        missing_ok=True,
-                    )
-                    extracted.extend(evidence_list)
-                    if not evidence_list:
-                        state.raise_anomaly(3, IDENTIFICATION_DRONE_FLIGHT_STORAGE, "no artefacts found", category=DRONE_LOGS)
         else:
-            state.raise_anomaly(3, IDENTIFICATION_DRONE_FLIGHT_STORAGE, f"DJI export not recognised for {flight_archive.name}", category=DRONE_LOGS)
+            state.raise_anomaly(
+                3, IDENTIFICATION_DRONE_FLIGHT_STORAGE,
+                f"unsupported archive format for {flight_archive.name}",
+                category=DRONE_LOGS,
+            )
 
-    state.phase_outputs["p3_artefact_extraction"] = {
+    state.phase_outputs[_PHASE_NAME] = {
         "completed_at": utc_now_iso(),
         "extracted_artefacts": [item.to_dict() for item in extracted],
     }
 
-    if "p3_artefact_extraction" not in state.completed_phases:
-        state.completed_phases.append("p3_artefact_extraction")
+    if _PHASE_NAME not in state.completed_phases:
+        state.completed_phases.append(_PHASE_NAME)
 
     return state

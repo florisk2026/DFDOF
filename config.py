@@ -70,6 +70,7 @@ ACQUISITION_PARSER_ANDROID = "parser_android"
 ACQUISITION_EXTRACT_LOGICAL = "extract_logical"
 ACQUISITION_EXTRACT_PHYSICAL = "extract_physical"
 ACQUISITION_DATCON = "datcon"
+ACQUISITION_EXTRACT_DJI = "extractdji"
 ACQUISITION_TXTLOGTOCSV = "txtlogtocsvtool"
 ACQUISITION_EXIFTOOL = "exiftool"
 ACQUISITION_SELECT_ACCOUNT_DATA = "p4_decision_and_orchestration"
@@ -135,65 +136,6 @@ MAX_SUMMARY_LENGTH = 125
 EXTENSION_ZIP = [".zip"]
 EXTENSION_PHYSICAL = [".E01", ".001"]
 SUPPORTED_IMAGE_EXTENSIONS = tuple(EXTENSION_PHYSICAL) + tuple(EXTENSION_ZIP)
-
-# For exif metadata in phase 4.
-EXIF_IMAGE_FIELDS: set[str] = {
-    "EXIF:DateTimeOriginal",
-    "EXIF:GPSLatitude",
-    "EXIF:GPSLongitude",
-    "EXIF:GPSAltitude",
-    "EXIF:GPSLatitudeRef",
-    "EXIF:GPSLongitudeRef",
-    "EXIF:GPSAltitudeRef",
-    "EXIF:Make",
-    "EXIF:Model",
-    "EXIF:Software",
-    "EXIF:ImageWidth",
-    "EXIF:ImageHeight",
-    "EXIF:Orientation",
-    "XMP:AbsoluteAltitude",
-    "XMP:RelativeAltitude",
-    "XMP:GimbalRollDegree",
-    "XMP:GimbalYawDegree",
-    "XMP:GimbalPitchDegree",
-    "XMP:FlightRollDegree",
-    "XMP:FlightYawDegree",
-    "XMP:FlightPitchDegree",
-    "XMP:CalibratedFocalLength",
-    "XMP:CalibratedOpticalCenterX",
-    "XMP:CalibratedOpticalCenterY",
-    "File:FileName",
-    "File:FileSize",
-    "File:FileTypeExtension",
-    "File:FileCreateDate",
-    "File:FileModifyDate",
-}
-
-EXIF_VIDEO_FIELDS: set[str] = {
-    "QuickTime:CreateDate",
-    "QuickTime:ModifyDate",
-    "QuickTime:Duration",
-    "QuickTime:VideoFrameRate",
-    "QuickTime:ImageWidth",
-    "QuickTime:ImageHeight",
-    "QuickTime:Make",
-    "QuickTime:Model",
-    "QuickTime:Software",
-    "QuickTime:GPSCoordinates",
-    "XMP:AbsoluteAltitude",
-    "XMP:RelativeAltitude",
-    "XMP:GimbalRollDegree",
-    "XMP:GimbalYawDegree",
-    "XMP:GimbalPitchDegree",
-    "XMP:FlightRollDegree",
-    "XMP:FlightYawDegree",
-    "XMP:FlightPitchDegree",
-    "File:FileName",
-    "File:FileSize",
-    "File:FileTypeExtension",
-    "File:FileCreateDate",
-    "File:FileModifyDate",
-}
 
 
 # Default functions.

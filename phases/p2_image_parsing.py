@@ -32,6 +32,8 @@ from parsing.utils_parse import normalise_scalar, to_windows_path
 from phases.utils_phase import find_input_evidence_list_by_identification
 from state import State
 
+_PHASE_NAME = Path(__file__).stem
+
 
 def _extract_installed_dji_apps(
     value: Any, allowed_domains: dict[str, str]
@@ -167,7 +169,7 @@ def run_phase_2(state: State) -> State:
             "Phase 2 requires Phase 1 outputs (p1_provenance.identified_evidence). Run Phase 1 first."
         )
 
-    phase_dir = output_dir() / state.case_id / "p2_image_parsing"
+    phase_dir = output_dir() / state.case_id / _PHASE_NAME
     clear_and_make(phase_dir)
 
     parsed_evidence: list[dict[str, Any]] = []
@@ -219,13 +221,13 @@ def run_phase_2(state: State) -> State:
             state.raise_anomaly(2, IDENTIFICATION_CONTROLLER_IOS, f"failed to convert {cast(Path, ios_source.stored_path).name}")
 
     now = utc_now_iso()
-    state.phase_outputs["p2_image_parsing"] = {
+    state.phase_outputs[_PHASE_NAME] = {
         "completed_at": now,
         "parsed_evidence": parsed_evidence,
         "derived_observations": observations,
     }
 
-    if "p2_image_parsing" not in state.completed_phases:
-        state.completed_phases.append("p2_image_parsing")
+    if _PHASE_NAME not in state.completed_phases:
+        state.completed_phases.append(_PHASE_NAME)
 
     return state
