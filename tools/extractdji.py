@@ -18,6 +18,14 @@ from parsing.utils_parse import to_windows_path
 from state import State
 
 
+def _extractdji_output_missing(output_dir: Path) -> bool:
+    """Return True if no FLY*.DAT file is present in output_dir."""
+    return not any(
+        p.is_file() and p.suffix.upper() == ".DAT" and p.stem.upper().startswith("FLY")
+        for p in output_dir.iterdir()
+    )
+
+
 def _extractdji_settings_block(dat_path: Path, output_dir: Path) -> str:
     return (
         "ExtractDJI is required for: {name}\n"
@@ -58,11 +66,25 @@ def run_extractdji(
         )
         return []
 
-    input("Once the export is finished, close ExtractDJI, and type 'done' and press Enter: ")
+    while True:
+        response = input(
+            "Once the export is finished, close ExtractDJI, and type 'done' and press Enter.\n"
+            "If this export produced only GIMBAL files (not useful), type 'skip'.\n"
+            "If ExtractDJI reported an error, type 'error': "
+        ).strip().lower()
+        if response in {"skip", "error"}:
+            return []
+        if not _extractdji_output_missing(output_dir):
+            break
+        print(
+            "WARNING: Export incomplete — settings were incorrect or exports are missing.\n"
+            "Expected: at least one FLY*.DAT file in the output directory.\n"
+            "Please reopen ExtractDJI, check your settings, export again, or type 'skip'/'error' to bypass."
+        )
 
     output_files = [
         p for p in output_dir.iterdir()
-        if p.is_file() and p.suffix.upper() == ".DAT"
+        if p.is_file() and p.suffix.upper() == ".DAT" and p.stem.upper().startswith("FLY")
     ]
     output_paths_str = [str(p) for p in output_files]
     state.log_tool_invocation(
@@ -74,14 +96,6 @@ def run_extractdji(
         stderr=None,
         output_paths=output_paths_str or None,
     )
-
-    if not output_files:
-        state.raise_anomaly(
-            4, identification,
-            f"ExtractDJI produced no DAT files for {dat_path.name}",
-            category=DRONE_LOGS, index=index,
-        )
-        return []
 
     evidence_list: list[Evidence] = []
     for file_path in output_files:

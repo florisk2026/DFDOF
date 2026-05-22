@@ -16,6 +16,18 @@ from evidence import Evidence, make_evidence
 from parsing.utils_parse import to_windows_path
 from state import State
 
+_DATCON_REQUIRED_EXTS = {".csv", ".kml", ".config", ".log"}
+
+
+def _datcon_output_missing(output_dir: Path, dat_stem: str) -> bool:
+	"""Return True if any required DatCon output file is absent."""
+	present = {
+		p.suffix.lower()
+		for p in output_dir.iterdir()
+		if p.is_file() and p.stem == dat_stem
+	}
+	return not _DATCON_REQUIRED_EXTS.issubset(present)
+
 
 def _datcon_settings_block(dat_path: Path, output_dir: Path) -> str:
 	return (
@@ -64,14 +76,25 @@ def run_datcon(
 			stderr=f"Tool not found: {DATCON}",
 			output_paths=None,
 		)
-		if output_dir.exists() and not any(output_dir.iterdir()):
-			output_dir.rmdir()
 		state.raise_anomaly(4, identification, f"DatCon not found for {dat_path.name}", category=DRONE_LOGS, index=index)
 		return []
 
-	input("Once the export is finished, close DatCon, and type 'done' and press Enter: ")
-
 	dat_stem = dat_path.stem
+	while True:
+		response = input(
+			"Once the export is finished, close DatCon, and type 'done' and press Enter.\n"
+			"If DatCon reported an error, type 'error': "
+		).strip().lower()
+		if response == "error":
+			return []
+		if not _datcon_output_missing(output_dir, dat_stem):
+			break
+		print(
+			"WARNING: Export incomplete — settings were incorrect or exports are missing.\n"
+			f"Expected: {dat_stem}.csv, {dat_stem}.KML, {dat_stem}.config, {dat_stem}.log\n"
+			"Please reopen DatCon, check your settings, export again, or type 'error' to bypass."
+		)
+
 	output_files = [
 		path
 		for path in output_dir.iterdir()
@@ -87,12 +110,6 @@ def run_datcon(
 		stderr=None,
 		output_paths=output_paths or None,
 	)
-
-	if not output_files:
-		if output_dir.exists() and not any(output_dir.iterdir()):
-			output_dir.rmdir()
-		state.raise_anomaly(4, identification, f"DatCon produced no output for {dat_path.name}", category=DRONE_LOGS, index=index)
-		return []
 
 	evidence_list: list[Evidence] = []
 	for file_path in output_files:
