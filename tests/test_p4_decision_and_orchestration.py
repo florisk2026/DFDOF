@@ -253,3 +253,104 @@ def test_run_phase_4_records_anomalies(tmp_path: Path, monkeypatch) -> None:
     assert "[p4 - controller android]: source evidence not found" in anomalies
     assert "[p4 - drone sd]: source evidence not found" in anomalies
     assert not (phase_dir / "controller_ios" / "account_data").exists()
+
+
+def test_run_phase_4_android_info_file_parsed(tmp_path: Path, monkeypatch) -> None:
+    project_root = tmp_path
+    documents_dir = project_root / "Documents"
+    documents_dir.mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    state = _build_state(tmp_path, "CASE-P4-INFO-1")
+    android_zip = tmp_path / "android.zip"
+    android_zip.write_text("android", encoding="utf-8")
+    source = _add_source(state, android_zip, config.IDENTIFICATION_CONTROLLER_ANDROID)
+
+    artefact_dir = tmp_path / "artefacts"
+    artefact_dir.mkdir()
+    info_file = artefact_dir / "2018_04_19_11_40_02.info"
+    info_file.write_text(
+        "#Thu Apr 19 11:40:53 MDT 2018\n"
+        "CaptureDate=2018/04/19 11\\:40\\:02\n"
+        "PositionRelativeAlt=86.0\n"
+        "PositionGPSLat=39.96050285066674\n"
+        "PositionGPSAlt=86.0\n"
+        "PositionGPSLng=-106.21660977113379\n"
+        "FPS_Drone=30\n"
+        "DeviceMaker=DJI\n",
+        encoding="utf-8",
+    )
+    info_evidence = make_evidence(
+        source_path=info_file.name,
+        stored_path=info_file,
+        parent=source,
+        acquisition_method=config.ACQUISITION_EXTRACT_LOGICAL,
+        type=config.EVIDENCE_TYPE_EXTRACTED,
+        artefact_category=config.VIDEOS,
+    )
+    state.phase_outputs["p3_artefact_extraction"] = {
+        "extracted_artefacts": [info_evidence.to_dict()]
+    }
+
+    exiftool_called_for: list[str] = []
+
+    def fake_exiftool(file_path, output_dir, _state, parent_ev, artefact_category, _identification, _index=None):
+        exiftool_called_for.append(file_path.name)
+        return None, None
+
+    monkeypatch.setattr(p4, "run_exiftool", fake_exiftool)
+
+    result = p4.run_phase_4(state)
+    phase_output = result.phase_outputs["p4_decision_and_orchestration"]
+
+    artefacts = phase_output["decision_and_orchestration_artefacts"]
+    observations = phase_output["derived_observations"]
+
+    assert len(artefacts) == 1
+    assert artefacts[0]["stored_path"].endswith(".json")
+    assert "2018_04_19_11_40_02.info" not in exiftool_called_for
+
+    assert len(observations) == 1
+    obs_fields = observations[0]["observations"][0]
+    assert obs_fields["CaptureDate"] == "2018/04/19 11:40:02"
+    assert obs_fields["PositionGPSLat"] == "39.96050285066674"
+    assert obs_fields["PositionGPSLng"] == "-106.21660977113379"
+    assert obs_fields["PositionGPSAlt"] == "86.0"
+    assert obs_fields["PositionRelativeAlt"] == "86.0"
+    assert "FPS_Drone" not in obs_fields
+    assert "DeviceMaker" not in obs_fields
+
+
+def test_run_phase_4_android_info_file_empty_raises_anomaly(tmp_path: Path, monkeypatch) -> None:
+    project_root = tmp_path
+    documents_dir = project_root / "Documents"
+    documents_dir.mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    state = _build_state(tmp_path, "CASE-P4-INFO-2")
+    android_zip = tmp_path / "android.zip"
+    android_zip.write_text("android", encoding="utf-8")
+    source = _add_source(state, android_zip, config.IDENTIFICATION_CONTROLLER_ANDROID)
+
+    artefact_dir = tmp_path / "artefacts"
+    artefact_dir.mkdir()
+    empty_info = artefact_dir / "empty.info"
+    empty_info.write_text("#only a comment\n", encoding="utf-8")
+    info_evidence = make_evidence(
+        source_path=empty_info.name,
+        stored_path=empty_info,
+        parent=source,
+        acquisition_method=config.ACQUISITION_EXTRACT_LOGICAL,
+        type=config.EVIDENCE_TYPE_EXTRACTED,
+        artefact_category=config.VIDEOS,
+    )
+    state.phase_outputs["p3_artefact_extraction"] = {
+        "extracted_artefacts": [info_evidence.to_dict()]
+    }
+
+    result = p4.run_phase_4(state)
+    phase_output = result.phase_outputs["p4_decision_and_orchestration"]
+
+    assert not phase_output["decision_and_orchestration_artefacts"]
+    assert not phase_output["derived_observations"]
+    assert any("video info parse failed" in flag for flag in result.anomaly_flags)

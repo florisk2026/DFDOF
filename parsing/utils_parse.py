@@ -194,6 +194,41 @@ def decode_cllocation_bplist(value: str) -> dict[str, str] | None:
         return None
 
 
+def parse_java_properties(path: Path) -> dict[str, str]:
+    """Parse a Java .properties file into a flat key→value dict.
+
+    Strips comment lines (#/!) and blank lines. Unescapes backslash sequences
+    (e.g. \\: → :). Returns {} on read failure.
+    """
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except Exception:
+        return {}
+    result: dict[str, str] = {}
+    for line in lines:
+        line = line.strip()
+        if not line or line[0] in ("#", "!"):
+            continue
+        sep = -1
+        i = 0
+        while i < len(line):
+            if line[i] == "\\":
+                i += 2
+                continue
+            if line[i] in ("=", ":"):
+                sep = i
+                break
+            i += 1
+        if sep == -1:
+            continue
+        key = line[:sep].strip()
+        value = line[sep + 1:].strip()
+        value = re.sub(r"\\(.)", lambda m: m.group(1), value)
+        if key:
+            result[key] = value
+    return result
+
+
 def parse_json_file(path: Path) -> dict:
     """Load a JSON file and return the top-level dict. Return {} on failure."""
     try:

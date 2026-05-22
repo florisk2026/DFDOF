@@ -43,6 +43,7 @@ from parsing.utils_parse import (
 	ieee754_long_to_degrees,
 	normalise_acquisition_method,
 	parse_android_xml_map,
+	parse_java_properties,
 	parse_json_file,
 	parse_plist_strict,
 	to_windows_path,
@@ -88,6 +89,12 @@ _ANDROID_DJI_PILOT_FIELDS: dict[str, tuple] = {
 	"device_uuid":      (["key_uuid_for_account_center"], None),
 	"last_latitude":    (["KEY_CC_LAST_FLYC_LAT"], ieee754_long_to_degrees),
 	"last_longitude":   (["KEY_CC_LAST_FLYC_LNG"], ieee754_long_to_degrees),
+}
+
+
+_INFO_KEYS_LOWER = {
+	"capturedate", "positionrelativealt", "positiongpslat",
+	"positiongpsalt", "positiongpslng",
 }
 
 
@@ -304,6 +311,35 @@ def run_phase_4(state: State) -> State:
 					}:
 						continue
 					tool_output_dir = source_dir / category_key
+
+					if stored_path.suffix.lower() == ".info":
+						raw = parse_java_properties(stored_path)
+						if not raw:
+							state.raise_anomaly(4, identification, f"video info parse failed for {stored_path.name}", category=VIDEOS, index=evidence_index)
+							continue
+						tool_output_dir.mkdir(parents=True, exist_ok=True)
+						json_path = tool_output_dir / f"{stored_path.stem}.json"
+						write_json(json_path, raw)
+						orchestrated.append(
+							make_evidence(
+								source_path=to_windows_path(str(stored_path)),
+								stored_path=json_path,
+								parent=parent_evidence,
+								acquisition_method=ACQUISITION_SELECT_ACCOUNT_DATA,
+								type=EVIDENCE_TYPE_PARSED,
+								artefact_category=VIDEOS,
+							)
+						)
+						observations.append(
+							make_observation(
+								evidence_sha256=parent_evidence.sha256,
+								evidence_category=VIDEOS,
+								acquisition_method=ACQUISITION_SELECT_ACCOUNT_DATA,
+								observations=[{k: v for k, v in raw.items() if k.lower() in _INFO_KEYS_LOWER}],
+							)
+						)
+						continue
+
 					if ACQUISITION_EXIFTOOL not in _announced_tools:
 						print("  Orchestrating ExifTool")
 						_announced_tools.add(ACQUISITION_EXIFTOOL)
