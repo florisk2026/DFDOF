@@ -182,11 +182,7 @@ def decode_cllocation_bplist(value: str) -> dict[str, str] | None:
         obj = objects[1]
         out = {}
         for archive_key, canonical in _KEY_MAP.items():
-            uid = obj.get(archive_key)
-            if uid is None:
-                continue
-            idx = uid.data if hasattr(uid, "data") else int(uid)
-            val = objects[idx] if 0 <= idx < len(objects) else None
+            val = obj.get(archive_key)
             if val is not None:
                 out[canonical] = str(round(float(val), 8))
         return out or None

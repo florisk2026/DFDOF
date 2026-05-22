@@ -37,7 +37,10 @@ def json_safe(value: Any) -> Any:
         return [json_safe(v) for v in value]
     if hasattr(value, "isoformat"):
         try:
-            return value.isoformat()
+            ts = value.isoformat(timespec="seconds")
+            if not ts.endswith(("+00:00", "Z")) and not any(c in ts[-6:] for c in "+-"):
+                ts += "Z"
+            return ts
         except Exception:
             return str(value)
     if isinstance(value, (str, int, float, bool)) or value is None:
@@ -50,7 +53,7 @@ def json_safe(value: Any) -> Any:
 
 def compact_json(data: Any) -> str:
     """JSON with indent=2 but integer-only arrays and P5 column-check arrays on a single line."""
-    text = json.dumps(data, indent=2)
+    text = json.dumps(data, indent=2, sort_keys=True)
 
     def _collapse(m: re.Match) -> str:
         items = [x.strip() for x in m.group(1).split(",") if x.strip()]

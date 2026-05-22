@@ -8,6 +8,7 @@ This phase:
 
 from __future__ import annotations
 
+import base64
 from pathlib import Path
 from typing import Any
 
@@ -111,12 +112,16 @@ def _extract_find_aircraft_location(raw: dict) -> dict:
 		except Exception:
 			pass
 	loc = block.get("LAST_LOCATION")
-	if isinstance(loc, dict):
+	if isinstance(loc, bytes):
+		b64 = base64.b64encode(loc).decode("ascii")
+	elif isinstance(loc, dict):
 		b64 = loc.get("__bytes_base64")
-		if b64:
-			coords = decode_cllocation_bplist(b64)
-			if coords:
-				out.update(coords)
+	else:
+		b64 = None
+	if b64:
+		coords = decode_cllocation_bplist(b64)
+		if coords:
+			out.update(coords)
 	return out
 
 
