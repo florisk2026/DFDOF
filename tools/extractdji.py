@@ -58,7 +58,7 @@ def run_extractdji(
         )
         return []
 
-    input("Once the export is finished, type 'done' and press Enter: ")
+    input("Once the export is finished, close ExtractDJI, and type 'done' and press Enter: ")
 
     output_files = [
         p for p in output_dir.iterdir()

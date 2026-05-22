@@ -1,0 +1,588 @@
+from __future__ import annotations
+
+import csv
+import json
+from pathlib import Path
+
+import config
+from evidence import make_evidence
+from phases import p5_normalisation_and_anomaly_checking as p5
+from phases.utils_phase import (
+    haversine_m,
+    parse_datcon_date,
+    parse_datcon_time,
+    parse_flightrecord_timestamp,
+    parse_iso_timestamp,
+)
+from state import State
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _build_state(
+    tmp_path: Path,
+    identification: str,
+    p4_file: Path,
+    p4_acquisition: str,
+    p4_category: str,
+) -> State:
+    """Build a minimal State with a wired P1→P3→P4 chain for one artefact."""
+    state = State(case_id="CASE-P5-TEST", operator="Tester")
+
+    src = tmp_path / "source.zip"
+    if not src.exists():
+        src.write_text("src", encoding="utf-8")
+    source_ev = make_evidence(
+        source_path=str(src),
+        stored_path=src,
+        parent=None,
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
+    )
+    state.input_evidence.append(source_ev)
+    state.phase_outputs["p1_provenance"] = {
+        "identified_evidence": [{
+            "source_path": str(src),
+            "identified_as": identification,
+            "identified_by_operator_as": None,
+        }]
+    }
+
+    p3_raw = tmp_path / "p3_raw.bin"
+    if not p3_raw.exists():
+        p3_raw.write_text("raw", encoding="utf-8")
+    p3_ev = make_evidence(
+        source_path=str(p3_raw),
+        stored_path=p3_raw,
+        parent=source_ev,
+        acquisition_method=config.ACQUISITION_EXTRACT_LOGICAL,
+        type=config.EVIDENCE_TYPE_EXTRACTED,
+        artefact_category=p4_category,
+    )
+    state.phase_outputs["p3_artefact_extraction"] = {
+        "extracted_artefacts": [p3_ev.to_dict()]
+    }
+
+    p4_ev = make_evidence(
+        source_path=str(p3_raw),
+        stored_path=p4_file,
+        parent=p3_ev,
+        acquisition_method=p4_acquisition,
+        type=config.EVIDENCE_TYPE_DECODED,
+        artefact_category=p4_category,
+    )
+    state.phase_outputs["p4_decision_and_orchestration"] = {
+        "decision_and_orchestration_artefacts": [p4_ev.to_dict()]
+    }
+    return state
+
+
+def _write_datcon_csv(path: Path, rows: list[list[str]]) -> None:
+    """Write a DatCon-style CSV with GPS, clock, and key sensor columns."""
+    header = [
+        "Clock:Tick#", "Clock:offsetTime",
+        "GPS:Date", "GPS:Time", "GPS:dateTimeStamp",
+        "GPS:Lat", "GPS:Long", "GPS:numSV", "GPS:hDOP",
+        "IMUCalcs(0):height:C", "Controller:motor_state",
+        "eventLog",
+    ]
+    with path.open("w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh)
+        w.writerow(header)
+        w.writerows(rows)
+
+
+def _write_flight_record_csv(path: Path, rows: list[list[str]]) -> None:
+    """Write a FlightRecord-style CSV with all columns used by P5 checks."""
+    header = [
+        "CUSTOM.updateTime", "OSD.latitude", "OSD.longitude", "OSD.height [m]",
+        "OSD.gpsNum", "OSD.compassError", "OSD.battery", "OSD.isMotorUp",
+        "CENTER_BATTERY.relativeCapacity",
+        "CENTER_BATTERY.voltageCell1 [V]", "CENTER_BATTERY.voltageCell2 [V]",
+        "CENTER_BATTERY.voltageCell3 [V]", "CENTER_BATTERY.voltageCell4 [V]",
+        "CENTER_BATTERY.temperature [C]",
+    ]
+    with path.open("w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh)
+        w.writerow(header)
+        w.writerows(rows)
+
+
+# ---------------------------------------------------------------------------
+# Helper unit tests
+# ---------------------------------------------------------------------------
+
+def test_parse_datcon_date_valid() -> None:
+    assert parse_datcon_date("20180419") == "2018-04-19"
+
+
+def test_parse_datcon_date_invalid() -> None:
+    assert parse_datcon_date("") is None
+    assert parse_datcon_date("2018") is None
+    assert parse_datcon_date("abcdefgh") is None
+
+
+def test_parse_datcon_time_valid() -> None:
+    assert parse_datcon_time("172449") == "17:24:49"
+    assert parse_datcon_time("172449.123") == "17:24:49.123"
+
+
+def test_parse_datcon_time_invalid() -> None:
+    assert parse_datcon_time("") is None
+    assert parse_datcon_time("1724") is None
+
+
+def test_haversine_m_same_point() -> None:
+    assert haversine_m(0.0, 0.0, 0.0, 0.0) == 0.0
+
+
+def test_haversine_m_known_distance() -> None:
+    d = haversine_m(0.0, 0.0, 1.0, 0.0)
+    assert 110_000 < d < 112_000
+
+
+def test_parse_iso_timestamp_z_suffix() -> None:
+    assert parse_iso_timestamp("2018-04-19T17:24:49Z") == "2018-04-19T17:24:49+00:00"
+
+
+def test_parse_iso_timestamp_offset() -> None:
+    assert parse_iso_timestamp("2018-04-19T17:24:49+02:00") == "2018-04-19T17:24:49+02:00"
+
+
+def test_parse_iso_timestamp_invalid() -> None:
+    assert parse_iso_timestamp("") is None
+    assert parse_iso_timestamp("not-a-date") is None
+
+
+def test_parse_flightrecord_timestamp_with_ms() -> None:
+    assert parse_flightrecord_timestamp("2018/04/19 17:25:11.078") == "2018-04-19T17:25:11.078000+00:00"
+
+
+def test_parse_flightrecord_timestamp_no_ms() -> None:
+    assert parse_flightrecord_timestamp("2018/04/19 17:25:11") == "2018-04-19T17:25:11+00:00"
+
+
+def test_parse_flightrecord_timestamp_invalid() -> None:
+    assert parse_flightrecord_timestamp("") is None
+    assert parse_flightrecord_timestamp("not-a-date") is None
+
+
+# ---------------------------------------------------------------------------
+# Phase 5 integration tests — DatCon
+# ---------------------------------------------------------------------------
+
+def _datcon_row(
+    tick: str = "0",
+    offset: str = "0.0",
+    date: str = "20180419",
+    time: str = "172449",
+    dts: str = "2018-04-19T17:24:49Z",
+    lat: str = "39.9612830",
+    lon: str = "-106.2165130",
+    numsv: str = "10",
+    hdop: str = "1.2",
+    height: str = "5.0",
+    motor: str = "1",
+    event: str = "",
+) -> list[str]:
+    return [tick, offset, date, time, dts, lat, lon, numsv, hdop, height, motor, event]
+
+
+def test_datcon_norm_columns(tmp_path: Path, monkeypatch) -> None:
+    """DatCon CSV gets [NORM]:ID, date/time, and dateTimeStamp NORM columns at correct positions."""
+    project_root = tmp_path
+    (project_root / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    p4_csv = tmp_path / "FLY029.csv"
+    _write_datcon_csv(p4_csv, [
+        _datcon_row(offset="0.0", dts="2018-04-19T17:24:49Z"),
+        _datcon_row(tick="1", offset="1.0", dts="2018-04-19T17:24:50Z",
+                    lat="39.9612840", lon="-106.2165120"),
+    ])
+
+    state = _build_state(
+        tmp_path, config.IDENTIFICATION_CONTROLLER_IOS,
+        p4_csv, config.ACQUISITION_DATCON, config.DRONE_LOGS,
+    )
+    result = p5.run_phase_5(state)
+
+    artefacts = result.phase_outputs[p5._PHASE_NAME]["normalised_artefacts"]
+    assert len(artefacts) == 1
+    norm_path = Path(artefacts[0]["stored_path"])
+    assert norm_path.exists()
+    assert norm_path.name.startswith("norm_")
+
+    with norm_path.open(newline="", encoding="utf-8") as fh:
+        reader = csv.reader(fh)
+        header = next(reader)
+        rows = list(reader)
+
+    assert header[0] == "[NORM]:ID"
+    assert "[NORM]:GPS:Date" in header
+    assert "[NORM]:GPS:Time" in header
+    assert "[NORM]:GPS:dateTimeStamp" in header
+
+    date_norm_idx = header.index("[NORM]:GPS:Date")
+    time_norm_idx = header.index("[NORM]:GPS:Time")
+    gps_date_idx = header.index("GPS:Date")
+    gps_time_idx = header.index("GPS:Time")
+    dts_idx = header.index("GPS:dateTimeStamp")
+    dts_norm_idx = header.index("[NORM]:GPS:dateTimeStamp")
+
+    assert date_norm_idx == gps_date_idx + 1
+    assert time_norm_idx == gps_time_idx + 1
+    assert dts_norm_idx == dts_idx + 1
+
+    assert rows[0][0] == "0"
+    assert rows[1][0] == "1"
+    assert rows[0][date_norm_idx] == "2018-04-19"
+    assert rows[0][time_norm_idx] == "17:24:49"
+    assert rows[0][dts_norm_idx] == "2018-04-19T17:24:49+00:00"
+
+
+def test_datcon_coordinate_jump_anomaly(tmp_path: Path, monkeypatch) -> None:
+    """Two GPS rows 1000 km apart in 1 second → coordinate_jump contains those row IDs."""
+    project_root = tmp_path
+    (project_root / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    p4_csv = tmp_path / "FLY_speed.csv"
+    _write_datcon_csv(p4_csv, [
+        _datcon_row(offset="0.0", dts="2018-04-19T12:00:00Z", lat="1.0", lon="0.0"),
+        _datcon_row(tick="1", offset="1.0", dts="2018-04-19T12:00:01Z", lat="10.0", lon="0.0"),
+    ])
+
+    state = _build_state(
+        tmp_path, config.IDENTIFICATION_CONTROLLER_IOS,
+        p4_csv, config.ACQUISITION_DATCON, config.DRONE_LOGS,
+    )
+    result = p5.run_phase_5(state)
+
+    anomalies = result.phase_outputs[p5._PHASE_NAME]["derived_anomalies"]
+    assert anomalies
+    obs = anomalies[0]["observations"][0]
+    assert 1 in obs["coordinate_jump"]
+
+
+def test_datcon_zero_coord_anomaly(tmp_path: Path, monkeypatch) -> None:
+    """Row with GPS:Lat=0, GPS:Long=0 → zero_coordinate contains that row ID."""
+    project_root = tmp_path
+    (project_root / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    p4_csv = tmp_path / "FLY_zero.csv"
+    _write_datcon_csv(p4_csv, [
+        _datcon_row(offset="0.0", lat="0.0", lon="0.0"),
+        _datcon_row(tick="1", offset="1.0", lat="39.961", lon="-106.216"),
+    ])
+
+    state = _build_state(
+        tmp_path, config.IDENTIFICATION_CONTROLLER_IOS,
+        p4_csv, config.ACQUISITION_DATCON, config.DRONE_LOGS,
+    )
+    result = p5.run_phase_5(state)
+
+    obs = result.phase_outputs[p5._PHASE_NAME]["derived_anomalies"][0]["observations"][0]
+    assert 0 in obs["zero_coordinate"]
+
+
+def test_datcon_timestamp_regression(tmp_path: Path, monkeypatch) -> None:
+    """Clock:offsetTime decreasing between rows → timestamp_regression contains row_id 1."""
+    project_root = tmp_path
+    (project_root / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    p4_csv = tmp_path / "FLY_regression.csv"
+    _write_datcon_csv(p4_csv, [
+        _datcon_row(offset="1.0"),
+        _datcon_row(tick="1", offset="0.5"),  # goes backward
+    ])
+
+    state = _build_state(
+        tmp_path, config.IDENTIFICATION_CONTROLLER_IOS,
+        p4_csv, config.ACQUISITION_DATCON, config.DRONE_LOGS,
+    )
+    result = p5.run_phase_5(state)
+
+    obs = result.phase_outputs[p5._PHASE_NAME]["derived_anomalies"][0]["observations"][0]
+    assert 1 in obs["timestamp_regression"]
+
+
+def test_datcon_duplicate_timestamp(tmp_path: Path, monkeypatch) -> None:
+    """Identical Clock:offsetTime for two consecutive rows → duplicate_timestamp contains row_id 1."""
+    project_root = tmp_path
+    (project_root / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    p4_csv = tmp_path / "FLY_dup.csv"
+    _write_datcon_csv(p4_csv, [
+        _datcon_row(offset="1.0"),
+        _datcon_row(tick="1", offset="1.0"),  # same offset → duplicate
+    ])
+
+    state = _build_state(
+        tmp_path, config.IDENTIFICATION_CONTROLLER_IOS,
+        p4_csv, config.ACQUISITION_DATCON, config.DRONE_LOGS,
+    )
+    result = p5.run_phase_5(state)
+
+    obs = result.phase_outputs[p5._PHASE_NAME]["derived_anomalies"][0]["observations"][0]
+    assert 1 in obs["duplicate_timestamp"]
+
+
+def test_datcon_altitude_negative(tmp_path: Path, monkeypatch) -> None:
+    """Relative height below -2 m → altitude_negative contains that row_id."""
+    project_root = tmp_path
+    (project_root / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    p4_csv = tmp_path / "FLY_alt.csv"
+    _write_datcon_csv(p4_csv, [
+        _datcon_row(offset="0.0", height="-5.0"),
+        _datcon_row(tick="1", offset="1.0", height="5.0"),
+    ])
+
+    state = _build_state(
+        tmp_path, config.IDENTIFICATION_CONTROLLER_IOS,
+        p4_csv, config.ACQUISITION_DATCON, config.DRONE_LOGS,
+    )
+    result = p5.run_phase_5(state)
+
+    obs = result.phase_outputs[p5._PHASE_NAME]["derived_anomalies"][0]["observations"][0]
+    assert 0 in obs["altitude_negative"]
+
+
+# ---------------------------------------------------------------------------
+# Phase 5 integration tests — FlightRecord
+# ---------------------------------------------------------------------------
+
+def _fr_row(
+    time: str = "2018/04/19 17:25:11.078",
+    lat: str = "39.961",
+    lon: str = "-106.216",
+    height: str = "5.0",
+    numsv: str = "10",
+    compass_err: str = "False",
+    batt_osd: str = "0",
+    motor: str = "True",
+    batt_cap: str = "80",
+    cell1: str = "3.9",
+    cell2: str = "3.9",
+    cell3: str = "3.9",
+    cell4: str = "3.9",
+    temp: str = "25.0",
+) -> list[str]:
+    return [time, lat, lon, height, numsv, compass_err, batt_osd, motor,
+            batt_cap, cell1, cell2, cell3, cell4, temp]
+
+
+def test_flight_record_norm_columns(tmp_path: Path, monkeypatch) -> None:
+    """FlightRecord CSV gets [NORM]:ID and [NORM]:CUSTOM.updateTime; no GPS date/time columns."""
+    project_root = tmp_path
+    (project_root / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    p4_csv = tmp_path / "DJIFlightRecord.csv"
+    _write_flight_record_csv(p4_csv, [_fr_row()])
+
+    state = _build_state(
+        tmp_path, config.IDENTIFICATION_CONTROLLER_ANDROID,
+        p4_csv, config.ACQUISITION_TXTLOGTOCSV, config.FLIGHT_RECORDS,
+    )
+    result = p5.run_phase_5(state)
+
+    artefacts = result.phase_outputs[p5._PHASE_NAME]["normalised_artefacts"]
+    assert len(artefacts) == 1
+    norm_path = Path(artefacts[0]["stored_path"])
+
+    with norm_path.open(newline="", encoding="utf-8") as fh:
+        reader = csv.reader(fh)
+        header = next(reader)
+        data_rows = list(reader)
+
+    assert header[0] == "[NORM]:ID"
+    assert "[NORM]:CUSTOM.updateTime" in header
+    assert "[NORM]:GPS:Date" not in header
+    assert "[NORM]:GPS:Time" not in header
+
+    time_idx = header.index("CUSTOM.updateTime")
+    norm_time_idx = header.index("[NORM]:CUSTOM.updateTime")
+    assert norm_time_idx == time_idx + 1
+
+    assert data_rows[0][0] == "0"
+    assert data_rows[0][1] == "2018/04/19 17:25:11.078"
+    assert data_rows[0][norm_time_idx] == "2018-04-19T17:25:11.078000+00:00"
+
+
+def test_flight_record_motor_on_empty_battery(tmp_path: Path, monkeypatch) -> None:
+    """OSD.isMotorUp=True and CENTER_BATTERY.relativeCapacity=0 → motor_on_empty_battery flagged."""
+    project_root = tmp_path
+    (project_root / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    p4_csv = tmp_path / "DJIFlightRecord_batt.csv"
+    _write_flight_record_csv(p4_csv, [
+        _fr_row(motor="True", batt_cap="0"),
+        _fr_row(time="2018/04/19 17:25:12.078", motor="True", batt_cap="80"),
+    ])
+
+    state = _build_state(
+        tmp_path, config.IDENTIFICATION_CONTROLLER_ANDROID,
+        p4_csv, config.ACQUISITION_TXTLOGTOCSV, config.FLIGHT_RECORDS,
+    )
+    result = p5.run_phase_5(state)
+
+    obs = result.phase_outputs[p5._PHASE_NAME]["derived_anomalies"][0]["observations"][0]
+    assert 0 in obs["motor_on_empty_battery"]
+    assert 1 not in obs.get("motor_on_empty_battery", [])
+
+
+def test_flight_record_battery_cell_voltage_out_of_range(tmp_path: Path, monkeypatch) -> None:
+    """Cell voltage below 2.8 V → battery_cell_voltage_out_of_range contains that row_id."""
+    project_root = tmp_path
+    (project_root / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    p4_csv = tmp_path / "DJIFlightRecord_cell.csv"
+    _write_flight_record_csv(p4_csv, [
+        _fr_row(cell1="2.0"),  # < 2.8 V → anomaly
+        _fr_row(time="2018/04/19 17:25:12.078", cell1="3.9"),  # normal
+    ])
+
+    state = _build_state(
+        tmp_path, config.IDENTIFICATION_CONTROLLER_ANDROID,
+        p4_csv, config.ACQUISITION_TXTLOGTOCSV, config.FLIGHT_RECORDS,
+    )
+    result = p5.run_phase_5(state)
+
+    obs = result.phase_outputs[p5._PHASE_NAME]["derived_anomalies"][0]["observations"][0]
+    assert 0 in obs["battery_cell_voltage_out_of_range"]
+    assert 1 not in obs.get("battery_cell_voltage_out_of_range", [])
+
+
+# ---------------------------------------------------------------------------
+# Phase 5 integration tests — EXIF
+# ---------------------------------------------------------------------------
+
+def test_exif_anomaly_observation(tmp_path: Path, monkeypatch) -> None:
+    """EXIF JSON with zero date and no GPS → Observation with exif_zero_date and exif_missing_gps.
+
+    norm_date/norm_time must be absent (zero date → omit).
+    evidence_sha256 must be the parent (original media) sha256, not the JSON sha256.
+    """
+    project_root = tmp_path
+    (project_root / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    exif_json = tmp_path / "DJI_0001_exif.json"
+    exif_json.write_text(
+        json.dumps({"FileName": "DJI_0001.MP4", "CreateDate": "0000:00:00 00:00:00"}),
+        encoding="utf-8",
+    )
+
+    state = _build_state(
+        tmp_path, config.IDENTIFICATION_DRONE_SD,
+        exif_json, config.ACQUISITION_EXIFTOOL, config.VIDEOS,
+    )
+    result = p5.run_phase_5(state)
+
+    anomalies = result.phase_outputs[p5._PHASE_NAME]["derived_anomalies"]
+    assert len(anomalies) == 1
+    anomaly = anomalies[0]
+    obs = anomaly["observations"][0]
+    assert obs["filename"] == "DJI_0001_exif.json"
+    assert obs["exif_zero_date"] is True
+    assert obs["exif_missing_gps"] is True
+    assert "norm_date" not in obs
+    assert "norm_time" not in obs
+    parent_sha = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"][0]["sha256"]
+    assert anomaly["evidence_sha256"] == parent_sha
+
+    assert result.phase_outputs[p5._PHASE_NAME]["normalised_artefacts"] == []
+
+
+def test_exif_valid_date_normalised(tmp_path: Path, monkeypatch) -> None:
+    """EXIF JSON with valid CreateDate → Observation has norm_date + norm_time; no anomaly flags."""
+    project_root = tmp_path
+    (project_root / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    exif_json = tmp_path / "DJI_0002_exif.json"
+    exif_json.write_text(
+        json.dumps({
+            "FileName": "DJI_0002.MP4",
+            "CreateDate": "2018:04:19 17:24:49",
+            "GPSLatitude": 39.961,
+            "GPSLongitude": -106.216,
+        }),
+        encoding="utf-8",
+    )
+
+    state = _build_state(
+        tmp_path, config.IDENTIFICATION_DRONE_SD,
+        exif_json, config.ACQUISITION_EXIFTOOL, config.VIDEOS,
+    )
+    result = p5.run_phase_5(state)
+
+    anomalies = result.phase_outputs[p5._PHASE_NAME]["derived_anomalies"]
+    assert len(anomalies) == 1
+    anomaly = anomalies[0]
+    obs = anomaly["observations"][0]
+    assert obs["norm_date"] == "2018-04-19"
+    assert obs["norm_time"] == "17:24:49"
+    assert "exif_zero_date" not in obs
+    assert "exif_missing_gps" not in obs
+    parent_sha = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"][0]["sha256"]
+    assert anomaly["evidence_sha256"] == parent_sha
+
+
+# ---------------------------------------------------------------------------
+# Phase 5 infrastructure tests
+# ---------------------------------------------------------------------------
+
+def test_missing_p4_artefact(tmp_path: Path, monkeypatch) -> None:
+    """P4 artefact listed in state but file missing → anomaly flagged, phase still completes."""
+    project_root = tmp_path
+    (project_root / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    missing_csv = tmp_path / "ghost.csv"
+    missing_csv.write_text("temp", encoding="utf-8")
+
+    state = _build_state(
+        tmp_path, config.IDENTIFICATION_CONTROLLER_IOS,
+        missing_csv, config.ACQUISITION_DATCON, config.DRONE_LOGS,
+    )
+    missing_csv.unlink()
+    result = p5.run_phase_5(state)
+
+    assert p5._PHASE_NAME in result.completed_phases
+    assert any("ghost.csv" in flag for flag in result.anomaly_flags)
+    assert result.phase_outputs[p5._PHASE_NAME]["normalised_artefacts"] == []
+
+
+def test_no_empty_output_dirs(tmp_path: Path, monkeypatch) -> None:
+    """Source with only EXIF artefacts produces no output subdirectory."""
+    project_root = tmp_path
+    (project_root / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    exif_json = tmp_path / "DJI_0001_exif.json"
+    exif_json.write_text(
+        json.dumps({"FileName": "DJI_0001.MP4", "GPSLatitude": 39.96, "GPSLongitude": -106.21,
+                    "CreateDate": "2018:04:19 17:24:49"}),
+        encoding="utf-8",
+    )
+
+    state = _build_state(
+        tmp_path, config.IDENTIFICATION_DRONE_SD,
+        exif_json, config.ACQUISITION_EXIFTOOL, config.VIDEOS,
+    )
+    result = p5.run_phase_5(state)
+
+    phase_dir = project_root / "Documents" / "dfdof_output" / "CASE-P5-TEST" / p5._PHASE_NAME
+    subdirs = [d for d in phase_dir.iterdir() if d.is_dir()] if phase_dir.exists() else []
+    assert subdirs == []

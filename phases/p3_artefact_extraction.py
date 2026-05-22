@@ -329,7 +329,7 @@ def run_phase_3(state: State) -> State:
     else:
         controller_android_dir = phase_dir / "controller_android"
         clear_and_make(controller_android_dir)
-        print("Extracting from controller_android")
+        print("  Extracting from controller_android")
         android_archive = Path(str(android_source.stored_path))
         acquisition_method = normalise_acquisition_method(
             android_source.acquisition_method
@@ -456,7 +456,7 @@ def run_phase_3(state: State) -> State:
             ios_acquisition_method = ACQUISITION_EXTRACT_LOGICAL
         controller_ios_dir = phase_dir / "controller_ios"
         clear_and_make(controller_ios_dir)
-        print("Extracting from controller_ios")
+        print("  Extracting from controller_ios")
         categories = CONTROLLER_ARTEFACT_CATEGORIES
         for category in categories:
             try:
@@ -490,7 +490,7 @@ def run_phase_3(state: State) -> State:
         for idx, sd_source in enumerate(sd_sources):
             drone_sd_dir = phase_dir / drone_sd_label(idx + 1)
             clear_and_make(drone_sd_dir)
-            print(f"Extracting from drone_sd {idx + 1}")
+            print(f"  Extracting from drone_sd {idx + 1}")
             sd_archive = Path(str(sd_source.stored_path))
             acquisition_method = normalise_acquisition_method(
                 sd_source.acquisition_method
@@ -521,7 +521,7 @@ def run_phase_3(state: State) -> State:
     else:
         drone_flight_dir = phase_dir / "drone_flight_storage"
         clear_and_make(drone_flight_dir)
-        print("Extracting from drone_flight_storage")
+        print("  Extracting from drone_flight_storage")
         flight_archive = Path(str(flight_source.stored_path))
         if flight_archive.suffix.lower() == EXTENSION_ZIP[0]:
             member_names = _member_names(flight_archive)

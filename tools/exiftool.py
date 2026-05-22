@@ -19,7 +19,7 @@ from parsing.utils_parse import to_windows_path
 from state import State
 
 _EXIF_IMAGE_FIELDS: set[str] = {
-	"DateTimeOriginal",
+	"DateTimeOriginal", "CreateDate",
 	"GPSLatitude", "GPSLongitude", "GPSAltitude",
 	"GPSLatitudeRef", "GPSLongitudeRef", "GPSAltitudeRef",
 	"Make", "Model", "Software",
@@ -28,20 +28,18 @@ _EXIF_IMAGE_FIELDS: set[str] = {
 	"GimbalRollDegree", "GimbalYawDegree", "GimbalPitchDegree",
 	"FlightRollDegree", "FlightYawDegree", "FlightPitchDegree",
 	"CalibratedFocalLength", "CalibratedOpticalCenterX", "CalibratedOpticalCenterY",
-	"FileName", "FileType", "FileSize", "FileTypeExtension",
-	"FileCreateDate", "FileModifyDate", "MIMEType",
+	"FileName", "FileType", "FileSize", "MIMEType",
 }
 
 _EXIF_VIDEO_FIELDS: set[str] = {
-	"CreateDate", "ModifyDate", "Duration", "VideoFrameRate",
+	"CreateDate", "ModifyDate", "Duration",
 	"ImageWidth", "ImageHeight",
 	"Make", "Model", "Software", "GPSCoordinates",
 	"AbsoluteAltitude", "RelativeAltitude",
 	"GimbalRollDegree", "GimbalYawDegree", "GimbalPitchDegree",
 	"FlightRollDegree", "FlightYawDegree", "FlightPitchDegree",
-	"FileName", "FileType", "FileSize", "FileTypeExtension",
-	"FileCreateDate", "FileModifyDate", "MIMEType",
-	"MajorBrand", "CompatibleBrands", "Encoder", "MediaDuration",
+	"FileName", "FileType", "FileSize", "MIMEType",
+	"CompatibleBrands", "MediaDuration",
 }
 
 

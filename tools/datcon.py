@@ -19,6 +19,7 @@ from state import State
 
 def _datcon_settings_block(dat_path: Path, output_dir: Path) -> str:
 	return (
+		"-------------------------------\n"
 		"DatCon is required for: {name}\n"
 		"Please configure DatCon with the following settings:\n"
 		"  .DAT file:           {dat_path}\n"
@@ -68,7 +69,7 @@ def run_datcon(
 		state.raise_anomaly(4, identification, f"DatCon not found for {dat_path.name}", category=DRONE_LOGS, index=index)
 		return []
 
-	input("Once the export is finished, type 'done' and press Enter: ")
+	input("Once the export is finished, close DatCon, and type 'done' and press Enter: ")
 
 	dat_stem = dat_path.stem
 	output_files = [

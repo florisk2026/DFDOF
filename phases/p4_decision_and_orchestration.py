@@ -13,7 +13,11 @@ from typing import Any
 
 from config import (
 	ACCOUNT_DATA,
+	ACQUISITION_DATCON,
+	ACQUISITION_EXIFTOOL,
+	ACQUISITION_EXTRACT_DJI,
 	ACQUISITION_SELECT_ACCOUNT_DATA,
+	ACQUISITION_TXTLOGTOCSV,
 	DATABASES,
 	DRONE_LOGS,
 	EVIDENCE_TYPE_PARSED,
@@ -158,6 +162,8 @@ def run_phase_4(state: State) -> State:
 	extracted_artefacts = list(p3_output.get("extracted_artefacts", []))
 	artefacts_by_parent = _group_artefacts_by_parent(extracted_artefacts)
 
+	_announced_tools: set[str] = set()
+
 	for identification in SOURCE_IDENTIFICATION_TYPES:
 		sources = find_input_evidence_list_by_identification(state, identification)
 		if not sources:
@@ -198,7 +204,13 @@ def run_phase_4(state: State) -> State:
 						continue
 					tool_output_dir = source_dir / DRONE_LOGS
 					source_name = Path(str(artefact.get("source_path") or stored_path.name)).name
+					if ACQUISITION_DATCON not in _announced_tools:
+						print("  Orchestrating DatCon")
+						_announced_tools.add(ACQUISITION_DATCON)
 					if "ASSISTANT_EXPORT" in source_name.upper():
+						if ACQUISITION_EXTRACT_DJI not in _announced_tools:
+							print("  Orchestrating ExtractDJI")
+							_announced_tools.add(ACQUISITION_EXTRACT_DJI)
 						converted = run_extractdji(
 							stored_path,
 							tool_output_dir,
@@ -239,6 +251,9 @@ def run_phase_4(state: State) -> State:
 					}:
 						continue
 					tool_output_dir = source_dir / FLIGHT_RECORDS
+					if ACQUISITION_TXTLOGTOCSV not in _announced_tools:
+						print("  Orchestrating TxtLogToCsv")
+						_announced_tools.add(ACQUISITION_TXTLOGTOCSV)
 					csv_evidence = run_txtlogtocsv(
 						stored_path,
 						tool_output_dir,
@@ -294,6 +309,9 @@ def run_phase_4(state: State) -> State:
 					}:
 						continue
 					tool_output_dir = source_dir / category_key
+					if ACQUISITION_EXIFTOOL not in _announced_tools:
+						print("  Orchestrating ExifTool")
+						_announced_tools.add(ACQUISITION_EXIFTOOL)
 					evidence, observation = run_exiftool(
 						stored_path,
 						tool_output_dir,

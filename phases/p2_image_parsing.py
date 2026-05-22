@@ -183,7 +183,7 @@ def run_phase_2(state: State) -> State:
         state.raise_anomaly(2, IDENTIFICATION_CONTROLLER_ANDROID, "source evidence not found")
     else:
         try:
-            print("Parsing controller Android")
+            print("  Parsing controller Android")
             android_output_dir = phase_dir / "controller_android_parsed"
             clear_and_make(android_output_dir)
 
@@ -206,7 +206,7 @@ def run_phase_2(state: State) -> State:
         state.raise_anomaly(2, IDENTIFICATION_CONTROLLER_IOS, "source evidence not found")
     else:
         try:
-            print("Parsing controller iOS")
+            print("  Parsing controller iOS")
             ios_output_dir = phase_dir / "controller_ios_parsed"
             clear_and_make(ios_output_dir)
 

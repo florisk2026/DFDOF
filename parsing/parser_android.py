@@ -102,7 +102,7 @@ def _collect_text_fragments(value: Any) -> list[str]:
             fragments.append(fragment)
         return fragments
 
-    for _k, v in _walk_nested(value):
+    for v in _walk_nested(value):
         if isinstance(v, str):
             fragment = v.strip()
             if fragment:

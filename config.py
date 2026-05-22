@@ -74,12 +74,14 @@ ACQUISITION_EXTRACT_DJI = "extractdji"
 ACQUISITION_TXTLOGTOCSV = "txtlogtocsvtool"
 ACQUISITION_EXIFTOOL = "exiftool"
 ACQUISITION_SELECT_ACCOUNT_DATA = "p4_decision_and_orchestration"
+ACQUISITION_NORMALISE = "p5_normalisation_and_anomaly_checking"
 
 # Evidence types.
 EVIDENCE_TYPE_INPUT = "input"
 EVIDENCE_TYPE_PARSED = "parsed"
 EVIDENCE_TYPE_EXTRACTED = "extracted"
 EVIDENCE_TYPE_DECODED = "decoded"
+EVIDENCE_TYPE_NORMALISED = "normalised"
 
 # For extraction in phase 3.
 ACCOUNT_DATA = "account_data"

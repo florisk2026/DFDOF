@@ -18,6 +18,7 @@ from config import (
     utc_now_iso,
 )
 from evidence import Evidence
+from phases.utils_phase import compact_json
 
 
 def get_tsk_tool_version(tool_path: str) -> str | None:
@@ -90,9 +91,7 @@ class State:
         target_path = Path(path)
         temp_path = target_path.with_suffix(target_path.suffix + ".tmp")
         with temp_path.open("w", encoding="utf-8") as file_handle:
-            # Keep the key order produced by `to_dict()` rather than sorting.
-            # Preserve top-level case metadata prominence.
-            json.dump(self.to_dict(), file_handle, indent=2)
+            file_handle.write(compact_json(self.to_dict()))
             file_handle.write("\n")
         temp_path.replace(target_path)
 

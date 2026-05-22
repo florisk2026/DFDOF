@@ -22,6 +22,7 @@ from phases.p1_provenance import prompt_phase_1_summary_and_confirm, run_phase_1
 from phases.p2_image_parsing import run_phase_2
 from phases.p3_artefact_extraction import run_phase_3
 from phases.p4_decision_and_orchestration import run_phase_4
+from phases.p5_normalisation_and_anomaly_checking import run_phase_5
 from state import State
 
 
@@ -108,6 +109,12 @@ def run_phases(
     # Phase 4: Decision and orchestration.
     print("[Phase 4] Decision and Orchestration:")
     state = run_phase_4(state)
+    state.save(state_path)
+    print()
+
+    # Phase 5: Normalisation and anomaly checking.
+    print("[Phase 5] Normalisation and Anomaly Checking:")
+    state = run_phase_5(state)
     state.save(state_path)
     print()
 
