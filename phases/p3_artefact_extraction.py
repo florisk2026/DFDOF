@@ -281,15 +281,17 @@ def _collect_members_by_category(
     member_names: Iterable[str],
     categories: Iterable[str],
 ) -> dict[str, list[str]]:
-    """Collect archive members per category using a single pass."""
+    """Collect archive members per category using a single pass, deduplicating by basename."""
     requested = set(categories)
     path_index = _build_path_category_index()
     category_members: dict[str, list[str]] = {category: [] for category in requested}
+    seen_basenames: dict[str, set[str]] = {category: set() for category in requested}
 
     for name in member_names:
         normalised = normalise_path(name, to_lower=True)
         filename = Path(name).name
         suffix = Path(filename).suffix.lower()
+        basename_lower = filename.lower()
 
         matching_categories: set[str] = set()
         for token, cats in path_index.items():
@@ -299,14 +301,41 @@ def _collect_members_by_category(
         for category in matching_categories:
             if category not in requested:
                 continue
+            if basename_lower in seen_basenames[category]:
+                continue
             ext_set = {ext.lower() for ext in ARTEFACT_EXTENSIONS[category]}
             if suffix not in ext_set:
                 continue
             if category == DATABASES and not _is_database_included(filename):
                 continue
             category_members[category].append(name)
+            seen_basenames[category].add(basename_lower)
 
     return category_members
+
+
+def _filter_empty(
+    evidence_list: list[Evidence],
+    state: State,
+    identification: str,
+    category: str | None = None,
+    index: int | None = None,
+) -> list[Evidence]:
+    """Remove 0-byte evidence items, delete their files, and flag an anomaly for each."""
+    kept: list[Evidence] = []
+    for item in evidence_list:
+        if item.size == 0:
+            Path(str(item.stored_path)).unlink(missing_ok=True)
+            state.raise_anomaly(
+                3,
+                identification,
+                f"empty file skipped: {Path(str(item.stored_path)).name}",
+                category=category or item.artefact_category,
+                index=index,
+            )
+        else:
+            kept.append(item)
+    return kept
 
 
 def run_phase_3(state: State) -> State:
@@ -356,12 +385,17 @@ def run_phase_3(state: State) -> State:
                     evidence_list: list[Evidence] = []
                     if members:
                         output_dir_cat = controller_android_dir / safe_segment(category)
-                        evidence_list = extract_logical_files(
-                            android_source,
-                            output_dir_cat,
-                            members,
-                            artefact_category=category,
-                            missing_ok=True,
+                        evidence_list = _filter_empty(
+                            extract_logical_files(
+                                android_source,
+                                output_dir_cat,
+                                members,
+                                artefact_category=category,
+                                missing_ok=True,
+                            ),
+                            state,
+                            IDENTIFICATION_CONTROLLER_ANDROID,
+                            category,
                         )
                         extracted.extend(evidence_list)
                     else:
@@ -415,6 +449,9 @@ def run_phase_3(state: State) -> State:
                             continue
                         filtered.append(item)
 
+                    filtered = _filter_empty(
+                        filtered, state, IDENTIFICATION_CONTROLLER_ANDROID, category
+                    )
                     if filtered:
                         extracted.extend(filtered)
                     else:
@@ -466,13 +503,18 @@ def run_phase_3(state: State) -> State:
                     matched_files = _collect_parsed_files(ios_parsed_root, category)
                 if matched_files:
                     output_dir_cat = controller_ios_dir / safe_segment(category)
-                    evidence_list = _copy_parsed_files(
-                        ios_parsed_root,
-                        matched_files,
-                        output_dir_cat,
-                        ios_source,
+                    evidence_list = _filter_empty(
+                        _copy_parsed_files(
+                            ios_parsed_root,
+                            matched_files,
+                            output_dir_cat,
+                            ios_source,
+                            category,
+                            ios_acquisition_method,
+                        ),
+                        state,
+                        IDENTIFICATION_CONTROLLER_IOS,
                         category,
-                        ios_acquisition_method,
                     )
                     extracted.extend(evidence_list)
                 else:
@@ -502,8 +544,11 @@ def run_phase_3(state: State) -> State:
                 state.raise_anomaly(3, IDENTIFICATION_DRONE_SD, "physical acquisition required", index=idx + 1)
             else:
                 try:
-                    evidence_list = _extract_drone_sd_physical(
-                        state, sd_source, drone_sd_dir
+                    evidence_list = _filter_empty(
+                        _extract_drone_sd_physical(state, sd_source, drone_sd_dir),
+                        state,
+                        IDENTIFICATION_DRONE_SD,
+                        index=idx + 1,
                     )
                     extracted.extend(evidence_list)
                     if not evidence_list:
@@ -535,12 +580,17 @@ def run_phase_3(state: State) -> State:
                     category=DRONE_LOGS,
                 )
             else:
-                evidence_list = extract_logical_files(
-                    flight_source,
-                    drone_flight_dir,
-                    dat_members,
-                    artefact_category=DRONE_LOGS,
-                    missing_ok=True,
+                evidence_list = _filter_empty(
+                    extract_logical_files(
+                        flight_source,
+                        drone_flight_dir,
+                        dat_members,
+                        artefact_category=DRONE_LOGS,
+                        missing_ok=True,
+                    ),
+                    state,
+                    IDENTIFICATION_DRONE_FLIGHT_STORAGE,
+                    DRONE_LOGS,
                 )
                 extracted.extend(evidence_list)
                 if not evidence_list:

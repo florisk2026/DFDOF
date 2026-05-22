@@ -268,11 +268,6 @@ def run_phase_4(state: State) -> State:
 
 				if category_key == ACCOUNT_DATA:
 					tool_output_dir = source_dir / ACCOUNT_DATA
-					artefact_size = int(artefact.get("size") or 0)
-					if artefact_size == 0:
-						state.raise_anomaly(4, identification, f"account data file is empty: {stored_path.name}", category=ACCOUNT_DATA, index=evidence_index)
-						continue
-
 					raw, filtered = _parse_account_file(stored_path)
 					if not raw:
 						state.raise_anomaly(4, identification, f"account data parse failed for {stored_path.name}", category=ACCOUNT_DATA, index=evidence_index)

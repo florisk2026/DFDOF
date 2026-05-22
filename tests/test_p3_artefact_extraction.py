@@ -405,3 +405,89 @@ def test_run_phase_3_drone_sd_physical_single_pass(tmp_path: Path, monkeypatch) 
     assert "DJI_0001.THM" in stored_names
     assert call_inodes.count(10) == 1
     assert call_inodes.count(11) == 1
+
+
+def test_run_phase_3_android_logical_skips_empty_files(tmp_path: Path, monkeypatch) -> None:
+    project_root = tmp_path
+    documents_dir = project_root / "Documents"
+    documents_dir.mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    android_zip = tmp_path / "android_backup.zip"
+    _write_zip(
+        android_zip,
+        {
+            "DJI/FlightRecords/record1.txt": "flight record",
+            "DJI/FlightLogs/sys_log_empty.txt": b"",
+            "data/data/com.dji.go/db/djiFMDB.db": "db",
+        },
+    )
+
+    state = _build_state(tmp_path, "CASE-P3-EMPTY")
+    android_evidence = make_evidence(
+        source_path=android_zip,
+        stored_path=android_zip,
+        parent=None,
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
+        skip_hash=True,
+    )
+    state.input_evidence.append(android_evidence)
+    state.phase_outputs["p1_provenance"]["identified_evidence"] = [
+        {
+            "source_path": str(android_zip),
+            "identified": True,
+            "identified_as": "controller_android",
+            "operator_confirmed": True,
+            "identified_by_operator_as": None,
+        },
+    ]
+
+    result = p3.run_phase_3(state)
+    artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]
+    stored_names = [Path(item["stored_path"]).name for item in artefacts]
+    assert "sys_log_empty.txt" not in stored_names
+    assert any("empty file skipped" in flag for flag in result.anomaly_flags)
+
+
+def test_run_phase_3_android_logical_deduplicates_by_basename(tmp_path: Path, monkeypatch) -> None:
+    project_root = tmp_path
+    documents_dir = project_root / "Documents"
+    documents_dir.mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    android_zip = tmp_path / "android_backup.zip"
+    _write_zip(
+        android_zip,
+        {
+            "data/data/com.dji.go/db/djiFMDB.db": "db content first",
+            "data/data/com.dji.go/.space_db/djiFMDB.db": "db content second",
+        },
+    )
+
+    state = _build_state(tmp_path, "CASE-P3-DEDUP")
+    android_evidence = make_evidence(
+        source_path=android_zip,
+        stored_path=android_zip,
+        parent=None,
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
+        skip_hash=True,
+    )
+    state.input_evidence.append(android_evidence)
+    state.phase_outputs["p1_provenance"]["identified_evidence"] = [
+        {
+            "source_path": str(android_zip),
+            "identified": True,
+            "identified_as": "controller_android",
+            "operator_confirmed": True,
+            "identified_by_operator_as": None,
+        },
+    ]
+
+    result = p3.run_phase_3(state)
+    artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]
+    db_artefacts = [item for item in artefacts if item["artefact_category"] == DATABASES]
+    db_names = [Path(item["stored_path"]).name for item in db_artefacts]
+    assert db_names.count("djiFMDB.db") == 1
+    assert "djiFMDB_1.db" not in db_names

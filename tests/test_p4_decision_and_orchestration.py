@@ -212,12 +212,12 @@ def test_run_phase_4_records_anomalies(tmp_path: Path, monkeypatch) -> None:
 
     artefact_dir = tmp_path / "artefacts"
     artefact_dir.mkdir()
-    empty_account = artefact_dir / "empty.plist"
-    empty_account.write_text("", encoding="utf-8")
+    bad_account = artefact_dir / "bad.plist"
+    bad_account.write_text("not a plist", encoding="utf-8")
 
-    empty_account_evidence = make_evidence(
-        source_path=empty_account.name,
-        stored_path=empty_account,
+    bad_account_evidence = make_evidence(
+        source_path=bad_account.name,
+        stored_path=bad_account,
         parent=source,
         acquisition_method=config.ACQUISITION_EXTRACT_LOGICAL,
         type=config.EVIDENCE_TYPE_EXTRACTED,
@@ -236,11 +236,8 @@ def test_run_phase_4_records_anomalies(tmp_path: Path, monkeypatch) -> None:
         "hash_timestamp": None,
     }
 
-    empty_payload = empty_account_evidence.to_dict()
-    empty_payload["size"] = 0
-
     state.phase_outputs["p3_artefact_extraction"] = {
-        "extracted_artefacts": [missing_payload, empty_payload]
+        "extracted_artefacts": [missing_payload, bad_account_evidence.to_dict()]
     }
 
     monkeypatch.setattr(p4, "run_datcon", lambda *_args, **_kwargs: [])
@@ -252,7 +249,7 @@ def test_run_phase_4_records_anomalies(tmp_path: Path, monkeypatch) -> None:
     phase_dir = config.output_dir() / state.case_id / "p4_decision_and_orchestration"
 
     assert "[p4 - controller ios]: input artefact missing: missing.txt" in anomalies
-    assert "[p4 - controller ios - account data]: account data file is empty: empty.plist" in anomalies
+    assert "[p4 - controller ios - account data]: account data parse failed for bad.plist" in anomalies
     assert "[p4 - controller android]: source evidence not found" in anomalies
     assert "[p4 - drone sd]: source evidence not found" in anomalies
     assert not (phase_dir / "controller_ios" / "account_data").exists()
