@@ -49,17 +49,19 @@ def json_safe(value: Any) -> Any:
 
 
 def compact_json(data: Any) -> str:
-    """JSON with indent=2 but scalar-only arrays (integers or strings) on a single line."""
+    """JSON with indent=2 but integer-only arrays and P5 column-check arrays on a single line."""
     text = json.dumps(data, indent=2)
 
     def _collapse(m: re.Match) -> str:
         items = [x.strip() for x in m.group(1).split(",") if x.strip()]
         return "[" + ", ".join(items) + "]"
 
-    # Collapse integer-only arrays.
+    # Collapse integer-only arrays (row-ID lists, etc.).
     text = re.sub(r"\[(\s*\d+(?:,\s*\d+)*\s*)\]", _collapse, text, flags=re.DOTALL)
-    # Collapse string-only arrays (no nested objects/arrays).
-    text = re.sub(r'\[(\s*"[^"]*"(?:,\s*"[^"]*")*\s*)\]', _collapse, text, flags=re.DOTALL)
+    # Collapse string arrays only for the two P5 column-level check keys.
+    _str_arr = r'\[(\s*"[^"]*"(?:,\s*"[^"]*")*\s*)\]'
+    text = re.sub(r'(?<="contains_no_value": )' + _str_arr, _collapse, text, flags=re.DOTALL)
+    text = re.sub(r'(?<="contains_constant_value": )' + _str_arr, _collapse, text, flags=re.DOTALL)
     return text
 
 
