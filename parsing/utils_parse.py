@@ -165,8 +165,11 @@ def parse_android_xml_map(path: Path) -> dict[str, str]:
         return {}
 
 
-def decode_cllocation_bplist(value: str) -> dict[str, str] | None:
-    """Decode a base64 NSKeyedArchive binary plist of CLLocation; return canonical coordinate fields."""
+def decode_cllocation_bplist(value: bytes | str) -> dict[str, str] | None:
+    """Decode a CLLocation NSKeyedArchive binary plist; return canonical coordinate fields.
+
+    Accepts raw bytes or a base64-encoded string.
+    """
     _KEY_MAP = {
         "kCLLocationCodingKeyCoordinateLatitude":  "find_aircraft_last_latitude",
         "kCLLocationCodingKeyCoordinateLongitude": "find_aircraft_last_longitude",
@@ -174,7 +177,7 @@ def decode_cllocation_bplist(value: str) -> dict[str, str] | None:
         "kCLLocationCodingKeyHorizontalAccuracy":  "find_aircraft_last_hacc",
     }
     try:
-        data = base64.b64decode(value.strip())
+        data = base64.b64decode(value.strip()) if isinstance(value, str) else value
         archive = plistlib.loads(data)
         objects = archive.get("$objects", [])
         if len(objects) < 2 or not isinstance(objects[1], dict):

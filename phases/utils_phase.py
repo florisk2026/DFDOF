@@ -30,7 +30,7 @@ def json_safe(value: Any) -> Any:
     - anything else    → str() fallback, None on failure
     """
     if isinstance(value, (bytes, bytearray)):
-        return {"__bytes_base64": base64.b64encode(bytes(value)).decode("ascii")}
+        return {"__bytes_base64": base64.b64encode(value).decode("ascii")}
     if isinstance(value, dict):
         return {str(k): json_safe(v) for k, v in value.items()}
     if isinstance(value, (list, tuple)):

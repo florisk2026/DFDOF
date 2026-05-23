@@ -8,7 +8,6 @@ This phase:
 
 from __future__ import annotations
 
-import base64
 from pathlib import Path
 from typing import Any
 
@@ -99,8 +98,13 @@ _INFO_KEYS_LOWER = {
 }
 
 
-def _extract_find_aircraft_location(raw: dict) -> dict:
-	"""Extract FIND_AIRCRAFT_LAST_LOCATION fields from a raw iOS/JSON account dict."""
+def _decode_find_aircraft_location(raw: dict, raw_safe: dict) -> dict:
+	"""Decode FIND_AIRCRAFT_LAST_LOCATION into coordinate fields.
+
+	Reads from raw (original plist bytes), mutates raw_safe["FIND_AIRCRAFT_LAST_LOCATION"]
+	in-place (removes LAST_LOCATION blob, inlines decoded fields), and returns the decoded
+	fields so the Observation matches the JSON file exactly.
+	"""
 	block = raw.get("FIND_AIRCRAFT_LAST_LOCATION")
 	if not isinstance(block, dict):
 		return {}
@@ -113,20 +117,18 @@ def _extract_find_aircraft_location(raw: dict) -> dict:
 			pass
 	loc = block.get("LAST_LOCATION")
 	if isinstance(loc, bytes):
-		b64 = base64.b64encode(loc).decode("ascii")
-	elif isinstance(loc, dict):
-		b64 = loc.get("__bytes_base64")
-	else:
-		b64 = None
-	if b64:
-		coords = decode_cllocation_bplist(b64)
+		coords = decode_cllocation_bplist(loc)
 		if coords:
 			out.update(coords)
+	safe_block = raw_safe.get("FIND_AIRCRAFT_LAST_LOCATION")
+	if isinstance(safe_block, dict) and out:
+		safe_block.pop("LAST_LOCATION", None)
+		safe_block.update(out)
 	return out
 
 
 def _parse_account_file(file_path: Path) -> tuple[dict, dict]:
-	"""Parse a DJI account data file. Return (full_raw_dict, filtered_forensic_fields)."""
+	"""Parse a DJI account data file. Return (raw_safe_dict, filtered_forensic_fields)."""
 	suffix = file_path.suffix.lower()
 	try:
 		if suffix == ".plist":
@@ -150,8 +152,8 @@ def _parse_account_file(file_path: Path) -> tuple[dict, dict]:
 	raw_safe = json_safe(raw)
 	filtered = extract_fields(raw_safe, field_map)
 	if suffix in {".plist", ".json"}:
-		filtered.update(_extract_find_aircraft_location(raw))
-	return raw, filtered
+		filtered.update(_decode_find_aircraft_location(raw, raw_safe))
+	return raw_safe, filtered
 
 
 def _group_artefacts_by_parent(
