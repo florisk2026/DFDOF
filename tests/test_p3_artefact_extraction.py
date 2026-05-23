@@ -15,7 +15,7 @@ from config import (
     VIDEOS,
     DEVICE_AND_BACKUP_INFO,
 )
-from evidence import make_evidence
+from evidence import Evidence, make_evidence
 from phases import p3_artefact_extraction as p3
 from state import State
 

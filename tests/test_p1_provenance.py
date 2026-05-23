@@ -25,19 +25,14 @@ def test_identify_source_controller_android() -> None:
 
 def test_identify_source_ios_logical_nested_structure() -> None:
     """Test iOS logical backup with nested root (e.g., MC 04 iOS/...)."""
-    # Simulates: ios_logical.zip/MC 04 iOS/.../ab/cd/...
-    # Base structure
-    listing = [
-        "MC 04 iOS/7f05ad1235cea98920b1112ef14ddd9fdded744a/Info.plist",
-        "MC 04 iOS/7f05ad1235cea98920b1112ef14ddd9fdded744a/Manifest.db",
-    ]
-
-    # Add 60+ hex/hex entries to exceed threshold (50+)
     prefix = "MC 04 iOS/7f05ad1235cea98920b1112ef14ddd9fdded744a/"
-    for i in range(10):  # First hex pair (00-09)
-        for j in range(10):  # Second hex pair (00-09)
-            # Generate paths like: MC 04 iOS/.../0a/0b/file_hash
-            listing.append(f"{prefix}{i:02x}/{j:02x}/{('abcd' * 16)}")  # 64 entries
+    listing = [
+        f"{prefix}Info.plist",
+        f"{prefix}Manifest.db",
+    ]
+    for i in range(10):
+        for j in range(10):
+            listing.append(f"{prefix}{i:02x}/{j:02x}/{'abcd' * 16}")
 
     identified_as = identify_source(listing)
     assert identified_as == "controller_ios"
@@ -55,25 +50,24 @@ def test_run_phase_1_only_supported_inputs(tmp_path: Path, monkeypatch) -> None:
     ignored.write_text("ignore", encoding="utf-8")
 
     def fake_run(command, capture_output=True, text=True, check=False, stdout=None):
-        _ = (capture_output, text, check, stdout)
         exe = Path(command[0]).name.lower()
         if exe.startswith("mmls"):
             return subprocess.CompletedProcess(
                 command,
                 0,
-                stdout="""
-DOS Partition Table
-002:  000:000   0000002048   0000012345   0000010298   5.0M      Primary Table (#0)
-""",
+                stdout=(
+                    "DOS Partition Table\n"
+                    "002:  000:000   0000002048   0000012345   0000010298   5.0M      Primary Table (#0)\n"
+                ),
             )
         if exe.startswith("fls"):
             return subprocess.CompletedProcess(
                 command,
                 0,
-                stdout="""
-r/r 1234: DCIM/100MEDIA/DJI_0001.MP4
-r/r 1235: MISC/THM/100/DJI_0001.THM
-""",
+                stdout=(
+                    "r/r 1234: DCIM/100MEDIA/DJI_0001.MP4\n"
+                    "r/r 1235: MISC/THM/100/DJI_0001.THM\n"
+                ),
             )
         raise AssertionError(f"unexpected command: {command}")
 
@@ -109,26 +103,25 @@ def test_run_phase_1_multi_type_listing_uses_priority(
     image_path.write_bytes(b"image fixture")
 
     def fake_run(command, capture_output=True, text=True, check=False, stdout=None):
-        _ = (capture_output, text, check, stdout)
         exe = Path(command[0]).name.lower()
         if exe.startswith("mmls"):
             return subprocess.CompletedProcess(
                 command,
                 0,
-                stdout="""
-DOS Partition Table
-002:  000:000   0000002048   0000012345   0000010298   5.0M      Primary Table (#0)
-""",
+                stdout=(
+                    "DOS Partition Table\n"
+                    "002:  000:000   0000002048   0000012345   0000010298   5.0M      Primary Table (#0)\n"
+                ),
             )
         if exe.startswith("fls"):
             return subprocess.CompletedProcess(
                 command,
                 0,
-                stdout="""
-r/r 1234: sdcard/DJI/dji.go.v4/FlightRecord/abc.txt
-r/r 1235: DCIM/100MEDIA/DJI_0001.MP4
-r/r 1236: MISC/THM/100/DJI_0001.THM
-""",
+                stdout=(
+                    "r/r 1234: sdcard/DJI/dji.go.v4/FlightRecord/abc.txt\n"
+                    "r/r 1235: DCIM/100MEDIA/DJI_0001.MP4\n"
+                    "r/r 1236: MISC/THM/100/DJI_0001.THM\n"
+                ),
             )
         raise AssertionError(f"unexpected command: {command}")
 
@@ -156,17 +149,16 @@ def test_run_phase_1_uses_single_mmls_attempt_for_e01(
     commands: list[list[str]] = []
 
     def fake_run(command, capture_output=True, text=True, check=False, stdout=None):
-        _ = (capture_output, text, check, stdout)
         commands.append(list(command))
         exe = Path(command[0]).name.lower()
         if exe.startswith("mmls"):
             return subprocess.CompletedProcess(
                 command,
                 0,
-                stdout="""
-DOS Partition Table
-002:  000:000   0000002048   0000012345   0000010298   5.0M      Primary Table (#0)
-""",
+                stdout=(
+                    "DOS Partition Table\n"
+                    "002:  000:000   0000002048   0000012345   0000010298   5.0M      Primary Table (#0)\n"
+                ),
             )
         if exe.startswith("fls"):
             assert "-o" in command
@@ -204,7 +196,6 @@ def test_run_phase_1_reports_clear_mmls_failure(tmp_path: Path, monkeypatch) -> 
     image_path.write_bytes(b"image fixture")
 
     def fake_run(command, capture_output=True, text=True, check=False, stdout=None):
-        _ = (capture_output, text, check, stdout)
         exe = Path(command[0]).name.lower()
         if exe.startswith("mmls"):
             return subprocess.CompletedProcess(
@@ -229,7 +220,6 @@ def test_run_phase_1_fallbacks_to_fls_without_mmls(tmp_path: Path, monkeypatch) 
     image_path.write_bytes(b"image fixture")
 
     def fake_run(command, capture_output=True, text=True, check=False, stdout=None):
-        _ = (capture_output, text, check, stdout)
         exe = Path(command[0]).name.lower()
         if exe.startswith("mmls"):
             return subprocess.CompletedProcess(command, 1, stdout="", stderr="")
@@ -262,26 +252,24 @@ def test_run_phase_1_blocks_unidentified_sources(tmp_path: Path, monkeypatch) ->
     image_path.write_bytes(b"image fixture")
 
     def fake_run(command, capture_output=True, text=True, check=False, stdout=None):
-        _ = (capture_output, text, check, stdout)
         exe = Path(command[0]).name.lower()
         if exe.startswith("mmls"):
             return subprocess.CompletedProcess(
                 command,
                 0,
-                stdout="""
-DOS Partition Table
-002:  000:000   0000002048   0000012345   0000010298   5.0M      Primary Table (#0)
-""",
+                stdout=(
+                    "DOS Partition Table\n"
+                    "002:  000:000   0000002048   0000012345   0000010298   5.0M      Primary Table (#0)\n"
+                ),
             )
         if exe.startswith("fls"):
-            # Listing with no recognizable structure
             return subprocess.CompletedProcess(
                 command,
                 0,
-                stdout="""
-r/r 1234: unknown_folder/some_file.txt
-r/r 1235: other_data/file.bin
-""",
+                stdout=(
+                    "r/r 1234: unknown_folder/some_file.txt\n"
+                    "r/r 1235: other_data/file.bin\n"
+                ),
             )
         raise AssertionError(f"unexpected command: {command}")
 

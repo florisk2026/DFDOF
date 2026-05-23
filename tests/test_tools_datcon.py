@@ -11,7 +11,7 @@ from state import State
 from tools.datcon import _datcon_output_missing, run_datcon
 
 
-def _make_state(tmp_path: Path) -> State:
+def _make_state() -> State:
     state = State(case_id="CASE-DATCON", operator="Tester")
     state.phase_outputs["p1_provenance"] = {"identified_evidence": []}
     return state
@@ -52,7 +52,7 @@ def test_datcon_output_missing_empty_dir(tmp_path: Path) -> None:
 
 
 def test_run_datcon_error_returns_empty(tmp_path: Path, monkeypatch) -> None:
-    state = _make_state(tmp_path)
+    state = _make_state()
     parent = _make_parent(tmp_path)
     output_dir = tmp_path / "output"
     output_dir.mkdir()
@@ -70,7 +70,7 @@ def test_run_datcon_error_returns_empty(tmp_path: Path, monkeypatch) -> None:
 
 
 def test_run_datcon_succeeds_first_try(tmp_path: Path, monkeypatch, capsys) -> None:
-    state = _make_state(tmp_path)
+    state = _make_state()
     parent = _make_parent(tmp_path)
     output_dir = tmp_path / "output"
     output_dir.mkdir()
@@ -91,7 +91,7 @@ def test_run_datcon_succeeds_first_try(tmp_path: Path, monkeypatch, capsys) -> N
 
 
 def test_run_datcon_retries_on_missing_output(tmp_path: Path, monkeypatch, capsys) -> None:
-    state = _make_state(tmp_path)
+    state = _make_state()
     parent = _make_parent(tmp_path)
     output_dir = tmp_path / "output"
     output_dir.mkdir()

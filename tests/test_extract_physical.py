@@ -44,28 +44,27 @@ def test_tsk_image_extraction_invokes_icat_for_matching_paths(
     )
 
     def fake_run(command, capture_output=True, text=True, check=False, stdout=None):
-        _ = (capture_output, text, check)
         commands.append(command)
         executable = Path(command[0]).name.lower()
         if executable.startswith("mmls"):
             return subprocess.CompletedProcess(
                 command,
                 0,
-                stdout="""
-DOS Partition Table
-	  Slot      Start        End          Length       Size      Description
-002:  000:000   0000002048   0000012345   0000010298   5.0M      Primary Table (#0)
-""",
+                stdout=(
+                    "DOS Partition Table\n"
+                    "\t  Slot      Start        End          Length       Size      Description\n"
+                    "002:  000:000   0000002048   0000012345   0000010298   5.0M      Primary Table (#0)\n"
+                ),
             )
         if executable.startswith("fls"):
             return subprocess.CompletedProcess(
                 command,
                 0,
-                stdout="""
-r/r 1234: FlightRecord/DJIFlightRecord_2024-01-01.txt
-r/r 1235: Logs/ignore.me
-d/d 1236: FlightRecord/
-""",
+                stdout=(
+                    "r/r 1234: FlightRecord/DJIFlightRecord_2024-01-01.txt\n"
+                    "r/r 1235: Logs/ignore.me\n"
+                    "d/d 1236: FlightRecord/\n"
+                ),
             )
         if executable.startswith("icat"):
             assert stdout is not None

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import config
 from config import DEVICE_AND_BACKUP_INFO
-from evidence import make_evidence
+from evidence import Evidence, make_evidence
 from parsing import parser_android
 from state import State
 

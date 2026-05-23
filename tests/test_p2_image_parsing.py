@@ -11,7 +11,7 @@ from typing import Any
 
 import config
 from config import DEVICE_AND_BACKUP_INFO
-from evidence import make_evidence
+from evidence import Evidence, make_evidence
 from phases import p2_image_parsing as p2_module
 from state import State
 
@@ -37,12 +37,11 @@ def _observation_for_evidence(phase_output: dict[str, Any], evidence_item: dict[
 def test_run_phase_2_convert_controller_ios_evidence(
     tmp_path: Path, monkeypatch, capsys
 ) -> None:
-    project_root = tmp_path
-    documents_dir = project_root / "Documents"
+    documents_dir = tmp_path / "Documents"
     documents_dir.mkdir(parents=True)
 
-    input_archive = project_root / "ios_backup.zip"
-    manifest_db = project_root / "Manifest.db"
+    input_archive = tmp_path / "ios_backup.zip"
+    manifest_db = tmp_path / "Manifest.db"
     connection = sqlite3.connect(manifest_db)
     cursor = connection.cursor()
     cursor.execute("CREATE TABLE Files (fileID TEXT, domain TEXT, relativePath TEXT)")
@@ -108,11 +107,9 @@ def test_run_phase_2_convert_controller_ios_evidence(
         / "controller_ios_parsed"
     )
 
-    # Make Path.home() return our tmp project root so config functions resolve
-    # into the temporary Documents directory.
-    monkeypatch.setattr(Path, "home", lambda: project_root)
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
-    def fake_convert(archive_path, output_root=None, source_evidence=None):
+    def fake_convert(archive_path, output_root=None, _source_evidence=None):
         actual_root = (
             Path(output_root)
             if output_root is not None
@@ -172,6 +169,7 @@ def test_run_phase_2_convert_controller_ios_evidence(
         None,
     )
     assert info_plist_evidence is not None
+    assert info_plist_evidence["source_path"] == "Info.plist"
 
     info_plist_observation = _observation_for_evidence(phase_output, info_plist_evidence)
     assert info_plist_observation["evidence_category"] == DEVICE_AND_BACKUP_INFO
@@ -183,17 +181,6 @@ def test_run_phase_2_convert_controller_ios_evidence(
     assert info_plist_observation["observations"][0]["unique_identifier"] == "UID-123"
     assert info_plist_observation["observations"][0]["backup_date"] == "2026-05-04T12:34:56Z"
     assert info_plist_observation["observations"][0]["installed_dji_apps"] == ["com.dji.go"]
-
-    info_plist_evidence = next(
-        (
-            item
-            for item in phase_output["parsed_evidence"]
-            if Path(item["stored_path"]).name == "Info.plist"
-        ),
-        None,
-    )
-    assert info_plist_evidence is not None
-    assert info_plist_evidence["source_path"] == "Info.plist"
     assert "completed_at" in phase_output
     assert isinstance(phase_output["completed_at"], str)
     assert result.completed_phases == ["p2_image_parsing"]
@@ -223,10 +210,9 @@ def _create_android_logical_zip(zip_path: Path) -> None:
 def test_run_phase_2_processes_android_logical_source(
     tmp_path: Path, monkeypatch, capsys
 ) -> None:
-    project_root = tmp_path
-    documents_dir = project_root / "Documents"
+    documents_dir = tmp_path / "Documents"
     documents_dir.mkdir(parents=True)
-    input_archive = project_root / "android_backup.zip"
+    input_archive = tmp_path / "android_backup.zip"
     _create_android_logical_zip(input_archive)
 
     state = State(case_id="CASE-002", operator="Floris")
@@ -251,7 +237,7 @@ def test_run_phase_2_processes_android_logical_source(
         ]
     }
 
-    monkeypatch.setattr(Path, "home", lambda: project_root)
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
     converted_root = (
         documents_dir
         / "dfdof_output"
@@ -348,28 +334,15 @@ def test_run_phase_2_processes_android_logical_source(
     assert hostname is not None
     hostname_observation = _observation_for_evidence(phase_output, hostname)
     assert hostname_observation["observations"][0]["device_hostname"] == "hostname-android"
-    assert any(
-        Path(item["stored_path"]).name == "ApplicationInfo.xml"
-        for item in phase_output["parsed_evidence"]
-    )
-    assert any(
-        Path(item["stored_path"]).name == "ro.serialno"
-        for item in phase_output["parsed_evidence"]
-    )
-    assert any(
-        Path(item["stored_path"]).name == "net.hostname"
-        for item in phase_output["parsed_evidence"]
-    )
     assert len(phase_output["derived_observations"]) >= 5
 
 
 def test_run_phase_2_processes_android_physical_source(
     tmp_path: Path, monkeypatch, capsys
 ) -> None:
-    project_root = tmp_path
-    documents_dir = project_root / "Documents"
+    documents_dir = tmp_path / "Documents"
     documents_dir.mkdir(parents=True)
-    input_image = project_root / "android_image.E01"
+    input_image = tmp_path / "android_image.E01"
     input_image.write_bytes(b"image fixture")
 
     state = State(case_id="CASE-003", operator="Floris")
@@ -394,7 +367,7 @@ def test_run_phase_2_processes_android_physical_source(
         ]
     }
 
-    monkeypatch.setattr(Path, "home", lambda: project_root)
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
     converted_root = (
         documents_dir
         / "dfdof_output"
@@ -404,7 +377,7 @@ def test_run_phase_2_processes_android_physical_source(
     )
 
     def fake_extract_tsk_image(
-        image_path,
+        _image_path,
         working_dir,
         *,
         include_paths=None,
@@ -412,15 +385,8 @@ def test_run_phase_2_processes_android_physical_source(
         parent=None,
         state=None,
         artefact_category=None,
+        **_kwargs,
     ):
-        _ = (
-            image_path,
-            include_paths,
-            acquisition_method,
-            parent,
-            state,
-            artefact_category,
-        )
         working_dir = Path(working_dir)
         working_dir.mkdir(parents=True, exist_ok=True)
         files = {
@@ -440,7 +406,7 @@ def test_run_phase_2_processes_android_physical_source(
                     parent=parent,
                     acquisition_method=config.ACQUISITION_EXTRACT_PHYSICAL,
                     type=config.EVIDENCE_TYPE_EXTRACTED,
-                    artefact_category=DEVICE_AND_BACKUP_INFO,
+                    artefact_category=config.DEVICE_AND_BACKUP_INFO,
                 )
             )
         return extracted

@@ -38,10 +38,9 @@ def _add_source(state: State, source_path: Path, identification: str) -> Evidenc
 
 
 def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch) -> None:
-    project_root = tmp_path
-    documents_dir = project_root / "Documents"
+    documents_dir = tmp_path / "Documents"
     documents_dir.mkdir(parents=True)
-    monkeypatch.setattr(Path, "home", lambda: project_root)
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
     state = _build_state(tmp_path, "CASE-P4-1")
     ios_zip = tmp_path / "ios_logical.zip"
@@ -200,10 +199,9 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
 
 
 def test_run_phase_4_records_anomalies(tmp_path: Path, monkeypatch) -> None:
-    project_root = tmp_path
-    documents_dir = project_root / "Documents"
+    documents_dir = tmp_path / "Documents"
     documents_dir.mkdir(parents=True)
-    monkeypatch.setattr(Path, "home", lambda: project_root)
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
     state = _build_state(tmp_path, "CASE-P4-2")
     ios_zip = tmp_path / "ios_logical.zip"
@@ -256,10 +254,9 @@ def test_run_phase_4_records_anomalies(tmp_path: Path, monkeypatch) -> None:
 
 
 def test_run_phase_4_android_info_file_parsed(tmp_path: Path, monkeypatch) -> None:
-    project_root = tmp_path
-    documents_dir = project_root / "Documents"
+    documents_dir = tmp_path / "Documents"
     documents_dir.mkdir(parents=True)
-    monkeypatch.setattr(Path, "home", lambda: project_root)
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
     state = _build_state(tmp_path, "CASE-P4-INFO-1")
     android_zip = tmp_path / "android.zip"
@@ -322,10 +319,9 @@ def test_run_phase_4_android_info_file_parsed(tmp_path: Path, monkeypatch) -> No
 
 
 def test_run_phase_4_android_info_file_empty_raises_anomaly(tmp_path: Path, monkeypatch) -> None:
-    project_root = tmp_path
-    documents_dir = project_root / "Documents"
+    documents_dir = tmp_path / "Documents"
     documents_dir.mkdir(parents=True)
-    monkeypatch.setattr(Path, "home", lambda: project_root)
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
 
     state = _build_state(tmp_path, "CASE-P4-INFO-2")
     android_zip = tmp_path / "android.zip"
