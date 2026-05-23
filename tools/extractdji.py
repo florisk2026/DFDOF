@@ -68,9 +68,9 @@ def run_extractdji(
 
     while True:
         response = input(
-            "Once the export is finished, close ExtractDJI, and type 'done' and press Enter.\n"
-            "If this export produced only GIMBAL files (not useful), type 'skip'.\n"
-            "If ExtractDJI reported an error, type 'error': "
+			"If ExtractDJI reported an error, type 'error'.\n"
+            "If ExtractDJI produced only GIMBAL files (not useful), type 'skip'.\n"
+			"If the export was successful, close ExtractDJI and type 'done': "
         ).strip().lower()
         if response in {"skip", "error"}:
             return []

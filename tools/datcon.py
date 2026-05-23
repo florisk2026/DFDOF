@@ -82,8 +82,8 @@ def run_datcon(
 	dat_stem = dat_path.stem
 	while True:
 		response = input(
-			"Once the export is finished, close DatCon, and type 'done' and press Enter.\n"
-			"If DatCon reported an error, type 'error': "
+			"If DatCon reported an error, type 'error'.\n"
+			"If the export was successful, close DatCon and type 'done': "
 		).strip().lower()
 		if response == "error":
 			return []
