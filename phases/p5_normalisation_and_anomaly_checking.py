@@ -663,7 +663,7 @@ def _process_exif(artefact: dict[str, Any]) -> Observation | None:
     if parsed is None and not exif_zero_date and not exif_missing_gps:
         return None
 
-    obs: dict[str, Any] = {"filename": stored_path.name}
+    obs: dict[str, Any] = {}
     if parsed:
         obs["norm_date"], obs["norm_time"] = parsed
     if exif_zero_date:
@@ -672,6 +672,7 @@ def _process_exif(artefact: dict[str, Any]) -> Observation | None:
         obs["exif_missing_gps"] = True
 
     return make_observation(
+        stored_path=str(stored_path),
         evidence_sha256=str(artefact.get("parent_sha256") or ""),
         evidence_category=str(artefact.get("artefact_category") or ""),
         acquisition_method=ACQUISITION_NORMALISE,
@@ -732,10 +733,11 @@ def run_phase_5(state: State) -> State:
             normalised.append(evidence)
             non_empty = {k: v for k, v in anomaly_results.items() if v}
             anomalies.append(make_observation(
+                stored_path=str(evidence.stored_path),
                 evidence_sha256=evidence.sha256,
                 evidence_category=DRONE_LOGS,
                 acquisition_method=ACQUISITION_NORMALISE,
-                observations=[{"filename": dst.name, **non_empty}],
+                observations=[non_empty],
             ))
 
         elif acquisition == ACQUISITION_TXTLOGTOCSV and stored_path.suffix.lower() == ".csv":
@@ -763,10 +765,11 @@ def run_phase_5(state: State) -> State:
             normalised.append(evidence)
             non_empty = {k: v for k, v in anomaly_results.items() if v}
             anomalies.append(make_observation(
+                stored_path=str(evidence.stored_path),
                 evidence_sha256=evidence.sha256,
                 evidence_category=FLIGHT_RECORDS,
                 acquisition_method=ACQUISITION_NORMALISE,
-                observations=[{"filename": dst.name, **non_empty}],
+                observations=[non_empty],
             ))
 
         elif acquisition == ACQUISITION_EXIFTOOL:

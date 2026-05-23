@@ -14,6 +14,7 @@ from phases.utils_phase import json_safe
 
 @dataclass
 class Content:
+    stored_path: str | None
     evidence_sha256: str
     evidence_category: str | None
     acquisition_method: str | None
@@ -21,6 +22,7 @@ class Content:
 
     def to_dict(self) -> dict[str, Any]:
         return {
+            "stored_path": self.stored_path,
             "evidence_sha256": self.evidence_sha256,
             "evidence_category": self.evidence_category,
             "acquisition_method": self.acquisition_method,
@@ -30,6 +32,7 @@ class Content:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Content:
         return cls(
+            stored_path=data.get("stored_path"),
             evidence_sha256=str(data.get("evidence_sha256") or ""),
             evidence_category=data.get("evidence_category"),
             acquisition_method=data.get("acquisition_method"),
@@ -51,6 +54,7 @@ class Observation:
 
 def make_observation(
     *,
+    stored_path: str | None,
     evidence_sha256: str | None,
     evidence_category: str | None,
     acquisition_method: str | None,
@@ -59,6 +63,7 @@ def make_observation(
     """Factory: construct and return an Observation with populated Content."""
     return Observation(
         content=Content(
+            stored_path=stored_path,
             evidence_sha256=str(evidence_sha256 or ""),
             evidence_category=evidence_category,
             acquisition_method=acquisition_method,

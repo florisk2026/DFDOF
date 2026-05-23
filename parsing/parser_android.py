@@ -379,6 +379,7 @@ def parse_android_source(
             if values:
                 observations.append(
                     make_observation(
+                        stored_path=str(evidence_item.stored_path),
                         evidence_sha256=evidence_item.sha256,
                         evidence_category=evidence_item.artefact_category,
                         acquisition_method=evidence_item.acquisition_method,
@@ -394,6 +395,7 @@ def parse_android_source(
             if values:
                 observations.append(
                     make_observation(
+                        stored_path=str(evidence_item.stored_path),
                         evidence_sha256=evidence_item.sha256,
                         evidence_category=evidence_item.artefact_category,
                         acquisition_method=evidence_item.acquisition_method,
@@ -410,6 +412,7 @@ def parse_android_source(
             if values:
                 observations.append(
                     make_observation(
+                        stored_path=str(evidence_item.stored_path),
                         evidence_sha256=evidence_item.sha256,
                         evidence_category=evidence_item.artefact_category,
                         acquisition_method=evidence_item.acquisition_method,
@@ -421,6 +424,7 @@ def parse_android_source(
             if values:
                 observations.append(
                     make_observation(
+                        stored_path=str(evidence_item.stored_path),
                         evidence_sha256=evidence_item.sha256,
                         evidence_category=evidence_item.artefact_category,
                         acquisition_method=evidence_item.acquisition_method,
@@ -437,6 +441,7 @@ def parse_android_source(
                         evidence_category=evidence_item.artefact_category,
                         acquisition_method=evidence_item.acquisition_method,
                         observations=[{"installed_dji_apps": installed}],
+                        stored_path=str(evidence_item.stored_path),
                     )
                 )
 
@@ -468,6 +473,7 @@ def parse_android_source(
             if acquisition_values:
                 observations.append(
                     make_observation(
+                        stored_path=str(acquisition_evidence.stored_path),
                         evidence_sha256=acquisition_evidence.sha256,
                         evidence_category=acquisition_evidence.artefact_category,
                         acquisition_method=acquisition_evidence.acquisition_method,

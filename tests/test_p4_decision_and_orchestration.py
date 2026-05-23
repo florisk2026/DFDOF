@@ -176,6 +176,7 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
             artefact_category=artefact_category,
         )
         observation = make_observation(
+            stored_path=str(parent_evidence.stored_path),
             evidence_sha256=parent_evidence.sha256,
             evidence_category=artefact_category,
             acquisition_method=config.ACQUISITION_EXIFTOOL,

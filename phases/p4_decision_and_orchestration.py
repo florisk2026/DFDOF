@@ -303,6 +303,7 @@ def run_phase_4(state: State) -> State:
 					)
 					observations.append(
 						make_observation(
+							stored_path=str(parent_evidence.stored_path),
 							evidence_sha256=parent_evidence.sha256,
 							evidence_category=ACCOUNT_DATA,
 							acquisition_method=ACQUISITION_SELECT_ACCOUNT_DATA,
@@ -340,6 +341,7 @@ def run_phase_4(state: State) -> State:
 						)
 						observations.append(
 							make_observation(
+								stored_path=str(parent_evidence.stored_path),
 								evidence_sha256=parent_evidence.sha256,
 								evidence_category=VIDEOS,
 								acquisition_method=ACQUISITION_SELECT_ACCOUNT_DATA,

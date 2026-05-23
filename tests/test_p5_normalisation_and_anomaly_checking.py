@@ -493,7 +493,6 @@ def test_exif_anomaly_observation(tmp_path: Path, monkeypatch) -> None:
     assert len(anomalies) == 1
     anomaly = anomalies[0]
     obs = anomaly["observations"][0]
-    assert obs["filename"] == "DJI_0001_exif.json"
     assert obs["exif_zero_date"] is True
     assert obs["exif_missing_gps"] is True
     assert "norm_date" not in obs

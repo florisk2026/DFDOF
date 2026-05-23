@@ -142,6 +142,7 @@ def _process_ios_source(
         if backup_info_path.exists():
             info_plist_metadata = _normalise_backup_info_values(backup_info_path)
             info_plist_observation = make_observation(
+                stored_path=str(info_plist_evidence.stored_path),
                 evidence_sha256=info_plist_evidence.sha256,
                 evidence_category=info_plist_evidence.artefact_category,
                 acquisition_method=info_plist_evidence.acquisition_method,

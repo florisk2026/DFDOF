@@ -28,7 +28,7 @@ _EXIF_IMAGE_FIELDS: set[str] = {
 	"GimbalRollDegree", "GimbalYawDegree", "GimbalPitchDegree",
 	"FlightRollDegree", "FlightYawDegree", "FlightPitchDegree",
 	"CalibratedFocalLength", "CalibratedOpticalCenterX", "CalibratedOpticalCenterY",
-	"FileName", "FileType", "FileSize", "MIMEType",
+	"FileType", "MIMEType",
 }
 
 _EXIF_VIDEO_FIELDS: set[str] = {
@@ -38,7 +38,7 @@ _EXIF_VIDEO_FIELDS: set[str] = {
 	"AbsoluteAltitude", "RelativeAltitude",
 	"GimbalRollDegree", "GimbalYawDegree", "GimbalPitchDegree",
 	"FlightRollDegree", "FlightYawDegree", "FlightPitchDegree",
-	"FileName", "FileType", "FileSize", "MIMEType",
+	"FileType", "MIMEType",
 	"CompatibleBrands", "MediaDuration",
 }
 
@@ -104,6 +104,7 @@ def run_exiftool(
 	}
 
 	observation = make_observation(
+		stored_path=str(parent_evidence.stored_path),
 		evidence_sha256=parent_evidence.sha256,
 		evidence_category=artefact_category,
 		acquisition_method=ACQUISITION_EXIFTOOL,

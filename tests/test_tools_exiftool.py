@@ -104,10 +104,11 @@ def test_run_exiftool_image_fields_filtered_correctly(tmp_path: Path, monkeypatc
     evidence, observation = run_exiftool(img, output_dir, state, parent, config.IMAGES, config.IDENTIFICATION_CONTROLLER_IOS)
     assert observation is not None
     obs = observation.content.observations[0]
-    assert obs["FileName"] == "photo.jpg"
     assert obs["DateTimeOriginal"] == "2018:04:19 11:24:49"
     assert obs["GPSLatitude"] == 39.96
+    assert "FileName" not in obs
     assert "UnrelatedField" not in obs
+    assert observation.content.stored_path == str(img)
     assert not state.anomaly_flags
 
 
