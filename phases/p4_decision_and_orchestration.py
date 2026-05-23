@@ -49,7 +49,7 @@ from parsing.utils_parse import (
 	parse_plist_strict,
 	to_windows_path,
 )
-from phases.utils_phase import drone_sd_label, find_input_evidence_list_by_identification, write_json
+from phases.utils_phase import drone_sd_label, find_input_evidence_list_by_identification, json_safe, write_json
 from state import State
 
 from tools.datcon import run_datcon
@@ -147,7 +147,8 @@ def _parse_account_file(file_path: Path) -> tuple[dict, dict]:
 	except Exception:
 		return {}, {}
 
-	filtered = extract_fields(raw, field_map)
+	raw_safe = json_safe(raw)
+	filtered = extract_fields(raw_safe, field_map)
 	if suffix in {".plist", ".json"}:
 		filtered.update(_extract_find_aircraft_location(raw))
 	return raw, filtered

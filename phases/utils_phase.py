@@ -53,7 +53,7 @@ def json_safe(value: Any) -> Any:
 
 def compact_json(data: Any) -> str:
     """JSON with indent=2 but integer-only arrays and P5 column-check arrays on a single line."""
-    text = json.dumps(data, indent=2, sort_keys=True)
+    text = json.dumps(data, indent=2)
 
     def _collapse(m: re.Match) -> str:
         items = [x.strip() for x in m.group(1).split(",") if x.strip()]
