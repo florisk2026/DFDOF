@@ -16,15 +16,15 @@ from evidence import Evidence, make_evidence
 from parsing.utils_parse import to_windows_path
 from state import State
 
-_DATCON_REQUIRED_EXTS = {".csv", ".kml", ".config", ".log"}
+_DATCON_REQUIRED_EXTS = {".csv", ".kml", ".config.txt", ".log.txt"}
 
 
 def _datcon_output_missing(output_dir: Path, dat_stem: str) -> bool:
 	"""Return True if any required DatCon output file is absent."""
 	present = {
-		p.suffix.lower()
+		"".join(p.suffixes).lower()
 		for p in output_dir.iterdir()
-		if p.is_file() and p.stem == dat_stem
+		if p.is_file() and p.name.lower().startswith(dat_stem.lower() + ".")
 	}
 	return not _DATCON_REQUIRED_EXTS.issubset(present)
 
@@ -91,14 +91,14 @@ def run_datcon(
 			break
 		print(
 			"WARNING: Export incomplete — settings were incorrect or exports are missing.\n"
-			f"Expected: {dat_stem}.csv, {dat_stem}.KML, {dat_stem}.config, {dat_stem}.log\n"
-			"Please reopen DatCon, check your settings, export again, or type 'error' to bypass."
+			f"Expected: {dat_stem}.csv, {dat_stem}.kml, {dat_stem}.config.txt, {dat_stem}.log.txt\n"
+			"Please reopen DatCon, check your settings, and export again."
 		)
 
 	output_files = [
 		path
 		for path in output_dir.iterdir()
-		if path.is_file() and path.stem.startswith(dat_stem)
+		if path.is_file() and path.name.lower().startswith(dat_stem.lower() + ".")
 	]
 	output_paths = [str(path) for path in output_files]
 	state.log_tool_invocation(

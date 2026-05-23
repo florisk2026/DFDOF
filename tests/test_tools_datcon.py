@@ -31,7 +31,7 @@ def _make_parent(tmp_path: Path) -> "make_evidence":
 
 
 def _write_required_outputs(output_dir: Path, stem: str) -> None:
-    for ext in (".csv", ".KML", ".config", ".log"):
+    for ext in (".csv", ".kml", ".config.txt", ".log.txt"):
         (output_dir / f"{stem}{ext}").write_text("data", encoding="utf-8")
 
 
@@ -44,7 +44,7 @@ def test_datcon_output_missing_all_present(tmp_path: Path) -> None:
 def test_datcon_output_missing_partial(tmp_path: Path) -> None:
     stem = "FLY029"
     (tmp_path / f"{stem}.csv").write_text("data", encoding="utf-8")
-    (tmp_path / f"{stem}.KML").write_text("data", encoding="utf-8")
+    (tmp_path / f"{stem}.kml").write_text("data", encoding="utf-8")
     assert _datcon_output_missing(tmp_path, stem) is True
 
 

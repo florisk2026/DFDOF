@@ -79,7 +79,7 @@ def run_extractdji(
         print(
             "WARNING: Export incomplete — settings were incorrect or exports are missing.\n"
             "Expected: at least one FLY*.DAT file in the output directory.\n"
-            "Please reopen ExtractDJI, check your settings, export again, or type 'skip'/'error' to bypass."
+            "Please reopen ExtractDJI, check your settings, and export again."
         )
 
     output_files = [
