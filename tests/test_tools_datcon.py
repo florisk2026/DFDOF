@@ -17,7 +17,7 @@ def _make_state(tmp_path: Path) -> State:
     return state
 
 
-def _make_parent(tmp_path: Path) -> "make_evidence":
+def _make_parent(tmp_path: Path):
     dat = tmp_path / "FLY029.DAT"
     dat.write_bytes(b"dat")
     return make_evidence(
@@ -31,7 +31,7 @@ def _make_parent(tmp_path: Path) -> "make_evidence":
 
 
 def _write_required_outputs(output_dir: Path, stem: str) -> None:
-    for ext in (".csv", ".kml", ".config.txt", ".log.txt"):
+    for ext in (".csv", ".kml"):
         (output_dir / f"{stem}{ext}").write_text("data", encoding="utf-8")
 
 
@@ -44,7 +44,6 @@ def test_datcon_output_missing_all_present(tmp_path: Path) -> None:
 def test_datcon_output_missing_partial(tmp_path: Path) -> None:
     stem = "FLY029"
     (tmp_path / f"{stem}.csv").write_text("data", encoding="utf-8")
-    (tmp_path / f"{stem}.kml").write_text("data", encoding="utf-8")
     assert _datcon_output_missing(tmp_path, stem) is True
 
 
@@ -85,7 +84,7 @@ def test_run_datcon_succeeds_first_try(tmp_path: Path, monkeypatch, capsys) -> N
 
     result = run_datcon(dat_path, output_dir, state, parent, config.IDENTIFICATION_CONTROLLER_ANDROID)
 
-    assert len(result) == 4
+    assert len(result) == 2
     assert not state.anomaly_flags
     captured = capsys.readouterr()
     assert "WARNING" not in captured.out
@@ -115,6 +114,6 @@ def test_run_datcon_retries_on_missing_output(tmp_path: Path, monkeypatch, capsy
     result = run_datcon(dat_path, output_dir, state, parent, config.IDENTIFICATION_CONTROLLER_ANDROID)
 
     assert call_count == 2
-    assert len(result) == 4
+    assert len(result) == 2
     captured = capsys.readouterr()
     assert "WARNING" in captured.out

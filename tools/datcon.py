@@ -16,7 +16,7 @@ from evidence import Evidence, make_evidence
 from parsing.utils_parse import to_windows_path
 from state import State
 
-_DATCON_REQUIRED_EXTS = {".csv", ".kml", ".config.txt", ".log.txt"}
+_DATCON_REQUIRED_EXTS = {".csv", ".kml"}
 
 
 def _datcon_output_missing(output_dir: Path, dat_stem: str) -> bool:
@@ -44,8 +44,8 @@ def _datcon_settings_block(dat_path: Path, output_dir: Path) -> str:
 		"    Sample Rate:       30 Hz\n"
 		"    Event Log:         Yes (checked)\n\n"
 		"  Section: Log Files\n"
-		"    Event Log File:    Yes (checked)\n"
-		"    Config Log File:   Yes (checked)\n"
+		"    Event Log File:    No (unchecked)\n"
+		"    Config Log File:   No (unchecked)\n"
 		"    RecDefs File:      No (unchecked)\n\n"
 		"  Section: KML\n"
 		"    Ground Track:      Yes (checked)\n\n"
@@ -91,7 +91,7 @@ def run_datcon(
 			break
 		print(
 			"WARNING: Export incomplete — settings were incorrect or exports are missing.\n"
-			f"Expected: {dat_stem}.csv, {dat_stem}.kml, {dat_stem}.config.txt, {dat_stem}.log.txt\n"
+			f"Expected: {dat_stem}.csv, {dat_stem}.kml\n"
 			"Please reopen DatCon, check your settings, and export again."
 		)
 

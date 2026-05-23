@@ -18,7 +18,7 @@ def _make_state() -> State:
     return state
 
 
-def _make_parent(tmp_path: Path, name: str = "photo.jpg") -> make_evidence:
+def _make_parent(tmp_path: Path, name: str = "photo.jpg"):
     img = tmp_path / name
     img.write_bytes(b"img")
     return make_evidence(
@@ -57,10 +57,8 @@ def test_run_exiftool_subprocess_exception_raises_anomaly(tmp_path: Path, monkey
     img = tmp_path / "photo.jpg"
     output_dir = tmp_path / "output"
 
-    monkeypatch.setattr(
-        subprocess, "run",
-        lambda *_a, **_kw: (_ for _ in ()).throw(OSError("exiftool missing")),
-    )
+    def _raise(*_a, **_kw): raise OSError("exiftool missing")
+    monkeypatch.setattr(subprocess, "run", _raise)
 
     evidence, observation = run_exiftool(img, output_dir, state, parent, config.IMAGES, config.IDENTIFICATION_CONTROLLER_IOS)
 

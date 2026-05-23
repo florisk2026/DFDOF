@@ -17,7 +17,7 @@ def _make_state() -> State:
     return state
 
 
-def _make_parent(tmp_path: Path) -> make_evidence:
+def _make_parent(tmp_path: Path):
     txt = tmp_path / "DJIFlightRecord_2018-04-19.txt"
     txt.write_text("record", encoding="utf-8")
     return make_evidence(
@@ -61,7 +61,8 @@ def test_run_txtlogtocsv_subprocess_oserror_raises_anomaly(tmp_path: Path, monke
 
     monkeypatch.setattr("tools.txtlogtocsv.Path.exists", lambda self: True)
     monkeypatch.setattr("tools.txtlogtocsv.Path.is_file", lambda self: True)
-    monkeypatch.setattr(subprocess, "run", lambda *_a, **_kw: (_ for _ in ()).throw(OSError("no exe")))
+    def _raise(*_a, **_kw): raise OSError("no exe")
+    monkeypatch.setattr(subprocess, "run", _raise)
 
     result = run_txtlogtocsv(txt_path, output_dir, state, parent, config.IDENTIFICATION_CONTROLLER_IOS)
 
