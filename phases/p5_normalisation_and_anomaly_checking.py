@@ -832,6 +832,25 @@ def run_phase_5(state: State) -> State:
             if obs is not None:
                 anomalies.append(obs)
 
+    _id_rank = {ident: i for i, ident in enumerate(SOURCE_IDENTIFICATION_TYPES)}
+
+    def _anomaly_sort_key(obs: Observation) -> tuple:
+        path_parts = Path(obs.content.stored_path or "").parts
+        rank = 999
+        for seg in path_parts:
+            # exact match (controller_android, controller_ios, drone_flight_storage)
+            if seg in _id_rank:
+                rank = _id_rank[seg]
+                break
+            # prefix match for drone_sd_1, drone_sd_2, …
+            matched = next((ident for ident in _id_rank if seg.startswith(ident + "_") or seg == ident), None)
+            if matched:
+                rank = _id_rank[matched]
+                break
+        return (rank, obs.content.evidence_category or "", obs.content.stored_path or "")
+
+    anomalies.sort(key=_anomaly_sort_key)
+
     state.phase_outputs[_PHASE_NAME] = {
         "completed_at": utc_now_iso(),
         "normalised_artefacts": [e.to_dict() for e in normalised],
