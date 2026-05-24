@@ -585,3 +585,107 @@ def test_no_empty_output_dirs(tmp_path: Path, monkeypatch) -> None:
     phase_dir = project_root / "Documents" / "dfdof_output" / "CASE-P5-TEST" / p5._PHASE_NAME
     subdirs = [d for d in phase_dir.iterdir() if d.is_dir()] if phase_dir.exists() else []
     assert subdirs == []
+
+
+# ---------------------------------------------------------------------------
+# Database empty-row anomaly check
+# ---------------------------------------------------------------------------
+
+import sqlite3 as _sqlite3
+
+
+def _build_state_db(tmp_path: Path, identification: str, db_path: Path) -> State:
+    """Build a minimal State with a P1→P3 chain for one database artefact."""
+    state = State(case_id="CASE-P5-TEST", operator="Tester")
+
+    src = tmp_path / "source.zip"
+    if not src.exists():
+        src.write_text("src", encoding="utf-8")
+    source_ev = make_evidence(
+        source_path=str(src),
+        stored_path=src,
+        parent=None,
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
+    )
+    state.input_evidence.append(source_ev)
+    state.phase_outputs["p1_provenance"] = {
+        "identified_evidence": [{
+            "source_path": str(src),
+            "identified_as": identification,
+            "identified_by_operator_as": None,
+        }]
+    }
+
+    p3_ev = make_evidence(
+        source_path=db_path.name,
+        stored_path=db_path,
+        parent=source_ev,
+        acquisition_method=config.ACQUISITION_EXTRACT_LOGICAL,
+        type=config.EVIDENCE_TYPE_EXTRACTED,
+        artefact_category=config.DATABASES,
+    )
+    state.phase_outputs["p3_artefact_extraction"] = {
+        "extracted_artefacts": [p3_ev.to_dict()]
+    }
+    state.phase_outputs["p4_decision_and_orchestration"] = {
+        "decision_and_orchestration_artefacts": []
+    }
+    return state
+
+
+def test_p5_database_empty_raises_observation(tmp_path: Path, monkeypatch) -> None:
+    """SQLite DB with a table but zero rows → derived_anomalies contains database_empty observation."""
+    (tmp_path / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+    db_path = tmp_path / "dji.db"
+    con = _sqlite3.connect(str(db_path))
+    con.execute("CREATE TABLE flights (id INTEGER PRIMARY KEY, name TEXT)")
+    con.commit()
+    con.close()
+
+    state = _build_state_db(tmp_path, config.IDENTIFICATION_CONTROLLER_IOS, db_path)
+    result = p5.run_phase_5(state)
+
+    anomalies = result.phase_outputs[p5._PHASE_NAME]["derived_anomalies"]
+    assert len(anomalies) == 1
+    assert anomalies[0]["evidence_category"] == config.DATABASES
+    assert anomalies[0]["observations"][0]["database_empty"] is True
+
+
+def test_p5_database_non_empty_no_observation(tmp_path: Path, monkeypatch) -> None:
+    """SQLite DB with populated rows → no derived_anomaly."""
+    (tmp_path / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+    db_path = tmp_path / "dji.db"
+    con = _sqlite3.connect(str(db_path))
+    con.execute("CREATE TABLE flights (id INTEGER PRIMARY KEY, name TEXT)")
+    con.execute("INSERT INTO flights VALUES (1, 'flight1')")
+    con.commit()
+    con.close()
+
+    state = _build_state_db(tmp_path, config.IDENTIFICATION_CONTROLLER_IOS, db_path)
+    result = p5.run_phase_5(state)
+
+    anomalies = result.phase_outputs[p5._PHASE_NAME]["derived_anomalies"]
+    assert anomalies == []
+
+
+def test_p5_database_missing_file_raises_anomaly_flag(tmp_path: Path, monkeypatch) -> None:
+    """P3 database artefact with missing file → anomaly flag raised, phase completes."""
+    (tmp_path / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+    db_path = tmp_path / "ghost.db"
+    db_path.write_text("placeholder", encoding="utf-8")
+
+    state = _build_state_db(tmp_path, config.IDENTIFICATION_CONTROLLER_IOS, db_path)
+    db_path.unlink()
+
+    result = p5.run_phase_5(state)
+
+    assert p5._PHASE_NAME in result.completed_phases
+    assert any("ghost.db" in flag for flag in result.anomaly_flags)
+    assert result.phase_outputs[p5._PHASE_NAME]["derived_anomalies"] == []

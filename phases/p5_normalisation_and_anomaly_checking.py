@@ -17,6 +17,7 @@ import csv
 import json
 import math
 import shutil
+import sqlite3
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -26,11 +27,13 @@ from config import (
     ACQUISITION_EXIFTOOL,
     ACQUISITION_NORMALISE,
     ACQUISITION_TXTLOGTOCSV,
+    DATABASES,
     DRONE_LOGS,
     EVIDENCE_TYPE_NORMALISED,
     FLIGHT_RECORDS,
     IDENTIFICATION_DRONE_SD,
     IMAGES,
+    SOURCE_IDENTIFICATION_TYPES,
     clear_and_make,
     output_dir,
     utc_now_iso,
@@ -680,6 +683,24 @@ def _process_exif(artefact: dict[str, Any]) -> Observation | None:
     )
 
 
+def _check_database_empty(db_path: Path) -> bool:
+    """Return True if every table in the SQLite database has zero rows, or no tables exist."""
+    try:
+        con = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+        try:
+            tables = [r[0] for r in con.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            ).fetchall()]
+            return all(
+                con.execute(f"SELECT COUNT(*) FROM [{t}]").fetchone()[0] == 0
+                for t in tables
+            ) if tables else True
+        finally:
+            con.close()
+    except Exception:
+        return False
+
+
 def run_phase_5(state: State) -> State:
     phase_dir = output_dir() / state.case_id / _PHASE_NAME
     clear_and_make(phase_dir)
@@ -692,6 +713,34 @@ def run_phase_5(state: State) -> State:
     )
     identification_map = _build_identification_map(state)
     _announced_categories: set[str] = set()
+    _id_order = {ident: i for i, ident in enumerate(SOURCE_IDENTIFICATION_TYPES)}
+
+    p3_artefacts = state.phase_outputs.get("p3_artefact_extraction", {}).get("extracted_artefacts", [])
+    db_artefacts = [a for a in p3_artefacts if str(a.get("artefact_category") or "") == DATABASES]
+    db_artefacts.sort(key=lambda a: (
+        _id_order.get(identification_map.get(str(a.get("sha256") or ""), ""), 999),
+        str(a.get("stored_path") or ""),
+    ))
+
+    if db_artefacts and DATABASES not in _announced_categories:
+        print(f"  Normalising and Anomaly Checking {DATABASES}")
+        _announced_categories.add(DATABASES)
+
+    for artefact in db_artefacts:
+        stored_path = Path(str(artefact.get("stored_path") or ""))
+        sha = str(artefact.get("sha256") or "")
+        identification = identification_map.get(sha, "unknown")
+        if not stored_path.exists():
+            state.raise_anomaly(5, identification, f"p3 database artefact not found: {stored_path.name}", category=DATABASES)
+            continue
+        if _check_database_empty(stored_path):
+            anomalies.append(make_observation(
+                stored_path=str(stored_path),
+                evidence_sha256=sha,
+                evidence_category=DATABASES,
+                acquisition_method=ACQUISITION_NORMALISE,
+                observations=[{"database_empty": True}],
+            ))
 
     for artefact in p4_artefacts:
         acquisition = str(artefact.get("acquisition_method") or "")
