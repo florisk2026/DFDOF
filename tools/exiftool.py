@@ -53,7 +53,6 @@ def run_exiftool(
 	state: State,
 	parent_evidence: Evidence,
 	artefact_category: str,
-	identification: str,
 	index: int | None = None,
 ) -> tuple[Evidence | None, Observation | None]:
 	json_path = output_dir / f"{file_path.stem}_exif.json"
@@ -83,7 +82,7 @@ def run_exiftool(
 			stderr=str(exc),
 			output_paths=None,
 		)
-		state.raise_anomaly(4, identification, f"ExifTool failed on {file_path.name}", category=artefact_category, index=index)
+		state.raise_anomaly(4, parent_evidence.source_identification or "", f"ExifTool failed on {file_path.name}", category=artefact_category, index=index)
 		return None, None
 
 	# Parse JSON stdout if available.

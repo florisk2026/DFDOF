@@ -143,6 +143,7 @@ def run_phase_1(state: State, *, confirm_all: bool = True) -> State:
         else:
             listing, anomalies = enumerate_image_listing(candidate, state)
         identified_as = identify_source(listing)
+        evidence.source_identification = identified_as
 
         for message in anomalies:
             state.raise_anomaly(1, identified_as, message)
@@ -279,9 +280,17 @@ def prompt_phase_1_summary_and_confirm(state: State) -> bool:
             continue
         continue
 
-    # Finalize confirmations.
+    # Finalize confirmations and sync any operator overrides back to Evidence objects.
     for record in sources:
         record["operator_confirmed"] = accepted
+
+    if accepted:
+        src_to_ev = {str(e.source_path): e for e in state.input_evidence}
+        for record in sources:
+            final_id = str(record.get("identified_by_operator_as") or record.get("identified_as", ""))
+            ev = src_to_ev.get(str(record.get("source_path", "")))
+            if ev is not None:
+                ev.source_identification = final_id
 
     state.phase_outputs.setdefault("p1_provenance", {})[
         "operator_final_confirmation"

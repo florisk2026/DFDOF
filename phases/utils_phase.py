@@ -180,25 +180,5 @@ def haversine_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 def find_input_evidence_list_by_identification(
     state: State, identification: str
 ) -> list[Evidence]:
-    """Find all input evidence matching an identification from phase 1 output."""
-    source_records = state.phase_outputs.get("p1_provenance", {}).get(
-        "identified_evidence", []
-    )
-    matching_evidence: list[Evidence] = []
-    for record in source_records:
-        # Operator override always takes precedence when set; fall back to auto-identification.
-        recorded_identification = str(
-            record.get("identified_by_operator_as")
-            or record.get("identified_as", "")
-        )
-
-        if recorded_identification != identification:
-            continue
-        source_path = str(record.get("source_path") or "")
-        if not source_path:
-            continue
-        for evidence in state.input_evidence:
-            if str(evidence.source_path) == source_path:
-                matching_evidence.append(evidence)
-                break  # Assuming one evidence per source_path, but collect all.
-    return matching_evidence
+    """Return all input evidence whose source_identification matches identification."""
+    return [e for e in state.input_evidence if e.source_identification == identification]

@@ -84,6 +84,7 @@ def test_run_phase_2_convert_controller_ios_evidence(
         parent=None,
         acquisition_method=config.ACQUISITION_LOGICAL,
         type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=config.IDENTIFICATION_CONTROLLER_IOS,
         skip_hash=True,
     )
     state.input_evidence.append(ios_evidence)
@@ -222,6 +223,7 @@ def test_run_phase_2_processes_android_logical_source(
         parent=None,
         acquisition_method=config.ACQUISITION_LOGICAL,
         type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=config.IDENTIFICATION_CONTROLLER_ANDROID,
         skip_hash=True,
     )
     state.input_evidence.append(android_evidence)
@@ -352,6 +354,7 @@ def test_run_phase_2_processes_android_physical_source(
         parent=None,
         acquisition_method=config.ACQUISITION_PHYSICAL,
         type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=config.IDENTIFICATION_CONTROLLER_ANDROID,
         skip_hash=True,
     )
     state.input_evidence.append(android_evidence)

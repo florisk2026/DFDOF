@@ -118,25 +118,14 @@ _FR_BATTERY_TEMP_COL = "CENTER_BATTERY.temperature [C]"
 
 
 def _build_identification_map(state: State) -> dict[str, str]:
-    """Map each P3-artefact-sha256 to its source folder label.
+    """Map each P3-artefact sha256 to its source folder label.
 
     For drone_sd sources the label is drone_sd_1, drone_sd_2, … matching the
     numbered directories produced by P3/P4. All other sources use their
-    identification string directly.
+    identified_as string directly.
 
     Chain: P3-artefact.parent_sha256 → input-evidence sha256 → label.
-    P4 artefacts carry parent_sha256 pointing to P3 artefacts, so this map
-    is keyed on P3-artefact sha256 and looked up via P4-artefact.parent_sha256.
     """
-    p1_records = state.phase_outputs.get("p1_provenance", {}).get("identified_evidence", [])
-    source_path_to_id: dict[str, str] = {}
-    for record in p1_records:
-        src = str(record.get("source_path") or "")
-        ident = str(record.get("identified_by_operator_as") or record.get("identified_as", ""))
-        if src:
-            source_path_to_id[src] = ident
-
-    # Map input-evidence sha256 → folder label, with drone_sd numbered.
     drone_sd_sources = find_input_evidence_list_by_identification(state, IDENTIFICATION_DRONE_SD)
     drone_sd_sha_to_label: dict[str, str] = {
         ev.sha256: drone_sd_label(idx)
@@ -145,15 +134,15 @@ def _build_identification_map(state: State) -> dict[str, str]:
     }
 
     input_sha_to_label: dict[str, str] = {}
-    for evidence in state.input_evidence:
-        if not evidence.sha256:
+    for ev in state.input_evidence:
+        if not ev.sha256:
             continue
-        if evidence.sha256 in drone_sd_sha_to_label:
-            input_sha_to_label[evidence.sha256] = drone_sd_sha_to_label[evidence.sha256]
-        else:
-            src = str(evidence.source_path)
-            if src in source_path_to_id:
-                input_sha_to_label[evidence.sha256] = source_path_to_id[src]
+        if ev.source_identification == IDENTIFICATION_DRONE_SD:
+            label = drone_sd_sha_to_label.get(ev.sha256)
+            if label:
+                input_sha_to_label[ev.sha256] = label
+        elif ev.source_identification:
+            input_sha_to_label[ev.sha256] = ev.source_identification
 
     p3_artefacts = state.phase_outputs.get("p3_artefact_extraction", {}).get(
         "extracted_artefacts", []

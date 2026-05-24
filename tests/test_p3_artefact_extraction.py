@@ -61,18 +61,10 @@ def test_run_phase_3_android_logical(tmp_path: Path, monkeypatch) -> None:
         parent=None,
         acquisition_method=config.ACQUISITION_LOGICAL,
         type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=config.IDENTIFICATION_CONTROLLER_ANDROID,
         skip_hash=True,
     )
     state.input_evidence.append(android_evidence)
-    state.phase_outputs["p1_provenance"]["identified_evidence"] = [
-        {
-            "source_path": str(android_zip),
-            "identified": True,
-            "identified_as": "controller_android",
-            "operator_confirmed": True,
-            "identified_by_operator_as": None,
-        },
-    ]
 
     result = p3.run_phase_3(state)
     phase_output = result.phase_outputs["p3_artefact_extraction"]
@@ -137,18 +129,10 @@ def test_run_phase_3_ios_parsed_files(tmp_path: Path, monkeypatch) -> None:
         parent=None,
         acquisition_method=config.ACQUISITION_LOGICAL,
         type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=config.IDENTIFICATION_CONTROLLER_IOS,
         skip_hash=True,
     )
     state.input_evidence.append(ios_evidence)
-    state.phase_outputs["p1_provenance"]["identified_evidence"] = [
-        {
-            "source_path": str(ios_zip),
-            "identified": True,
-            "identified_as": "controller_ios",
-            "operator_confirmed": True,
-            "identified_by_operator_as": None,
-        }
-    ]
     state.phase_outputs["p2_image_parsing"] = {
         "parsed_evidence": [
             {
@@ -188,18 +172,10 @@ def test_run_phase_3_drone_flight_storage_flat_dat(tmp_path: Path, monkeypatch) 
         parent=None,
         acquisition_method=config.ACQUISITION_LOGICAL,
         type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=config.IDENTIFICATION_DRONE_FLIGHT_STORAGE,
         skip_hash=True,
     )
     state.input_evidence.append(flight_evidence)
-    state.phase_outputs["p1_provenance"]["identified_evidence"] = [
-        {
-            "source_path": str(flight_zip),
-            "identified": True,
-            "identified_as": "drone_flight_storage",
-            "operator_confirmed": True,
-            "identified_by_operator_as": None,
-        }
-    ]
 
     result = p3.run_phase_3(state)
     artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]
@@ -229,18 +205,10 @@ def test_run_phase_3_drone_flight_storage_export_dat(tmp_path: Path, monkeypatch
         parent=None,
         acquisition_method=config.ACQUISITION_LOGICAL,
         type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=config.IDENTIFICATION_DRONE_FLIGHT_STORAGE,
         skip_hash=True,
     )
     state.input_evidence.append(flight_evidence)
-    state.phase_outputs["p1_provenance"]["identified_evidence"] = [
-        {
-            "source_path": str(flight_zip),
-            "identified": True,
-            "identified_as": "drone_flight_storage",
-            "operator_confirmed": True,
-            "identified_by_operator_as": None,
-        }
-    ]
 
     result = p3.run_phase_3(state)
     artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]
@@ -267,18 +235,10 @@ def test_run_phase_3_android_physical_filters_extensions(
         parent=None,
         acquisition_method=config.ACQUISITION_PHYSICAL,
         type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=config.IDENTIFICATION_CONTROLLER_ANDROID,
         skip_hash=True,
     )
     state.input_evidence.append(android_evidence)
-    state.phase_outputs["p1_provenance"]["identified_evidence"] = [
-        {
-            "source_path": str(android_image),
-            "identified": True,
-            "identified_as": "controller_android",
-            "operator_confirmed": True,
-            "identified_by_operator_as": None,
-        }
-    ]
 
     def fake_extract_tsk_image(*_args, **kwargs):
         working_dir = Path(kwargs.get("working_dir") or _args[1])
@@ -365,18 +325,10 @@ def test_run_phase_3_drone_sd_physical_single_pass(tmp_path: Path, monkeypatch) 
         parent=None,
         acquisition_method=config.ACQUISITION_PHYSICAL,
         type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=config.IDENTIFICATION_DRONE_SD,
         skip_hash=True,
     )
     state.input_evidence.append(sd_evidence)
-    state.phase_outputs["p1_provenance"]["identified_evidence"] = [
-        {
-            "source_path": str(sd_image),
-            "identified": True,
-            "identified_as": "drone_sd",
-            "operator_confirmed": True,
-            "identified_by_operator_as": None,
-        }
-    ]
     state.phase_outputs["p1_provenance"]["image_metadata"] = {
         str(sd_image.name): {
             "offset_sectors": None,
@@ -430,18 +382,10 @@ def test_run_phase_3_android_logical_skips_empty_files(tmp_path: Path, monkeypat
         parent=None,
         acquisition_method=config.ACQUISITION_LOGICAL,
         type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=config.IDENTIFICATION_CONTROLLER_ANDROID,
         skip_hash=True,
     )
     state.input_evidence.append(android_evidence)
-    state.phase_outputs["p1_provenance"]["identified_evidence"] = [
-        {
-            "source_path": str(android_zip),
-            "identified": True,
-            "identified_as": "controller_android",
-            "operator_confirmed": True,
-            "identified_by_operator_as": None,
-        },
-    ]
 
     result = p3.run_phase_3(state)
     artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]
@@ -472,18 +416,10 @@ def test_run_phase_3_android_logical_deduplicates_by_basename(tmp_path: Path, mo
         parent=None,
         acquisition_method=config.ACQUISITION_LOGICAL,
         type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=config.IDENTIFICATION_CONTROLLER_ANDROID,
         skip_hash=True,
     )
     state.input_evidence.append(android_evidence)
-    state.phase_outputs["p1_provenance"]["identified_evidence"] = [
-        {
-            "source_path": str(android_zip),
-            "identified": True,
-            "identified_as": "controller_android",
-            "operator_confirmed": True,
-            "identified_by_operator_as": None,
-        },
-    ]
 
     result = p3.run_phase_3(state)
     artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]

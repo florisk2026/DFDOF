@@ -68,6 +68,7 @@ class Evidence:
     acquisition_method: str | None = None
     type: str = EVIDENCE_TYPE_INPUT
     artefact_category: str | None = None
+    source_identification: str | None = None
     hash_note: str | None = None
     size: int = field(init=False)
     skip_hash: bool = False
@@ -93,6 +94,8 @@ class Evidence:
             self.sha256, self.sha1 = hash_file(stored_path)
             self.hash_timestamp = utc_now_iso()
         self.parent_sha256 = self.parent.sha256 if self.parent is not None else None
+        if self.source_identification is None and self.parent is not None:
+            self.source_identification = self.parent.source_identification
 
     def compute_hash(self) -> None:
         """Compute hash if it wasn't done during initialization."""
@@ -107,6 +110,7 @@ class Evidence:
         result = {
             "source_path": str(self.source_path),
             "stored_path": str(stored_path),
+            "source_identification": self.source_identification,
             "parent_sha256": (self.parent_sha256 if self.parent_sha256 else None),
             "acquisition_method": self.acquisition_method,
             "type": self.type,
@@ -127,6 +131,7 @@ class Evidence:
         instance = cls.__new__(cls)
         instance.source_path = data["source_path"]
         instance.parent = None
+        instance.source_identification = data.get("source_identification")
         instance.acquisition_method = data.get("acquisition_method")
         instance.type = data.get("type", EVIDENCE_TYPE_INPUT)
         instance.artefact_category = data.get("artefact_category")
@@ -152,6 +157,7 @@ def make_evidence(
     acquisition_method: str,
     type: str,
     artefact_category: str | None = None,
+    source_identification: str | None = None,
     skip_hash: bool = False,
     hash_note: str | None = None,
 ) -> "Evidence":
@@ -163,6 +169,7 @@ def make_evidence(
         acquisition_method=acquisition_method,
         type=type,
         artefact_category=artefact_category,
+        source_identification=source_identification,
         skip_hash=skip_hash,
         hash_note=hash_note,
     )

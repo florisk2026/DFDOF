@@ -23,17 +23,9 @@ def _add_source(state: State, source_path: Path, identification: str) -> Evidenc
         parent=None,
         acquisition_method=config.ACQUISITION_LOGICAL,
         type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=identification,
     )
     state.input_evidence.append(source)
-    state.phase_outputs["p1_provenance"]["identified_evidence"].append(
-        {
-            "source_path": str(source_path),
-            "identified": True,
-            "identified_as": identification,
-            "operator_confirmed": True,
-            "identified_by_operator_as": None,
-        }
-    )
     return source
 
 
@@ -120,7 +112,7 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
         ]
     }
 
-    def fake_datcon(dat_path, output_dir, _state, parent_evidence, _identification, _index=None):
+    def fake_datcon(dat_path, output_dir, _state, parent_evidence, _index=None):
         output_dir.mkdir(parents=True, exist_ok=True)
         csv_path = output_dir / f"{dat_path.stem}.csv"
         csv_path.write_text("csv", encoding="utf-8")
@@ -135,7 +127,7 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
             )
         ]
 
-    def fake_extractdji(dat_path, output_dir, _state, parent_evidence, _identification, _index=None):
+    def fake_extractdji(dat_path, output_dir, _state, parent_evidence, _index=None):
         output_dir.mkdir(parents=True, exist_ok=True)
         converted_path = output_dir / "FLY001.DAT"
         converted_path.write_text("converted", encoding="utf-8")
@@ -150,7 +142,7 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
             )
         ]
 
-    def fake_txtlogtocsv(txt_path, output_dir, _state, parent_evidence, _identification, _index=None):
+    def fake_txtlogtocsv(txt_path, output_dir, _state, parent_evidence, _index=None):
         output_dir.mkdir(parents=True, exist_ok=True)
         csv_path = output_dir / f"{txt_path.stem}.csv"
         csv_path.write_text("csv", encoding="utf-8")
@@ -163,7 +155,7 @@ def test_run_phase_4_controller_ios_dispatches_tools(tmp_path: Path, monkeypatch
             artefact_category=config.FLIGHT_RECORDS,
         )
 
-    def fake_exiftool(file_path, output_dir, _state, parent_evidence, artefact_category, _identification, _index=None):
+    def fake_exiftool(file_path, output_dir, _state, parent_evidence, artefact_category, _index=None):
         output_dir.mkdir(parents=True, exist_ok=True)
         json_path = output_dir / f"{file_path.stem}_exif.json"
         json_path.write_text("{}", encoding="utf-8")
@@ -292,7 +284,7 @@ def test_run_phase_4_android_info_file_parsed(tmp_path: Path, monkeypatch) -> No
 
     exiftool_called_for: list[str] = []
 
-    def fake_exiftool(file_path, output_dir, _state, parent_ev, artefact_category, _identification, _index=None):
+    def fake_exiftool(file_path, output_dir, _state, parent_ev, artefact_category, _index=None):
         exiftool_called_for.append(file_path.name)
         return None, None
 

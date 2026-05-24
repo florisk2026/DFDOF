@@ -41,7 +41,6 @@ def run_extractdji(
     output_dir: Path,
     state: State,
     parent_evidence: Evidence,
-    identification: str,
     index: int | None = None,
 ) -> list[Evidence]:
     print(_extractdji_settings_block(dat_path, output_dir))
@@ -60,7 +59,7 @@ def run_extractdji(
             output_paths=None,
         )
         state.raise_anomaly(
-            4, identification,
+            4, parent_evidence.source_identification or "",
             f"ExtractDJI not found for {dat_path.name}",
             category=DRONE_LOGS, index=index,
         )

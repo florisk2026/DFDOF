@@ -23,7 +23,6 @@ def run_txtlogtocsv(
     output_dir: Path,
     state: State,
     parent_evidence: Evidence,
-    identification: str,
     index: int | None = None,
 ) -> Evidence | None:
     csv_path = output_dir / f"{txt_path.stem}.csv"
@@ -49,7 +48,7 @@ def run_txtlogtocsv(
             stderr=f"Executable not found: {TXTLOGTOCSV}",
             output_paths=None,
         )
-        state.raise_anomaly(4, identification, "TXTlogToCSV executable not found", category=FLIGHT_RECORDS, index=index)
+        state.raise_anomaly(4, parent_evidence.source_identification or "", "TXTlogToCSV executable not found", category=FLIGHT_RECORDS, index=index)
         return None
 
     try:
@@ -72,7 +71,7 @@ def run_txtlogtocsv(
         )
         if output_dir.exists() and not any(output_dir.iterdir()):
             output_dir.rmdir()
-        state.raise_anomaly(4, identification, f"TXTlogToCSV failed for {txt_path.name}", category=FLIGHT_RECORDS, index=index)
+        state.raise_anomaly(4, parent_evidence.source_identification or "", f"TXTlogToCSV failed for {txt_path.name}", category=FLIGHT_RECORDS, index=index)
         return None
 
     state.log_command_result(
@@ -89,7 +88,7 @@ def run_txtlogtocsv(
     ):
         if output_dir.exists() and not any(output_dir.iterdir()):
             output_dir.rmdir()
-        state.raise_anomaly(4, identification, f"TXTlogToCSV failed for {txt_path.name}", category=FLIGHT_RECORDS, index=index)
+        state.raise_anomaly(4, parent_evidence.source_identification or "", f"TXTlogToCSV failed for {txt_path.name}", category=FLIGHT_RECORDS, index=index)
         return None
 
     return make_evidence(

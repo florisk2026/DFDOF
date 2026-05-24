@@ -43,6 +43,29 @@ def test_evidence_round_trip(tmp_path: Path) -> None:
     assert round_tripped.size == child.size
 
 
+def test_source_identification_propagates_from_parent(tmp_path: Path) -> None:
+    f = tmp_path / "file.bin"
+    f.write_bytes(b"x")
+    parent = make_evidence(
+        source_path=f,
+        stored_path=f,
+        parent=None,
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=config.IDENTIFICATION_CONTROLLER_IOS,
+    )
+    child = make_evidence(
+        source_path=f,
+        stored_path=f,
+        parent=parent,
+        acquisition_method=config.ACQUISITION_EXTRACT_LOGICAL,
+        type=config.EVIDENCE_TYPE_EXTRACTED,
+    )
+    assert child.source_identification == config.IDENTIFICATION_CONTROLLER_IOS
+    # Round-trip preserves the field
+    assert Evidence.from_dict(child.to_dict()).source_identification == config.IDENTIFICATION_CONTROLLER_IOS
+
+
 def test_evidence_directory_size_uses_recursive_content(tmp_path: Path) -> None:
     parsed_root = tmp_path / "ios_logical_parsed"
     (parsed_root / "domains" / "app").mkdir(parents=True)

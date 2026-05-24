@@ -232,7 +232,6 @@ def run_phase_4(state: State) -> State:
 							tool_output_dir,
 							state,
 							parent_evidence,
-							identification,
 							evidence_index,
 						)
 						for converted_evidence in converted:
@@ -243,7 +242,6 @@ def run_phase_4(state: State) -> State:
 									tool_output_dir,
 									state,
 									converted_evidence,
-									identification,
 									evidence_index,
 								)
 							)
@@ -254,7 +252,6 @@ def run_phase_4(state: State) -> State:
 								tool_output_dir,
 								state,
 								parent_evidence,
-								identification,
 								evidence_index,
 							)
 						)
@@ -275,7 +272,6 @@ def run_phase_4(state: State) -> State:
 						tool_output_dir,
 						state,
 						parent_evidence,
-						identification,
 						evidence_index,
 					)
 					if csv_evidence is not None:
@@ -360,7 +356,6 @@ def run_phase_4(state: State) -> State:
 						state,
 						parent_evidence,
 						category_key,
-						identification,
 						evidence_index,
 					)
 					if evidence is not None:

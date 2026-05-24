@@ -60,7 +60,7 @@ def test_run_exiftool_subprocess_exception_raises_anomaly(tmp_path: Path, monkey
     def _raise(*_a, **_kw): raise OSError("exiftool missing")
     monkeypatch.setattr(subprocess, "run", _raise)
 
-    evidence, observation = run_exiftool(img, output_dir, state, parent, config.IMAGES, config.IDENTIFICATION_CONTROLLER_IOS)
+    evidence, observation = run_exiftool(img, output_dir, state, parent, config.IMAGES)
 
     assert evidence is None
     assert observation is None
@@ -77,7 +77,7 @@ def test_run_exiftool_empty_stdout_returns_empty_observation(tmp_path: Path, mon
 
     monkeypatch.setattr(subprocess, "run", _fake_run(stdout="[]"))
 
-    evidence, observation = run_exiftool(img, output_dir, state, parent, config.IMAGES, config.IDENTIFICATION_CONTROLLER_IOS)
+    evidence, observation = run_exiftool(img, output_dir, state, parent, config.IMAGES)
 
     assert evidence is not None
     assert observation is not None
@@ -101,7 +101,7 @@ def test_run_exiftool_image_fields_filtered_correctly(tmp_path: Path, monkeypatc
     }]
     monkeypatch.setattr(subprocess, "run", _fake_run(stdout=json.dumps(exif_data)))
 
-    evidence, observation = run_exiftool(img, output_dir, state, parent, config.IMAGES, config.IDENTIFICATION_CONTROLLER_IOS)
+    evidence, observation = run_exiftool(img, output_dir, state, parent, config.IMAGES)
     assert observation is not None
     obs = observation.content.observations[0]
     assert obs["DateTimeOriginal"] == "2018:04:19 11:24:49"
@@ -125,7 +125,7 @@ def test_run_exiftool_zero_date_excluded_from_observation(tmp_path: Path, monkey
     }]
     monkeypatch.setattr(subprocess, "run", _fake_run(stdout=json.dumps(exif_data)))
 
-    evidence, observation = run_exiftool(img, output_dir, state, parent, config.IMAGES, config.IDENTIFICATION_CONTROLLER_IOS)
+    evidence, observation = run_exiftool(img, output_dir, state, parent, config.IMAGES)
     assert observation is not None
     obs = observation.content.observations[0]
     assert "DateTimeOriginal" not in obs
@@ -155,7 +155,7 @@ def test_run_exiftool_video_uses_video_field_filter(tmp_path: Path, monkeypatch)
     }]
     monkeypatch.setattr(subprocess, "run", _fake_run(stdout=json.dumps(exif_data)))
 
-    evidence, observation = run_exiftool(vid, output_dir, state, parent, config.VIDEOS, config.IDENTIFICATION_CONTROLLER_IOS)
+    evidence, observation = run_exiftool(vid, output_dir, state, parent, config.VIDEOS)
     assert observation is not None
     obs = observation.content.observations[0]
     assert obs["Duration"] == 12.5
@@ -173,7 +173,7 @@ def test_run_exiftool_writes_json_to_disk(tmp_path: Path, monkeypatch) -> None:
     exif_data = [{"FileName": "photo.jpg", "Make": "DJI", "UnrelatedField": "kept_on_disk"}]
     monkeypatch.setattr(subprocess, "run", _fake_run(stdout=json.dumps(exif_data)))
 
-    evidence, _ = run_exiftool(img, output_dir, state, parent, config.IMAGES, config.IDENTIFICATION_CONTROLLER_IOS)
+    evidence, _ = run_exiftool(img, output_dir, state, parent, config.IMAGES)
     assert evidence is not None
     json_path = Path(str(evidence.stored_path))
     assert json_path.exists()
@@ -190,7 +190,7 @@ def test_run_exiftool_evidence_metadata(tmp_path: Path, monkeypatch) -> None:
 
     monkeypatch.setattr(subprocess, "run", _fake_run(stdout=json.dumps([{"FileName": "photo.jpg"}])))
 
-    evidence, _ = run_exiftool(img, output_dir, state, parent, config.IMAGES, config.IDENTIFICATION_CONTROLLER_IOS)
+    evidence, _ = run_exiftool(img, output_dir, state, parent, config.IMAGES)
     assert evidence is not None
     assert evidence.acquisition_method == config.ACQUISITION_EXIFTOOL
     assert evidence.artefact_category == config.IMAGES

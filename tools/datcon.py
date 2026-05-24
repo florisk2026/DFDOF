@@ -58,7 +58,6 @@ def run_datcon(
 	output_dir: Path,
 	state: State,
 	parent_evidence: Evidence,
-	identification: str,
 	index: int | None = None,
 ) -> list[Evidence]:
 	print(_datcon_settings_block(dat_path, output_dir))
@@ -76,7 +75,7 @@ def run_datcon(
 			stderr=f"Tool not found: {DATCON}",
 			output_paths=None,
 		)
-		state.raise_anomaly(4, identification, f"DatCon not found for {dat_path.name}", category=DRONE_LOGS, index=index)
+		state.raise_anomaly(4, parent_evidence.source_identification or "", f"DatCon not found for {dat_path.name}", category=DRONE_LOGS, index=index)
 		return []
 
 	dat_stem = dat_path.stem

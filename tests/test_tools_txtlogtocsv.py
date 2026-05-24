@@ -47,7 +47,7 @@ def test_run_txtlogtocsv_exe_not_found_raises_anomaly(tmp_path: Path, monkeypatc
     monkeypatch.setattr("tools.txtlogtocsv.Path.exists", lambda self: False)
     monkeypatch.setattr("tools.txtlogtocsv.shutil.which", lambda _: None)
 
-    result = run_txtlogtocsv(txt_path, output_dir, state, parent, config.IDENTIFICATION_CONTROLLER_IOS)
+    result = run_txtlogtocsv(txt_path, output_dir, state, parent)
 
     assert result is None
     assert any("TXTlogToCSV executable not found" in f for f in state.anomaly_flags)
@@ -64,7 +64,7 @@ def test_run_txtlogtocsv_subprocess_oserror_raises_anomaly(tmp_path: Path, monke
     def _raise(*_a, **_kw): raise OSError("no exe")
     monkeypatch.setattr(subprocess, "run", _raise)
 
-    result = run_txtlogtocsv(txt_path, output_dir, state, parent, config.IDENTIFICATION_CONTROLLER_IOS)
+    result = run_txtlogtocsv(txt_path, output_dir, state, parent)
 
     assert result is None
     assert any("TXTlogToCSV failed" in f for f in state.anomaly_flags)
@@ -84,7 +84,7 @@ def test_run_txtlogtocsv_nonzero_returncode_raises_anomaly(tmp_path: Path, monke
         lambda *_a, **_kw: subprocess.CompletedProcess(_a, returncode=1, stdout="", stderr="error"),
     )
 
-    result = run_txtlogtocsv(txt_path, output_dir, state, parent, config.IDENTIFICATION_CONTROLLER_IOS)
+    result = run_txtlogtocsv(txt_path, output_dir, state, parent)
 
     assert result is None
     assert any("TXTlogToCSV failed" in f for f in state.anomaly_flags)
@@ -106,7 +106,7 @@ def test_run_txtlogtocsv_empty_csv_raises_anomaly(tmp_path: Path, monkeypatch) -
     monkeypatch.setattr("tools.txtlogtocsv.Path.is_file", lambda self: True)
     monkeypatch.setattr(subprocess, "run", fake_run)
 
-    result = run_txtlogtocsv(txt_path, output_dir, state, parent, config.IDENTIFICATION_CONTROLLER_IOS)
+    result = run_txtlogtocsv(txt_path, output_dir, state, parent)
 
     assert result is None
     assert any("TXTlogToCSV failed" in f for f in state.anomaly_flags)
@@ -124,7 +124,7 @@ def test_run_txtlogtocsv_success_returns_evidence(tmp_path: Path, monkeypatch) -
     monkeypatch.setattr("tools.txtlogtocsv.Path.is_file", lambda self: True)
     monkeypatch.setattr(subprocess, "run", _fake_run_success(csv_path))
 
-    result = run_txtlogtocsv(txt_path, output_dir, state, parent, config.IDENTIFICATION_CONTROLLER_IOS)
+    result = run_txtlogtocsv(txt_path, output_dir, state, parent)
 
     assert result is not None
     assert Path(str(result.stored_path)).suffix == ".csv"

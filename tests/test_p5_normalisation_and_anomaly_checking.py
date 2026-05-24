@@ -40,15 +40,9 @@ def _build_state(
         parent=None,
         acquisition_method=config.ACQUISITION_LOGICAL,
         type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=identification,
     )
     state.input_evidence.append(source_ev)
-    state.phase_outputs["p1_provenance"] = {
-        "identified_evidence": [{
-            "source_path": str(src),
-            "identified_as": identification,
-            "identified_by_operator_as": None,
-        }]
-    }
 
     p3_raw = tmp_path / "p3_raw.bin"
     if not p3_raw.exists():
@@ -607,15 +601,9 @@ def _build_state_db(tmp_path: Path, identification: str, db_path: Path) -> State
         parent=None,
         acquisition_method=config.ACQUISITION_LOGICAL,
         type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=identification,
     )
     state.input_evidence.append(source_ev)
-    state.phase_outputs["p1_provenance"] = {
-        "identified_evidence": [{
-            "source_path": str(src),
-            "identified_as": identification,
-            "identified_by_operator_as": None,
-        }]
-    }
 
     p3_ev = make_evidence(
         source_path=db_path.name,

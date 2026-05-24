@@ -63,7 +63,7 @@ def test_run_datcon_error_returns_empty(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr("builtins.input", lambda _: "error")
     monkeypatch.setattr(subprocess, "Popen", lambda *_a, **_kw: None)
 
-    result = run_datcon(dat_path, output_dir, state, parent, config.IDENTIFICATION_CONTROLLER_ANDROID)
+    result = run_datcon(dat_path, output_dir, state, parent)
 
     assert result == []
     assert not state.anomaly_flags
@@ -82,7 +82,7 @@ def test_run_datcon_succeeds_first_try(tmp_path: Path, monkeypatch, capsys) -> N
     monkeypatch.setattr("builtins.input", lambda _: "done")
     monkeypatch.setattr(subprocess, "Popen", lambda *_a, **_kw: None)
 
-    result = run_datcon(dat_path, output_dir, state, parent, config.IDENTIFICATION_CONTROLLER_ANDROID)
+    result = run_datcon(dat_path, output_dir, state, parent)
 
     assert len(result) == 2
     assert not state.anomaly_flags
@@ -111,7 +111,7 @@ def test_run_datcon_retries_on_missing_output(tmp_path: Path, monkeypatch, capsy
     monkeypatch.setattr("builtins.input", fake_input)
     monkeypatch.setattr(subprocess, "Popen", lambda *_a, **_kw: None)
 
-    result = run_datcon(dat_path, output_dir, state, parent, config.IDENTIFICATION_CONTROLLER_ANDROID)
+    result = run_datcon(dat_path, output_dir, state, parent)
 
     assert call_count == 2
     assert len(result) == 2

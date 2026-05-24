@@ -55,7 +55,7 @@ def test_run_extractdji_succeeds_first_try(tmp_path: Path, monkeypatch, capsys) 
     monkeypatch.setattr("builtins.input", lambda _: "done")
     monkeypatch.setattr(subprocess, "Popen", lambda *_a, **_kw: None)
 
-    result = run_extractdji(dat_path, output_dir, state, parent, config.IDENTIFICATION_DRONE_FLIGHT_STORAGE)
+    result = run_extractdji(dat_path, output_dir, state, parent)
 
     assert len(result) == 1
     assert Path(str(result[0].stored_path)).suffix.upper() == ".DAT"
@@ -75,7 +75,7 @@ def test_run_extractdji_error_returns_empty(tmp_path: Path, monkeypatch) -> None
     monkeypatch.setattr("builtins.input", lambda _: "error")
     monkeypatch.setattr(subprocess, "Popen", lambda *_a, **_kw: None)
 
-    result = run_extractdji(dat_path, output_dir, state, parent, config.IDENTIFICATION_DRONE_FLIGHT_STORAGE)
+    result = run_extractdji(dat_path, output_dir, state, parent)
 
     assert result == []
     assert not state.anomaly_flags
@@ -91,7 +91,7 @@ def test_run_extractdji_skip_returns_empty(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr("builtins.input", lambda _: "skip")
     monkeypatch.setattr(subprocess, "Popen", lambda *_a, **_kw: None)
 
-    result = run_extractdji(dat_path, output_dir, state, parent, config.IDENTIFICATION_DRONE_FLIGHT_STORAGE)
+    result = run_extractdji(dat_path, output_dir, state, parent)
 
     assert result == []
     assert not state.anomaly_flags
@@ -116,7 +116,7 @@ def test_run_extractdji_retries_on_missing_output(tmp_path: Path, monkeypatch, c
     monkeypatch.setattr("builtins.input", fake_input)
     monkeypatch.setattr(subprocess, "Popen", lambda *_a, **_kw: None)
 
-    result = run_extractdji(dat_path, output_dir, state, parent, config.IDENTIFICATION_DRONE_FLIGHT_STORAGE)
+    result = run_extractdji(dat_path, output_dir, state, parent)
 
     assert call_count == 2
     assert len(result) == 1
