@@ -38,6 +38,7 @@ from evidence import Evidence, make_evidence
 from observation import Observation, make_observation
 from parsing.utils_parse import (
 	decode_base64,
+	decode_bytes_blobs,
 	decode_cllocation_bplist,
 	extract_fields,
 	ieee754_long_to_degrees,
@@ -149,7 +150,7 @@ def _parse_account_file(file_path: Path) -> tuple[dict, dict]:
 	except Exception:
 		return {}, {}
 
-	raw_safe = json_safe(raw)
+	raw_safe = decode_bytes_blobs(json_safe(raw), json_safe)
 	filtered = extract_fields(raw_safe, field_map)
 	if suffix in {".plist", ".json"}:
 		filtered.update(_decode_find_aircraft_location(raw, raw_safe))

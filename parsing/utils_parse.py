@@ -193,6 +193,39 @@ def decode_cllocation_bplist(value: bytes | str) -> dict[str, str] | None:
         return None
 
 
+def decode_bytes_blobs(data: Any, _safe: Any = None) -> Any:
+    """Recursively decode {"__bytes_base64": "..."} blobs produced by json_safe().
+
+    Tries plistlib first (recursive sub-tree), then UTF-8 text.
+    Falls back to leaving the blob unchanged if neither succeeds.
+    _safe: optional callable (json_safe) applied to decoded plist sub-trees.
+    """
+    if isinstance(data, dict):
+        b64 = data.get("__bytes_base64")
+        if b64 and len(data) == 1:
+            try:
+                raw = base64.b64decode(b64)
+            except Exception:
+                return data
+            try:
+                parsed = plistlib.loads(raw)
+                normalised = _safe(parsed) if _safe else parsed
+                return decode_bytes_blobs(normalised, _safe)
+            except Exception:
+                pass
+            try:
+                text = raw.decode("utf-8").strip()
+                if text:
+                    return text
+            except Exception:
+                pass
+            return data
+        return {k: decode_bytes_blobs(v, _safe) for k, v in data.items()}
+    if isinstance(data, list):
+        return [decode_bytes_blobs(item, _safe) for item in data]
+    return data
+
+
 def parse_java_properties(path: Path) -> dict[str, str]:
     """Parse a Java .properties file into a flat key→value dict.
 
