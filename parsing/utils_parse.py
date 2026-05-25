@@ -88,25 +88,6 @@ def parse_plist_strict(path: Path) -> dict[str, Any]:
     return data if isinstance(data, dict) else {"value": data}
 
 
-def parse_xml_flat(path: Path) -> dict[str, Any]:
-    """Parse an XML file into a flat tag→value dict; repeated tags become lists."""
-    tree = ET.parse(path)
-    root = tree.getroot()
-    parsed: dict[str, Any] = {}
-    for element in root.iter():
-        text = (element.text or "").strip()
-        if not text:
-            continue
-        if element.tag in parsed:
-            existing = parsed[element.tag]
-            if isinstance(existing, list):
-                existing.append(text)
-            else:
-                parsed[element.tag] = [existing, text]
-        else:
-            parsed[element.tag] = text
-    return parsed
-
 
 def _build_label_patterns(labels: tuple[str, ...]) -> re.Pattern[str]:
     """Return a single compiled pattern that matches any label in either key=value or plist-XML form."""

@@ -26,6 +26,7 @@ from config import (
 from evidence import hash_file
 from parsing.extract_logical import copy_zip_member
 from parsing.utils_parse import parse_plist_file, safe_segment, sanitise_path
+from phases.utils_phase import json_safe
 
 logger = logging.getLogger(__name__)
 
@@ -246,23 +247,6 @@ def _write_index(result: ConversionResult) -> None:
             writer.writerow(asdict(record))
 
 
-def _json_safe(value: Any) -> Any:
-    """Convert a value to a JSON-safe representation, handling common non-serializable types."""
-    if isinstance(value, dict):
-        return {str(key): _json_safe(item) for key, item in value.items()}
-    if isinstance(value, list):
-        return [_json_safe(item) for item in value]
-    if isinstance(value, tuple):
-        return [_json_safe(item) for item in value]
-    if isinstance(value, bytes):
-        return value.decode("utf-8", errors="replace")
-    if hasattr(value, "isoformat"):
-        try:
-            return value.isoformat()
-        except Exception:
-            return str(value)
-    return value
-
 
 def parse_ios_backup(
     archive_path: Path | str, output_root: Path | str | None = None
@@ -330,7 +314,7 @@ def parse_ios_backup(
     backup_info = parse_plist_file(metadata_root / "Info.plist")
     if backup_info:
         (result_root / "backup_info.json").write_text(
-            json.dumps(_json_safe(backup_info), indent=2, sort_keys=True),
+            json.dumps(json_safe(backup_info), indent=2, sort_keys=True),
             encoding="utf-8",
         )
 

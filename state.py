@@ -21,7 +21,7 @@ from evidence import Evidence
 from phases.utils_phase import compact_json
 
 
-def get_tsk_tool_version(tool_path: str) -> str | None:
+def _get_tsk_tool_version(tool_path: str) -> str | None:
     """Probe a TSK binary (mmls, fls, icat) for its version string."""
     try:
         result = subprocess.run(
@@ -147,7 +147,7 @@ class State:
                     cmd0 = str(result.args[0])
                     base = Path(cmd0).name.lower()
                     if base in {"mmls", "mmls.exe", "fls", "fls.exe", "icat", "icat.exe"}:
-                        version_val = get_tsk_tool_version(cmd0)
+                        version_val = _get_tsk_tool_version(cmd0)
             except Exception:
                 version_val = None
 

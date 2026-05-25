@@ -32,7 +32,7 @@ def test_log_command_result_adds_tsk_version_and_info_summary(monkeypatch) -> No
     monkeypatch.setattr(state_module, "utc_now_iso", lambda: "2026-05-15T00:00:01+00:00")
     monkeypatch.setattr(
         state_module,
-        "get_tsk_tool_version",
+        "_get_tsk_tool_version",
         lambda _tool_path: "The Sleuth Kit ver 4.15.0",
     )
 

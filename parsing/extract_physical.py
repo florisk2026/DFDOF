@@ -27,7 +27,7 @@ _FLS_LINE_RE = re.compile(r"^([rd]/[rd])\s+(\d+)(?:-\d+)?:\s+(.+)$")
 _MMLS_ROW_RE = re.compile(r"^\s*\d+:\s+\S+\s+(\d+)\s+(\d+)\s+(\d+)\s+\S+\s+(.+)$")
 
 
-def build_tsk_cmd(
+def _build_tsk_cmd(
     tool: Path,
     image_path: Path,
     image_type: str | None,
@@ -83,7 +83,7 @@ def parse_mmls_offset(output: str) -> int:
     return candidates[0][2]
 
 
-def list_fls_entries(output: str) -> list[tuple[str, int, str]]:
+def _list_fls_entries(output: str) -> list[tuple[str, int, str]]:
     """Parse fls output into a list of (kind, inode, relative_path) tuples."""
 
     entries: list[tuple[str, int, str]] = []
@@ -106,7 +106,7 @@ def enumerate_image_listing(
     anomalies: list[str] = []
 
     # Single mmls attempt - derive partition offset for disk-level images.
-    mmls_cmd = build_tsk_cmd(TSK_MMLS, image_path, None, None)
+    mmls_cmd = _build_tsk_cmd(TSK_MMLS, image_path, None, None)
     mmls_result = run_command(mmls_cmd)
     state.log_command_result(tool_name="mmls", result=mmls_result)
 
@@ -121,7 +121,7 @@ def enumerate_image_listing(
         )
 
     # fls enumeration - with offset if available, without if not.
-    fls_cmd = build_tsk_cmd(TSK_FLS, image_path, None, offset, ["-r", "-p"])
+    fls_cmd = _build_tsk_cmd(TSK_FLS, image_path, None, offset, ["-r", "-p"])
     fls_result = run_command(fls_cmd)
     state.log_command_result(tool_name="fls", result=fls_result)
 
@@ -131,7 +131,7 @@ def enumerate_image_listing(
             "Verify Sleuth Kit installation and EWF support."
         )
 
-    entries = list_fls_entries(fls_result.stdout or "")
+    entries = _list_fls_entries(fls_result.stdout or "")
 
     # Persist image metadata into state.phase_outputs for later phases to reuse.
     meta = {
@@ -207,7 +207,7 @@ def extract_tsk_image(
         state.log_command_result(tool_name="fls", result=fls_result)
         entries = [
             entry
-            for entry in list_fls_entries(fls_result.stdout or "")
+            for entry in _list_fls_entries(fls_result.stdout or "")
             if entry[0].startswith("r")
         ]
         if not entries:
