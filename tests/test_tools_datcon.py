@@ -8,7 +8,7 @@ from pathlib import Path
 import config
 from evidence import make_evidence
 from state import State
-from tools.datcon import _datcon_output_missing, run_datcon
+from tools.datcon import _datcon_output_files, _datcon_output_missing, run_datcon
 
 
 def _make_state() -> State:
@@ -38,17 +38,17 @@ def _write_required_outputs(output_dir: Path, stem: str) -> None:
 def test_datcon_output_missing_all_present(tmp_path: Path) -> None:
     stem = "FLY029"
     _write_required_outputs(tmp_path, stem)
-    assert _datcon_output_missing(tmp_path, stem) is False
+    assert _datcon_output_missing(_datcon_output_files(tmp_path, stem)) is False
 
 
 def test_datcon_output_missing_partial(tmp_path: Path) -> None:
     stem = "FLY029"
     (tmp_path / f"{stem}.csv").write_text("data", encoding="utf-8")
-    assert _datcon_output_missing(tmp_path, stem) is True
+    assert _datcon_output_missing(_datcon_output_files(tmp_path, stem)) is True
 
 
 def test_datcon_output_missing_empty_dir(tmp_path: Path) -> None:
-    assert _datcon_output_missing(tmp_path, "FLY029") is True
+    assert _datcon_output_missing(_datcon_output_files(tmp_path, "FLY029")) is True
 
 
 def test_run_datcon_error_returns_empty(tmp_path: Path, monkeypatch) -> None:

@@ -590,6 +590,7 @@ def _decode_image(
     artefact: dict[str, Any],
     phase_dir: Path,
     identification: str,
+    exif_data: dict[str, Any] | None = None,
 ) -> Evidence | None:
     """Copy an opaque-extension image to a viewable file with the correct extension.
 
@@ -606,11 +607,13 @@ def _decode_image(
     if not source_path.exists() or not stored_path.exists():
         return None
 
-    try:
-        data = json.loads(stored_path.read_text(encoding="utf-8"))
-    except Exception:
-        return None
+    if exif_data is None:
+        try:
+            exif_data = json.loads(stored_path.read_text(encoding="utf-8"))
+        except Exception:
+            return None
 
+    data = exif_data
     mime = str(data.get("MIMEType") or "").lower()
     ext = _MIME_TO_EXT.get(mime)
     if not ext:
@@ -632,7 +635,10 @@ def _decode_image(
     )
 
 
-def _process_exif(artefact: dict[str, Any]) -> Observation | None:
+def _process_exif(
+    artefact: dict[str, Any],
+    exif_data: dict[str, Any] | None = None,
+) -> Observation | None:
     """Normalise EXIF timestamps and check for zero-date / missing GPS.
 
     Uses parent_sha256 (original media sha256) as evidence_sha256, not the JSON's own sha256.
@@ -641,10 +647,12 @@ def _process_exif(artefact: dict[str, Any]) -> Observation | None:
     stored_path = Path(str(artefact.get("stored_path") or ""))
     if not stored_path.exists():
         return None
-    try:
-        data = json.loads(stored_path.read_text(encoding="utf-8"))
-    except Exception:
-        return None
+    if exif_data is None:
+        try:
+            exif_data = json.loads(stored_path.read_text(encoding="utf-8"))
+        except Exception:
+            return None
+    data = exif_data
 
     date_val = data.get("DateTimeOriginal") or data.get("CreateDate")
     exif_zero_date = not date_val or date_val == "0000:00:00 00:00:00"
@@ -814,10 +822,17 @@ def run_phase_5(state: State) -> State:
             if category not in _announced_categories:
                 print(f"  Normalising and Anomaly Checking {category}")
                 _announced_categories.add(category)
-            decoded = _decode_image(artefact, phase_dir, identification)
+            exif_stored = Path(str(artefact.get("stored_path") or ""))
+            exif_data: dict[str, Any] | None = None
+            if exif_stored.exists():
+                try:
+                    exif_data = json.loads(exif_stored.read_text(encoding="utf-8"))
+                except Exception:
+                    pass
+            decoded = _decode_image(artefact, phase_dir, identification, exif_data)
             if decoded is not None:
                 normalised.append(decoded)
-            obs = _process_exif(artefact)
+            obs = _process_exif(artefact, exif_data)
             if obs is not None:
                 anomalies.append(obs)
 

@@ -59,53 +59,51 @@ def _supported_input(path: Path) -> bool:
     return path.suffix.lower() in _SUPPORTED_INPUT_EXTS
 
 
-def _is_ios_logical_backup(listing: list[str]) -> bool:
+_DRONE_SD_EXTS_LOWER = frozenset(ext.lower() for ext in ARTEFACT_EXTENSIONS_DRONE_SD)
+_DRONE_LOG_EXTS_UPPER = tuple(ext.upper() for ext in ARTEFACT_EXTENSIONS[DRONE_LOGS])
+
+
+def _is_ios_logical_backup(norm: list[str]) -> bool:
     """Detect iTunes logical backup: Manifest.db + Info.plist + 50+ hex/hex folders."""
-    norm = [normalise_path(p) for p in listing]
     return (
         all(any(inc in p for p in norm) for inc in CONTROLLER_IOS_INCLUDES)
         and sum(1 for p in norm if re.search(r"[0-9a-fA-F]{2}/[0-9a-fA-F]{2}/", p)) > 50
     )
 
 
-def _is_controller_android(listing: list[str]) -> bool:
+def _is_controller_android(norm: list[str]) -> bool:
     """Detect Android controller: (data/data/dji OR sdcard/dji)."""
-    norm = [normalise_path(p) for p in listing]
-    has_dji = any(s in p.lower() for p in norm for s in CONTROLLER_ANDROID_INCLUDES)
-    return has_dji
+    return any(s in p.lower() for p in norm for s in CONTROLLER_ANDROID_INCLUDES)
 
 
-def _is_drone_sd(listing: list[str]) -> bool:
+def _is_drone_sd(norm: list[str]) -> bool:
     """Detect drone SD card: DCIM or MISC with media files (.MP4 and .THM only)."""
-    norm = [normalise_path(p) for p in listing]
-    extensions = {ext.lower() for ext in ARTEFACT_EXTENSIONS_DRONE_SD}
     return any(folder in p for folder in DRONE_SD_INCLUDES for p in norm) and any(
-        p.lower().endswith(tuple(extensions))
+        p.lower().endswith(tuple(_DRONE_SD_EXTS_LOWER))
         and any(folder in p for folder in DRONE_SD_INCLUDES)
         for p in norm
     )
 
 
-def _is_drone_flight_storage(listing: list[str]) -> bool:
+def _is_drone_flight_storage(norm: list[str]) -> bool:
     """Detect drone flight storage: FLY*.DAT or DJI_ASSISTANT_EXPORT_FILE*.DAT."""
-    norm = [normalise_path(p) for p in listing]
-    dat_ext = tuple(ARTEFACT_EXTENSIONS[DRONE_LOGS])
     return any(
         any(inc in p.upper() for inc in DRONE_FLIGHT_STORAGE_INCLUDES)
-        and p.upper().endswith(dat_ext)
+        and p.upper().endswith(_DRONE_LOG_EXTS_UPPER)
         for p in norm
     )
 
 
 def identify_source(listing: list[str]) -> str:
     """Deterministic structural identification."""
-    if _is_ios_logical_backup(listing):
+    norm = [normalise_path(p) for p in listing]
+    if _is_ios_logical_backup(norm):
         return IDENTIFICATION_CONTROLLER_IOS
-    if _is_controller_android(listing):
+    if _is_controller_android(norm):
         return IDENTIFICATION_CONTROLLER_ANDROID
-    if _is_drone_sd(listing):
+    if _is_drone_sd(norm):
         return IDENTIFICATION_DRONE_SD
-    if _is_drone_flight_storage(listing):
+    if _is_drone_flight_storage(norm):
         return IDENTIFICATION_DRONE_FLIGHT_STORAGE
 
     return IDENTIFICATION_UNCLASSIFIED

@@ -21,6 +21,7 @@ Construction contract:
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from hashlib import sha1, sha256
 from pathlib import Path
@@ -51,9 +52,12 @@ def _path_size(path: Path) -> int:
         return path.stat().st_size
     if path.is_dir():
         total = 0
-        for child in path.rglob("*"):
-            if child.is_file():
-                total += child.stat().st_size
+        for dirpath, _dirnames, filenames in os.walk(path):
+            for name in filenames:
+                try:
+                    total += os.stat(os.path.join(dirpath, name)).st_size
+                except OSError:
+                    pass
         return total
     return path.stat().st_size
 

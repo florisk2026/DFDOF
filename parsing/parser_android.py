@@ -47,6 +47,7 @@ except Exception:  # pragma: no cover - optional dependency fallback.
 _DATE_RE = re.compile(
     r"\b\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:?\d{2})?)?\b"
 )
+_RE_NON_ALNUM = re.compile(r"[^a-z0-9]+")
 
 TARGET_FILES = { 
     "DeviceInfo.xml",
@@ -66,7 +67,7 @@ class AndroidParserResult:
 
 def _normalise_key(value: Any) -> str:
     """Normalise a key to a lowercase string with non-alphanumeric chars removed."""
-    return re.sub(r"[^a-z0-9]+", "", str(value).lower())
+    return _RE_NON_ALNUM.sub("", str(value).lower())
 
 
 def _walk_nested(data: Any):
@@ -110,6 +111,20 @@ def _collect_text_fragments(value: Any) -> list[str]:
     return fragments
 
 
+_DOMAIN_PATTERNS: dict[str, re.Pattern[str]] = {}
+
+
+def _get_domain_pattern(domain: str) -> re.Pattern[str]:
+    pattern = _DOMAIN_PATTERNS.get(domain)
+    if pattern is None:
+        pattern = re.compile(
+            rf"(?<![A-Za-z0-9_.-]){re.escape(domain)}(?![A-Za-z0-9_.-])",
+            re.IGNORECASE,
+        )
+        _DOMAIN_PATTERNS[domain] = pattern
+    return pattern
+
+
 def _collect_allowed_dji_apps(value: Any, allowed_domains: dict[str, str]) -> list[str]:
     """Collect allowed DJI app domains from a value that may contain text or nested structures."""
     allowed = list(allowed_domains.keys())
@@ -120,10 +135,8 @@ def _collect_allowed_dji_apps(value: Any, allowed_domains: dict[str, str]) -> li
     fragments = _collect_text_fragments(value)
     selected: list[str] = []
     for domain in allowed:
-        pattern = rf"(?<![A-Za-z0-9_.-]){re.escape(domain)}(?![A-Za-z0-9_.-])"
-        if any(
-            re.search(pattern, fragment, flags=re.IGNORECASE) for fragment in fragments
-        ):
+        pat = _get_domain_pattern(domain)
+        if any(pat.search(fragment) for fragment in fragments):
             selected.append(domain)
     return selected
 

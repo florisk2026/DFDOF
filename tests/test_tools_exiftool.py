@@ -9,7 +9,7 @@ from pathlib import Path
 import config
 from evidence import make_evidence
 from state import State
-from tools.exiftool import _filter_metadata, run_exiftool
+from tools.exiftool import run_exiftool
 
 
 def _make_state() -> State:
@@ -35,18 +35,6 @@ def _fake_run(stdout: str, returncode: int = 0):
     def fake(args, **kwargs):
         return subprocess.CompletedProcess(args, returncode=returncode, stdout=stdout, stderr="")
     return fake
-
-
-# --- _filter_metadata ---
-
-def test_filter_metadata_removes_none_and_empty() -> None:
-    raw = {"FileName": "photo.jpg", "GPSLatitude": None, "Make": "", "Model": "Mavic"}
-    assert _filter_metadata(raw) == {"FileName": "photo.jpg", "Model": "Mavic"}
-
-
-def test_filter_metadata_passes_through_zero_and_false() -> None:
-    raw = {"Orientation": 0, "FlightRollDegree": 0.0}
-    assert _filter_metadata(raw) == {"Orientation": 0, "FlightRollDegree": 0.0}
 
 
 # --- run_exiftool subprocess failure ---

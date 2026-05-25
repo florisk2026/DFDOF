@@ -21,15 +21,23 @@ from parsing.utils_parse import normalise_path, to_windows_path, normalise_path_
 
 
 def ensure_unique_path(target: Path) -> Path:
-    """Return a non-colliding path by appending a numeric suffix if the target exists."""
+    """Return a non-colliding path by appending a numeric suffix if the target exists.
+
+    Scans the parent directory once to build a name set, avoiding repeated exists() calls.
+    """
     if not target.exists():
         return target
+    parent = target.parent
+    try:
+        existing = {p.name for p in parent.iterdir()}
+    except OSError:
+        existing = set()
     stem, suffix = target.stem, target.suffix
     for idx in range(1, 1000):
-        candidate = target.with_name(f"{stem}_{idx}{suffix}")
-        if not candidate.exists():
-            return candidate
-    return target.with_name(f"{stem}_overflow{suffix}")
+        name = f"{stem}_{idx}{suffix}"
+        if name not in existing:
+            return parent / name
+    return parent / f"{stem}_overflow{suffix}"
 
 
 def copy_zip_member(zip_file: zipfile.ZipFile, member: str, output_path: Path) -> str:

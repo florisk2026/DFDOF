@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import shutil
 import zipfile
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -55,6 +56,14 @@ from state import State
 
 _PHASE_NAME = Path(__file__).stem
 
+_ARTEFACT_EXTENSIONS_LOWER: dict[str, frozenset[str]] = {
+    category: frozenset(ext.lower() for ext in exts)
+    for category, exts in ARTEFACT_EXTENSIONS.items()
+}
+_ARTEFACT_EXTENSIONS_DRONE_SD_LOWER: frozenset[str] = frozenset(
+    ext.lower() for ext in ARTEFACT_EXTENSIONS_DRONE_SD
+)
+
 
 def _build_path_category_index() -> dict[str, list[str]]:
     """Build a reverse index of artefact paths to their categories."""
@@ -64,6 +73,9 @@ def _build_path_category_index() -> dict[str, list[str]]:
             normalised = normalise_path(path, to_lower=True)
             index.setdefault(normalised, []).append(category)
     return index
+
+
+_PATH_CATEGORY_INDEX: dict[str, list[str]] = _build_path_category_index()
 
 
 def _is_database_included(filename: str) -> bool:
@@ -150,7 +162,7 @@ def _extract_drone_sd_physical(
     offset_sectors = _get_cached_offset(state, sd_archive)
     output_root.mkdir(parents=True, exist_ok=True)
 
-    extensions = {ext.lower() for ext in ARTEFACT_EXTENSIONS_DRONE_SD}
+    extensions = _ARTEFACT_EXTENSIONS_DRONE_SD_LOWER
     extracted: list[Evidence] = []
 
     for kind, inode, rel_path in entries:
@@ -223,7 +235,7 @@ def _collect_parsed_files(parsed_root: Path, category: str) -> list[Path]:
         normalise_path(path, to_lower=True)
         for path in ARTEFACT_PATHS.get(category, set())
     }
-    extensions = {ext.lower() for ext in ARTEFACT_EXTENSIONS.get(category, set())}
+    extensions = _ARTEFACT_EXTENSIONS_LOWER.get(category, frozenset())
 
     matched: list[Path] = []
     for file_path in parsed_root.rglob("*"):
@@ -271,10 +283,11 @@ def _copy_parsed_files(
     return extracted
 
 
-def _member_names(zip_path: Path) -> list[str]:
-    """Return archive member names excluding directories."""
+@lru_cache(maxsize=16)
+def _member_names(zip_path: Path) -> tuple[str, ...]:
+    """Return archive member names excluding directories. Result cached per path."""
     with zipfile.ZipFile(zip_path) as archive:
-        return [name for name in archive.namelist() if not name.endswith("/")]
+        return tuple(name for name in archive.namelist() if not name.endswith("/"))
 
 
 def _collect_members_by_category(
@@ -283,7 +296,7 @@ def _collect_members_by_category(
 ) -> dict[str, list[str]]:
     """Collect archive members per category using a single pass, deduplicating by basename."""
     requested = set(categories)
-    path_index = _build_path_category_index()
+    path_index = _PATH_CATEGORY_INDEX
     category_members: dict[str, list[str]] = {category: [] for category in requested}
     seen_basenames: dict[str, set[str]] = {category: set() for category in requested}
 
@@ -303,7 +316,7 @@ def _collect_members_by_category(
                 continue
             if basename_lower in seen_basenames[category]:
                 continue
-            ext_set = {ext.lower() for ext in ARTEFACT_EXTENSIONS[category]}
+            ext_set = _ARTEFACT_EXTENSIONS_LOWER.get(category, frozenset())
             if suffix not in ext_set:
                 continue
             if category == DATABASES and not _is_database_included(filename):
@@ -426,9 +439,7 @@ def run_phase_3(state: State) -> State:
                     )
 
                     filtered: list[Evidence] = []
-                    ext_set = {
-                        ext.lower() for ext in ARTEFACT_EXTENSIONS.get(category, set())
-                    }
+                    ext_set = _ARTEFACT_EXTENSIONS_LOWER.get(category, frozenset())
                     account_targets = _account_targets("android")
                     for item in evidence_list:
                         stored_path = Path(str(item.stored_path))

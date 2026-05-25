@@ -18,12 +18,17 @@ from parsing.utils_parse import to_windows_path
 from state import State
 
 
-def _extractdji_output_missing(output_dir: Path) -> bool:
-    """Return True if no FLY*.DAT file is present in output_dir."""
-    return not any(
-        p.is_file() and p.suffix.upper() == ".DAT" and p.stem.upper().startswith("FLY")
-        for p in output_dir.iterdir()
-    )
+def _extractdji_output_files(output_dir: Path) -> list[Path]:
+    """Return all FLY*.DAT files in output_dir."""
+    return [
+        p for p in output_dir.iterdir()
+        if p.is_file() and p.suffix.upper() == ".DAT" and p.stem.upper().startswith("FLY")
+    ]
+
+
+def _extractdji_output_missing(files: list[Path]) -> bool:
+    """Return True if no FLY*.DAT file is present in the given file list."""
+    return not files
 
 
 def _extractdji_settings_block(dat_path: Path, output_dir: Path) -> str:
@@ -67,24 +72,20 @@ def run_extractdji(
 
     while True:
         response = input(
-			"If ExtractDJI reported an error, type 'error'.\n"
+            "If ExtractDJI reported an error, type 'error'.\n"
             "If ExtractDJI produced only GIMBAL files (not useful), type 'skip'.\n"
-			"If the export was successful, close ExtractDJI and type 'done': "
+            "If the export was successful, close ExtractDJI and type 'done': "
         ).strip().lower()
         if response in {"skip", "error"}:
             return []
-        if not _extractdji_output_missing(output_dir):
+        output_files = _extractdji_output_files(output_dir)
+        if not _extractdji_output_missing(output_files):
             break
         print(
             "WARNING: Export incomplete — settings were incorrect or exports are missing.\n"
             "Expected: at least one FLY*.DAT file in the output directory.\n"
             "Please reopen ExtractDJI, check your settings, and export again."
         )
-
-    output_files = [
-        p for p in output_dir.iterdir()
-        if p.is_file() and p.suffix.upper() == ".DAT" and p.stem.upper().startswith("FLY")
-    ]
     output_paths_str = [str(p) for p in output_files]
     state.log_tool_invocation(
         tool_name=ACQUISITION_EXTRACT_DJI,

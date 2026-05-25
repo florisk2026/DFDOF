@@ -198,7 +198,11 @@ def _manifest_rows(manifest_db_path: Path) -> list[BackupRecord]:
             temp_copy.unlink(missing_ok=True)
 
 
-def _member_for_file_id(zip_file: zipfile.ZipFile, file_id: str) -> str | None:
+def _member_for_file_id(
+    file_id: str,
+    names: list[str],
+    lower_lookup: dict[str, str],
+) -> str | None:
     """Find the ZIP member corresponding to a given file_id, using flexible matching."""
     file_id = file_id.lower()
     direct_candidates = [
@@ -206,12 +210,9 @@ def _member_for_file_id(zip_file: zipfile.ZipFile, file_id: str) -> str | None:
         f"{file_id[:2]}/{file_id}",
         f"{file_id[:2].upper()}/{file_id}",
     ]
-    names = zip_file.namelist()
-    lower_lookup = {name.lower(): name for name in names}
-
     for candidate in direct_candidates:
-        if candidate.lower() in lower_lookup:
-            return lower_lookup[candidate.lower()]
+        if candidate in lower_lookup:
+            return lower_lookup[candidate]
 
     for name in names:
         if Path(name).name.lower() == file_id:
@@ -295,6 +296,8 @@ def parse_ios_backup(
             zip_file, manifest_member, metadata_root
         )
         records = _manifest_rows(manifest_db_path)
+        all_names = zip_file.namelist()
+        lower_lookup = {name.lower(): name for name in all_names}
 
         for record in records:
             domain_dir = domains_root / safe_segment(record.domain or "_unknown")
@@ -304,7 +307,7 @@ def parse_ios_backup(
                 else Path(record.file_id)
             )
             output_path = domain_dir / relative_target
-            member = _member_for_file_id(zip_file, record.file_id)
+            member = _member_for_file_id(record.file_id, all_names, lower_lookup)
             record.source_member = member
             record.output_path = str(output_path)
             if member is None:

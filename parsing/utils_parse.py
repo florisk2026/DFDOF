@@ -14,6 +14,9 @@ import xml.etree.ElementTree as ET
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+_RE_UNSAFE_CHARS = re.compile(r"[^A-Za-z0-9._-]+")
+_RE_BACKSLASH_ESCAPE = re.compile(r"\\(.)")
+
 
 def sanitise_path(relative_path: str) -> Path:
     """Normalise a forensic path into a safe relative filesystem path."""
@@ -21,7 +24,7 @@ def sanitise_path(relative_path: str) -> Path:
     for raw_part in PurePosixPath(relative_path.replace("\\", "/")).parts:
         if raw_part == "..":
             continue
-        cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", raw_part).strip("._")
+        cleaned = _RE_UNSAFE_CHARS.sub("_", raw_part).strip("._")
         if cleaned:
             parts.append(cleaned)
     return Path(*parts) if parts else Path("unnamed_file")
@@ -34,7 +37,7 @@ def to_windows_path(path: str) -> str:
 
 def safe_segment(value: str) -> str:
     """Sanitise a single path segment (filename or folder name)."""
-    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", value.strip()).strip("._")
+    cleaned = _RE_UNSAFE_CHARS.sub("_", value.strip()).strip("._")
     return cleaned or "unnamed"
 
 
@@ -105,21 +108,30 @@ def parse_xml_flat(path: Path) -> dict[str, Any]:
     return parsed
 
 
-def match_labeled_value(text: str, labels: tuple[str, ...]) -> str | None:
-    """Find the first value matching any label in plain or plist-style XML text."""
-    patterns: list[str] = []
+def _build_label_patterns(labels: tuple[str, ...]) -> re.Pattern[str]:
+    """Return a single compiled pattern that matches any label in either key=value or plist-XML form."""
+    parts: list[str] = []
     for label in labels:
         escaped = re.escape(label)
-        patterns.extend(
-            [
-                rf"{escaped}\s*[:=]\s*([^\r\n<]+)",
-                rf"<key>\s*{escaped}\s*</key>\s*<(?:string|date|integer|real)>\s*(.*?)\s*</(?:string|date|integer|real)>",
-            ]
+        parts.append(rf"{escaped}\s*[:=]\s*([^\r\n<]+)")
+        parts.append(
+            rf"<key>\s*{escaped}\s*</key>\s*<(?:string|date|integer|real)>\s*(.*?)\s*</(?:string|date|integer|real)>"
         )
-    for pattern in patterns:
-        match = re.search(pattern, text, flags=re.IGNORECASE | re.DOTALL)
-        if match:
-            return normalise_scalar(match.group(1))
+    return re.compile("|".join(f"(?:{p})" for p in parts), re.IGNORECASE | re.DOTALL)
+
+
+_LABEL_PATTERN_CACHE: dict[tuple[str, ...], re.Pattern[str]] = {}
+
+
+def match_labeled_value(text: str, labels: tuple[str, ...]) -> str | None:
+    """Find the first value matching any label in plain or plist-style XML text."""
+    pattern = _LABEL_PATTERN_CACHE.get(labels)
+    if pattern is None:
+        pattern = _build_label_patterns(labels)
+        _LABEL_PATTERN_CACHE[labels] = pattern
+    match = pattern.search(text)
+    if match:
+        return normalise_scalar(next(g for g in match.groups() if g is not None))
     return None
 
 
@@ -255,7 +267,7 @@ def parse_java_properties(path: Path) -> dict[str, str]:
             continue
         key = line[:sep].strip()
         value = line[sep + 1:].strip()
-        value = re.sub(r"\\(.)", lambda m: m.group(1), value)
+        value = _RE_BACKSLASH_ESCAPE.sub(lambda m: m.group(1), value)
         if key:
             result[key] = value
     return result

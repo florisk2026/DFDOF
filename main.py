@@ -120,8 +120,6 @@ def run_phases(
 
     # Future phases.
 
-    # Save final state.
-    state.save(state_path)
     print(f"Workflow complete. State written to {state_path}\n")
     return state
 

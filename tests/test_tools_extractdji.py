@@ -8,7 +8,7 @@ from pathlib import Path
 import config
 from evidence import make_evidence
 from state import State
-from tools.extractdji import _extractdji_output_missing, run_extractdji
+from tools.extractdji import _extractdji_output_files, _extractdji_output_missing, run_extractdji
 
 
 def _make_state() -> State:
@@ -32,16 +32,16 @@ def _make_parent(tmp_path: Path):
 
 def test_extractdji_output_missing_fly_present(tmp_path: Path) -> None:
     (tmp_path / "FLY001.DAT").write_bytes(b"dat")
-    assert _extractdji_output_missing(tmp_path) is False
+    assert _extractdji_output_missing(_extractdji_output_files(tmp_path)) is False
 
 
 def test_extractdji_output_missing_no_fly_prefix(tmp_path: Path) -> None:
     (tmp_path / "OTHER001.DAT").write_bytes(b"dat")
-    assert _extractdji_output_missing(tmp_path) is True
+    assert _extractdji_output_missing(_extractdji_output_files(tmp_path)) is True
 
 
 def test_extractdji_output_missing_empty_dir(tmp_path: Path) -> None:
-    assert _extractdji_output_missing(tmp_path) is True
+    assert _extractdji_output_missing(_extractdji_output_files(tmp_path)) is True
 
 
 def test_run_extractdji_succeeds_first_try(tmp_path: Path, monkeypatch, capsys) -> None:

@@ -18,6 +18,20 @@ from observation import Observation, make_observation
 from parsing.utils_parse import to_windows_path
 from state import State
 
+_EXIFTOOL_VERSION: str | None = None
+
+
+def _get_exiftool_version() -> str | None:
+    global _EXIFTOOL_VERSION
+    if _EXIFTOOL_VERSION is None:
+        try:
+            ver_proc = subprocess.run([str(EXIFTOOL), "-ver"], capture_output=True, text=True, timeout=5)
+            _EXIFTOOL_VERSION = ver_proc.stdout.strip() if ver_proc.stdout else ""
+        except Exception:
+            _EXIFTOOL_VERSION = ""
+    return _EXIFTOOL_VERSION or None
+
+
 _EXIF_IMAGE_FIELDS: set[str] = {
 	"DateTimeOriginal", "CreateDate",
 	"GPSLatitude", "GPSLongitude", "GPSAltitude",
@@ -43,8 +57,7 @@ _EXIF_VIDEO_FIELDS: set[str] = {
 }
 
 
-def _filter_metadata(metadata: dict) -> dict:
-	return {key: value for key, value in metadata.items() if value not in (None, "")}
+_ZERO_DATE = "0000:00:00 00:00:00"
 
 
 def run_exiftool(
@@ -56,13 +69,7 @@ def run_exiftool(
 	index: int | None = None,
 ) -> tuple[Evidence | None, Observation | None]:
 	json_path = output_dir / f"{file_path.stem}_exif.json"
-
-	# Probe exiftool version.
-	try:
-		ver_proc = subprocess.run([str(EXIFTOOL), "-ver"], capture_output=True, text=True, timeout=5)
-		version = ver_proc.stdout.strip() if ver_proc.stdout else None
-	except Exception:
-		version = None
+	version = _get_exiftool_version()
 
 	# Run exiftool with JSON output and capture complete process.
 	try:
@@ -93,12 +100,12 @@ def run_exiftool(
 		except Exception:
 			metadata_list = []
 
-	metadata = _filter_metadata(metadata_list[0] if metadata_list else {})
+	raw_metadata = metadata_list[0] if metadata_list else {}
 	field_filter = _EXIF_IMAGE_FIELDS if artefact_category == IMAGES else _EXIF_VIDEO_FIELDS
-	_ZERO_DATE = "0000:00:00 00:00:00"
+	metadata = {k: v for k, v in raw_metadata.items() if v not in (None, "")}
 	filtered_metadata = {
 		key: value
-		for key, value in metadata.items()
+		for key, value in raw_metadata.items()
 		if key in field_filter and value not in (None, "", _ZERO_DATE)
 	}
 

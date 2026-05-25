@@ -19,14 +19,19 @@ from state import State
 _DATCON_REQUIRED_EXTS = {".csv", ".kml"}
 
 
-def _datcon_output_missing(output_dir: Path, dat_stem: str) -> bool:
-	"""Return True if any required DatCon output file is absent."""
-	present = {
-		"".join(p.suffixes).lower()
-		for p in output_dir.iterdir()
-		if p.is_file() and p.name.lower().startswith(dat_stem.lower() + ".")
-	}
-	return not _DATCON_REQUIRED_EXTS.issubset(present)
+def _datcon_output_files(output_dir: Path, dat_stem: str) -> list[Path]:
+    """Return all DatCon output files matching the expected stem."""
+    prefix = dat_stem.lower() + "."
+    return [
+        p for p in output_dir.iterdir()
+        if p.is_file() and p.name.lower().startswith(prefix)
+    ]
+
+
+def _datcon_output_missing(files: list[Path]) -> bool:
+    """Return True if any required DatCon output file is absent from the given file list."""
+    present = {"".join(p.suffixes).lower() for p in files}
+    return not _DATCON_REQUIRED_EXTS.issubset(present)
 
 
 def _datcon_settings_block(dat_path: Path, output_dir: Path) -> str:
@@ -86,19 +91,14 @@ def run_datcon(
 		).strip().lower()
 		if response == "error":
 			return []
-		if not _datcon_output_missing(output_dir, dat_stem):
+		output_files = _datcon_output_files(output_dir, dat_stem)
+		if not _datcon_output_missing(output_files):
 			break
 		print(
 			"WARNING: Export incomplete — settings were incorrect or exports are missing.\n"
 			f"Expected: {dat_stem}.csv, {dat_stem}.kml\n"
 			"Please reopen DatCon, check your settings, and export again."
 		)
-
-	output_files = [
-		path
-		for path in output_dir.iterdir()
-		if path.is_file() and path.name.lower().startswith(dat_stem.lower() + ".")
-	]
 	output_paths = [str(path) for path in output_files]
 	state.log_tool_invocation(
 		tool_name=ACQUISITION_DATCON,
