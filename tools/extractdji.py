@@ -10,7 +10,7 @@ from config import (
     DRONE_LOGS,
     EVIDENCE_TYPE_EXTRACTED,
     EXTRACT_DJI_EXE,
-    VERSION_DJI_EXTRACT,
+    VERSION_EXTRACT_DJI,
 )
 from evidence import Evidence, make_evidence
 from parsing.extract_logical import ensure_unique_path
@@ -56,7 +56,7 @@ def run_extractdji(
     except FileNotFoundError:
         state.log_tool_invocation(
             tool_name=ACQUISITION_EXTRACT_DJI,
-            version=VERSION_DJI_EXTRACT,
+            version=VERSION_EXTRACT_DJI,
             args=[str(EXTRACT_DJI_EXE), str(dat_path), str(output_dir)],
             return_code=127,
             stdout=None,
@@ -89,7 +89,7 @@ def run_extractdji(
     output_paths_str = [str(p) for p in output_files]
     state.log_tool_invocation(
         tool_name=ACQUISITION_EXTRACT_DJI,
-        version=VERSION_DJI_EXTRACT,
+        version=VERSION_EXTRACT_DJI,
         args=[str(EXTRACT_DJI_EXE), str(dat_path), str(output_dir)],
         return_code=None,
         stdout=None,
