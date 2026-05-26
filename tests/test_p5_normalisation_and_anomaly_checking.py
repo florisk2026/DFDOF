@@ -677,3 +677,182 @@ def test_p5_database_missing_file_raises_anomaly_flag(tmp_path: Path, monkeypatc
     assert p5._PHASE_NAME in result.completed_phases
     assert any("ghost.db" in flag for flag in result.anomaly_flags)
     assert result.phase_outputs[p5._PHASE_NAME]["derived_anomalies"] == []
+
+
+# ---------------------------------------------------------------------------
+# Flight log parsing — unit tests
+# ---------------------------------------------------------------------------
+
+def test_is_non_readable_binary() -> None:
+    """File with high non-printable byte ratio → True."""
+    import tempfile
+    with tempfile.NamedTemporaryFile(suffix=".dat", delete=False) as fh:
+        fh.write(bytes(range(256)) * 32)
+        path = Path(fh.name)
+    try:
+        assert p5._is_non_readable(path) is True
+    finally:
+        path.unlink(missing_ok=True)
+
+
+def test_is_non_readable_text(tmp_path: Path) -> None:
+    """Plain ASCII text file → False."""
+    log = tmp_path / "log.txt"
+    log.write_text("2018-04-19 17:24:45 INFO starting\nFailed to connect\n", encoding="utf-8")
+    assert p5._is_non_readable(log) is False
+
+
+def test_parse_crash_dump_extracts_failed_with_timestamp() -> None:
+    text = (
+        "2018-04-19 17:24:45 INFO boot sequence\n"
+        "Failed to initialise GPS module\n"
+        "2018-04-19 17:25:01 DEBUG retrying\n"
+        "Failed to connect to server\n"
+    )
+    entries = p5._parse_crash_dump(text)
+    assert len(entries) == 2
+    assert entries[0]["timestamp"] == "2018-04-19 17:24:45"
+    assert entries[0]["message"] == "Failed to initialise GPS module"
+    assert entries[1]["timestamp"] == "2018-04-19 17:25:01"
+    assert entries[1]["message"] == "Failed to connect to server"
+
+
+def test_parse_crash_dump_no_matches() -> None:
+    text = "2018-04-19 17:24:45 INFO all good\n"
+    assert p5._parse_crash_dump(text) == []
+
+
+def test_parse_bracketed_log_single() -> None:
+    text = "[2018-04-19 17:24:45, some diagnostic message]"
+    entries = p5._parse_bracketed_log(text)
+    assert len(entries) == 1
+    assert entries[0]["timestamp"] == "2018-04-19 17:24:45"
+    assert entries[0]["message"] == "some diagnostic message"
+
+
+def test_parse_bracketed_log_multiple() -> None:
+    text = "[2018-04-19 17:24:45, msg one][2018-04-19 17:25:00, msg two]"
+    entries = p5._parse_bracketed_log(text)
+    assert len(entries) == 2
+    assert entries[1]["message"] == "msg two"
+
+
+def test_classify_flight_log_crash() -> None:
+    text = "2018-04-19 17:24:45 ERROR\nFailed to arm motors\n"
+    fmt, entries = p5._classify_flight_log(text)
+    assert fmt == "crash_dump"
+    assert len(entries) == 1
+
+
+def test_classify_flight_log_bracketed() -> None:
+    text = "[2018-04-19 17:24:45, signal lost]"
+    fmt, entries = p5._classify_flight_log(text)
+    assert fmt == "bracketed_log"
+    assert len(entries) == 1
+
+
+def test_classify_flight_log_unknown() -> None:
+    text = "some plain text with no special format"
+    fmt, entries = p5._classify_flight_log(text)
+    assert fmt == "unknown"
+    assert entries == []
+
+
+# ---------------------------------------------------------------------------
+# Flight log parsing — integration tests (run_phase_5)
+# ---------------------------------------------------------------------------
+
+def _build_state_fl(tmp_path: Path, identification: str, log_path: Path) -> State:
+    """Build a minimal State with a P1→P3 chain for one flight_log artefact (no P4)."""
+    state = State(case_id="CASE-P5-FL", operator="Tester")
+
+    src = tmp_path / "source_fl.zip"
+    if not src.exists():
+        src.write_text("src", encoding="utf-8")
+    source_ev = make_evidence(
+        source_path=str(src),
+        stored_path=src,
+        parent=None,
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=identification,
+    )
+    state.input_evidence.append(source_ev)
+
+    p3_ev = make_evidence(
+        source_path=log_path.name,
+        stored_path=log_path,
+        parent=source_ev,
+        acquisition_method=config.ACQUISITION_EXTRACT_LOGICAL,
+        type=config.EVIDENCE_TYPE_EXTRACTED,
+        artefact_category=config.FLIGHT_LOGS,
+    )
+    state.phase_outputs["p3_artefact_extraction"] = {
+        "extracted_artefacts": [p3_ev.to_dict()]
+    }
+    state.phase_outputs["p4_decision_and_orchestration"] = {
+        "decision_and_orchestration_artefacts": []
+    }
+    return state
+
+
+def test_run_phase_5_flight_log_non_readable(tmp_path: Path, monkeypatch) -> None:
+    """Binary flight log → observation with non_readable: True."""
+    (tmp_path / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+    log = tmp_path / "encoded.dat"
+    log.write_bytes(bytes(range(256)) * 32)
+
+    state = _build_state_fl(tmp_path, config.IDENTIFICATION_CONTROLLER_ANDROID, log)
+    result = p5.run_phase_5(state)
+
+    anomalies = result.phase_outputs[p5._PHASE_NAME]["derived_anomalies"]
+    assert len(anomalies) == 1
+    obs = anomalies[0]["observations"][0]
+    assert obs == {"non_readable": True}
+    assert anomalies[0]["evidence_category"] == config.FLIGHT_LOGS
+
+
+def test_run_phase_5_flight_log_crash_dump(tmp_path: Path, monkeypatch) -> None:
+    """Crash dump log → observation with format=crash_dump and entries."""
+    (tmp_path / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+    log = tmp_path / "crash.txt"
+    log.write_text(
+        "2018-04-19 17:24:45 ERROR\nFailed to initialise GPS\n",
+        encoding="utf-8",
+    )
+
+    state = _build_state_fl(tmp_path, config.IDENTIFICATION_CONTROLLER_ANDROID, log)
+    result = p5.run_phase_5(state)
+
+    anomalies = result.phase_outputs[p5._PHASE_NAME]["derived_anomalies"]
+    assert len(anomalies) == 1
+    obs = anomalies[0]["observations"][0]
+    assert obs["format"] == "crash_dump"
+    assert len(obs["entries"]) == 1
+    assert obs["entries"][0]["message"] == "Failed to initialise GPS"
+
+
+def test_run_phase_5_flight_log_bracketed(tmp_path: Path, monkeypatch) -> None:
+    """Bracketed log → observation with format=bracketed_log and entries."""
+    (tmp_path / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+    log = tmp_path / "maplog.txt"
+    log.write_text(
+        "[2018-04-19 17:24:45, route calculated][2018-04-19 17:25:00, waypoint reached]",
+        encoding="utf-8",
+    )
+
+    state = _build_state_fl(tmp_path, config.IDENTIFICATION_CONTROLLER_ANDROID, log)
+    result = p5.run_phase_5(state)
+
+    anomalies = result.phase_outputs[p5._PHASE_NAME]["derived_anomalies"]
+    assert len(anomalies) == 1
+    obs = anomalies[0]["observations"][0]
+    assert obs["format"] == "bracketed_log"
+    assert len(obs["entries"]) == 2
+    assert obs["entries"][0]["timestamp"] == "2018-04-19 17:24:45"

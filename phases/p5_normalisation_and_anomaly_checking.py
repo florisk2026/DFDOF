@@ -16,6 +16,7 @@ from __future__ import annotations
 import csv
 import json
 import math
+import re
 import shutil
 import sqlite3
 from datetime import datetime
@@ -30,6 +31,7 @@ from config import (
     DATABASES,
     DRONE_LOGS,
     EVIDENCE_TYPE_NORMALISED,
+    FLIGHT_LOGS,
     FLIGHT_RECORDS,
     IDENTIFICATION_DRONE_SD,
     IMAGES,
@@ -153,6 +155,16 @@ _MIME_TO_EXT: dict[str, str] = {
     "image/tiff": ".tiff",
     "image/bmp": ".bmp",
 }
+
+# Flight log readability probe
+_PROBE_BYTES = 8192
+_NON_PRINTABLE_THRESHOLD = 0.15
+
+# Flight log format regexes
+_TIMESTAMP_RE = re.compile(
+    r"\d{4}[-/]\d{2}[-/]\d{2}[\sT]\d{2}:\d{2}:\d{2}|\d{2}:\d{2}:\d{2}"
+)
+_BRACKET_RE = re.compile(r"\[([^\]]+),\s*([^\]]+)\]")
 
 # DatCon column names
 _DATCON_DATE_COL = "GPS:Date"
@@ -737,6 +749,50 @@ def _process_exif(
     )
 
 
+def _is_non_readable(path: Path) -> bool:
+    """Return True if the file is binary or predominantly non-human-readable."""
+    try:
+        raw = path.read_bytes()[:_PROBE_BYTES]
+        text = raw.decode("utf-8")
+    except (UnicodeDecodeError, OSError):
+        return True
+    if not text:
+        return False
+    non_print = sum(1 for c in text if not c.isprintable() and c not in "\t\n\r")
+    return (non_print / len(text)) > _NON_PRINTABLE_THRESHOLD
+
+
+def _parse_crash_dump(text: str) -> list[dict[str, Any]]:
+    """Extract (timestamp, message) pairs from Java-style crash/error logs."""
+    entries: list[dict[str, Any]] = []
+    last_ts: str | None = None
+    for line in text.splitlines():
+        m = _TIMESTAMP_RE.search(line)
+        if m:
+            last_ts = m.group(0)
+        if line.strip().startswith("Failed"):
+            entries.append({"timestamp": last_ts, "message": line.strip()})
+    return entries
+
+
+def _parse_bracketed_log(text: str) -> list[dict[str, Any]]:
+    """Extract [timestamp, message] pairs from bracketed log format."""
+    return [
+        {"timestamp": m.group(1).strip(), "message": m.group(2).strip()}
+        for m in _BRACKET_RE.finditer(text)
+    ]
+
+
+def _classify_flight_log(text: str) -> tuple[str, list[dict[str, Any]]]:
+    """Classify a flight log text and return (format_name, entries)."""
+    if _BRACKET_RE.search(text):
+        return "bracketed_log", _parse_bracketed_log(text)
+    crash = _parse_crash_dump(text)
+    if crash:
+        return "crash_dump", crash
+    return "unknown", []
+
+
 def _check_database_empty(db_path: Path) -> bool:
     """Return True if every table in the SQLite database has zero rows, or no tables exist."""
     try:
@@ -795,6 +851,41 @@ def run_phase_5(state: State) -> State:
                 acquisition_method=ACQUISITION_NORMALISE,
                 observations=[{"database_empty": True}],
             ))
+
+    fl_artefacts = [a for a in p3_artefacts if str(a.get("artefact_category") or "") == FLIGHT_LOGS]
+    fl_artefacts.sort(key=lambda a: (
+        _id_order.get(identification_map.get(str(a.get("sha256") or ""), ""), 999),
+        str(a.get("stored_path") or ""),
+    ))
+
+    if fl_artefacts and FLIGHT_LOGS not in _announced_categories:
+        print(f"  Normalising and Anomaly Checking {FLIGHT_LOGS}")
+        _announced_categories.add(FLIGHT_LOGS)
+
+    for artefact in fl_artefacts:
+        stored_path = Path(str(artefact.get("stored_path") or ""))
+        sha = str(artefact.get("sha256") or "")
+        identification = identification_map.get(sha, "unknown")
+        if not stored_path.exists():
+            state.raise_anomaly(5, identification, f"p3 flight_log artefact not found: {stored_path.name}", category=FLIGHT_LOGS)
+            continue
+        if _is_non_readable(stored_path):
+            obs_data: dict[str, Any] = {"non_readable": True}
+        else:
+            try:
+                text = stored_path.read_text(encoding="utf-8", errors="replace")
+                fmt, entries = _classify_flight_log(text)
+                obs_data = {"format": fmt, "entries": entries}
+            except OSError as exc:
+                state.raise_anomaly(5, identification, f"flight_log read failed: {exc}", category=FLIGHT_LOGS)
+                continue
+        anomalies.append(make_observation(
+            stored_path=str(stored_path),
+            evidence_sha256=sha,
+            evidence_category=FLIGHT_LOGS,
+            acquisition_method=ACQUISITION_NORMALISE,
+            observations=[obs_data],
+        ))
 
     for artefact in p4_artefacts:
         acquisition = str(artefact.get("acquisition_method") or "")
