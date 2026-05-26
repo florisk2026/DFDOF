@@ -1,16 +1,26 @@
 """DFDOF Phase 3: Artefact Extraction.
 
 This phase:
- - create a phase 3 output directory,
- - loop through all evidence sources,
- - extract artefacts based on category filters and acquisition method.
+ - creates a phase 3 output directory,
+ - loops through all evidence sources,
+ - extracts artefacts based on DJI app root discovery and explicit category paths.
+
+Extraction is deterministic and auditable:
+  1. Discover trusted DJI app roots (by bundle ID for iOS, by scope segment for Android).
+  2. Construct explicit category directory paths (root / configured token).
+  3. Recurse only within those directories.
+  4. Filter by extension.
+  5. Reject empty files.
+  6. Wrap as Evidence.
+
+No heuristic substring matching. No fallback extraction. If roots cannot be found,
+an anomaly is raised and extraction stops for that source.
 """
 
 from __future__ import annotations
 
 import shutil
 import zipfile
-from functools import lru_cache
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -18,14 +28,12 @@ from config import (
     ACCOUNT_DATA,
     ACQUISITION_LOGICAL,
     ACQUISITION_PHYSICAL,
-    ARTEFACT_DATABASES_INCLUDES,
+    ANDROID_ARTEFACT_PATHS,
     ARTEFACT_EXTENSIONS,
     ARTEFACT_EXTENSIONS_DRONE_SD,
-    ARTEFACT_PATHS,
     ACQUISITION_EXTRACT_LOGICAL,
     ACQUISITION_EXTRACT_PHYSICAL,
     CONTROLLER_ARTEFACT_CATEGORIES,
-    DATABASES,
     DEVICE_AND_BACKUP_INFO,
     DJI_APP_DOMAINS,
     DRONE_LOGS,
@@ -35,17 +43,18 @@ from config import (
     IDENTIFICATION_CONTROLLER_IOS,
     IDENTIFICATION_DRONE_FLIGHT_STORAGE,
     IDENTIFICATION_DRONE_SD,
+    IOS_ARTEFACT_PATHS,
     IMAGES,
     TSK_ICAT,
     VIDEOS,
-	output_dir,
-	clear_and_make,
-	utc_now_iso,
+    output_dir,
+    clear_and_make,
+    utc_now_iso,
 )
 from evidence import Evidence, make_evidence
 from parsing.extract_logical import ensure_unique_path, extract_logical_files
 from parsing.utils_parse import (
-    normalise_path,
+    parse_json_file,
     safe_segment,
     to_windows_path,
     normalise_acquisition_method,
@@ -64,24 +73,86 @@ _ARTEFACT_EXTENSIONS_DRONE_SD_LOWER: frozenset[str] = frozenset(
     ext.lower() for ext in ARTEFACT_EXTENSIONS_DRONE_SD
 )
 
-
-def _build_path_category_index() -> dict[str, list[str]]:
-    """Build a reverse index of artefact paths to their categories."""
-    index: dict[str, list[str]] = {}
-    for category, paths in ARTEFACT_PATHS.items():
-        for path in paths:
-            normalised = normalise_path(path, to_lower=True)
-            index.setdefault(normalised, []).append(category)
-    return index
+_IOS_DOMAIN_PREFIXES: tuple[str, ...] = ("AppDomain-", "AppDomainGroup-")
 
 
-_PATH_CATEGORY_INDEX: dict[str, list[str]] = _build_path_category_index()
+def _android_installed_apps(state: State) -> list[str]:
+    """Read installed DJI bundle IDs from P2 backup_info.json."""
+    backup_info_path = (
+        output_dir() / state.case_id / "p2_image_parsing"
+        / "controller_android_parsed" / "backup_info.json"
+    )
+    if not backup_info_path.is_file():
+        return []
+    data = parse_json_file(backup_info_path)
+    apps = data.get("Installed Applications", [])
+    return [str(a) for a in apps if str(a).strip()] if isinstance(apps, list) else []
 
 
-def _is_database_included(filename: str) -> bool:
-    """Return True if filename stem matches any database include token."""
-    stem = Path(filename).stem.lower()
-    return any(token.lower() in stem for token in ARTEFACT_DATABASES_INCLUDES)
+def _android_discover_scope_roots(
+    member_names: Iterable[str],
+    bundle_ids: list[str],
+) -> list[str]:
+    """Find archive path prefixes ending with an installed DJI bundle ID segment."""
+    bundle_ids_lower = {b.lower() for b in bundle_ids}
+    roots: set[str] = set()
+    for name in member_names:
+        normalised = name.replace("\\", "/").lower()
+        parts = normalised.split("/")
+        for i, part in enumerate(parts):
+            if part in bundle_ids_lower:
+                roots.add("/".join(parts[: i + 1]) + "/")
+    return sorted(roots)
+
+
+def _ios_discover_app_roots(parsed_root: Path) -> list[Path]:
+    """Find DJI app directories in the parsed iOS backup domain tree.
+
+    Scans parsed_root/domains/ for subdirectories whose name, after stripping
+    a known domain prefix (AppDomain-, AppDomainGroup-), matches a bundle ID
+    from DJI_APP_DOMAINS["ios"].
+    """
+    bundle_ids_lower = {b.lower() for b in DJI_APP_DOMAINS["ios"].keys()}
+    domains_dir = parsed_root / "domains"
+    if not domains_dir.is_dir():
+        return []
+    roots: list[Path] = []
+    for subdir in domains_dir.iterdir():
+        if not subdir.is_dir():
+            continue
+        name = subdir.name
+        stripped = name
+        for prefix in _IOS_DOMAIN_PREFIXES:
+            if name.lower().startswith(prefix.lower()):
+                stripped = name[len(prefix):]
+                break
+        if stripped.lower() in bundle_ids_lower:
+            roots.append(subdir)
+    return sorted(roots)
+
+
+def _ios_collect_category_files(app_roots: list[Path], category: str) -> list[Path]:
+    """Collect files from explicit category directories under DJI iOS app roots.
+
+    For each app root and each token in IOS_ARTEFACT_PATHS[category], constructs
+    the exact path app_root / token and recurses inside it. No directory-name
+    scanning; paths are constructed directly from configuration.
+    """
+    tokens = IOS_ARTEFACT_PATHS.get(category, set())
+    ext_set = _ARTEFACT_EXTENSIONS_LOWER.get(category, frozenset())
+    seen: set[Path] = set()
+    matched: list[Path] = []
+    for app_root in app_roots:
+        for token in tokens:
+            category_dir = app_root / token.rstrip("/\\")
+            if not category_dir.is_dir():
+                continue
+            for file_path in category_dir.rglob("*"):
+                if file_path.is_file() and file_path.suffix.lower() in ext_set:
+                    if file_path not in seen:
+                        seen.add(file_path)
+                        matched.append(file_path)
+    return matched
 
 
 def _get_cached_offset(state: State, image_path: Path) -> int | None:
@@ -139,6 +210,42 @@ def _account_targets(os_key: str) -> set[str]:
     return {f"{domain}{ext}".lower() for domain in DJI_APP_DOMAINS[os_key].keys()}
 
 
+def _collect_account_members(
+    member_names: Iterable[str],
+    os_key: str,
+    scope_prefixes: list[str] | None = None,
+) -> list[str]:
+    """Collect account data members from a ZIP archive by filename.
+
+    When scope_prefixes are provided, only considers members whose normalised
+    path starts with one of the DJI app scope roots.
+    """
+    targets = _account_targets(os_key)
+    result = []
+    for name in member_names:
+        if scope_prefixes and not any(
+            name.replace("\\", "/").lower().startswith(p) for p in scope_prefixes
+        ):
+            continue
+        if Path(name).name.lower() in targets:
+            result.append(name)
+    return result
+
+
+def _collect_account_files(app_roots: list[Path], os_key: str) -> list[Path]:
+    """Collect account data files from DJI app roots by filename."""
+    targets = _account_targets(os_key)
+    seen: set[Path] = set()
+    result: list[Path] = []
+    for app_root in app_roots:
+        for file_path in app_root.rglob("*"):
+            if file_path.is_file() and file_path.name.lower() in targets:
+                if file_path not in seen:
+                    seen.add(file_path)
+                    result.append(file_path)
+    return result
+
+
 def _drone_sd_category_for_suffix(suffix: str) -> str | None:
     """Return the drone SD category for a filename suffix."""
     suffix = suffix.lower()
@@ -174,9 +281,9 @@ def _extract_drone_sd_physical(
         category = _drone_sd_category_for_suffix(suffix)
         if category is None:
             continue
-        output_dir = output_root / safe_segment(category)
-        output_dir.mkdir(parents=True, exist_ok=True)
-        output_path = ensure_unique_path(output_dir / Path(rel_path).name)
+        out_dir = output_root / safe_segment(category)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        output_path = ensure_unique_path(out_dir / Path(rel_path).name)
         icat_tmp = output_path.parent / (output_path.name + ".tmp")
         with icat_tmp.open("wb") as output_handle:
             result = run_command(
@@ -217,54 +324,10 @@ def _extract_drone_sd_physical(
     return extracted
 
 
-def _collect_account_members(member_names: Iterable[str], os_key: str) -> list[str]:
-    """Collect account data members from a ZIP archive by filename."""
-    targets = _account_targets(os_key)
-    return [name for name in member_names if Path(name).name.lower() in targets]
-
-
-def _collect_account_files(parsed_root: Path, os_key: str) -> list[Path]:
-    """Collect account data files from a parsed folder by filename."""
-    targets = _account_targets(os_key)
-    return [
-        path
-        for path in parsed_root.rglob("*")
-        if path.is_file() and path.name.lower() in targets
-    ]
-
-
-def _collect_parsed_files(parsed_root: Path, category: str) -> list[Path]:
-    """Collect parsed iOS files that match the artefact category filters."""
-    if category == ACCOUNT_DATA:
-        return []
-    paths = {
-        normalise_path(path, to_lower=True)
-        for path in ARTEFACT_PATHS.get(category, set())
-    }
-    extensions = _ARTEFACT_EXTENSIONS_LOWER.get(category, frozenset())
-
-    matched: list[Path] = []
-    for file_path in parsed_root.rglob("*"):
-        if not file_path.is_file():
-            continue
-        suffix = file_path.suffix.lower()
-        if suffix not in extensions:
-            continue
-        rel_path = normalise_path(
-            str(file_path.relative_to(parsed_root)), to_lower=True
-        )
-        if paths and not any(token in rel_path for token in paths):
-            continue
-        if category == DATABASES and not _is_database_included(file_path.name):
-            continue
-        matched.append(file_path)
-    return matched
-
-
 def _copy_parsed_files(
     parsed_root: Path,
     files: list[Path],
-    output_dir: Path,
+    out_dir: Path,
     parent: Evidence,
     category: str,
     acquisition_method: str,
@@ -272,7 +335,7 @@ def _copy_parsed_files(
     """Copy parsed files into the phase output directory and wrap as Evidence."""
     extracted: list[Evidence] = []
     for file_path in files:
-        output_path = ensure_unique_path(output_dir / file_path.name)
+        output_path = ensure_unique_path(out_dir / file_path.name)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(file_path, output_path)
         rel_source = to_windows_path(str(file_path.relative_to(parsed_root)))
@@ -289,48 +352,10 @@ def _copy_parsed_files(
     return extracted
 
 
-@lru_cache(maxsize=16)
 def _member_names(zip_path: Path) -> tuple[str, ...]:
-    """Return archive member names excluding directories. Result cached per path."""
+    """Return archive member names excluding directories."""
     with zipfile.ZipFile(zip_path) as archive:
         return tuple(name for name in archive.namelist() if not name.endswith("/"))
-
-
-def _collect_members_by_category(
-    member_names: Iterable[str],
-    categories: Iterable[str],
-) -> dict[str, list[str]]:
-    """Collect archive members per category using a single pass, deduplicating by basename."""
-    requested = set(categories)
-    path_index = _PATH_CATEGORY_INDEX
-    category_members: dict[str, list[str]] = {category: [] for category in requested}
-    seen_basenames: dict[str, set[str]] = {category: set() for category in requested}
-
-    for name in member_names:
-        normalised = normalise_path(name, to_lower=True)
-        filename = Path(name).name
-        suffix = Path(filename).suffix.lower()
-        basename_lower = filename.lower()
-
-        matching_categories: set[str] = set()
-        for token, cats in path_index.items():
-            if token in normalised:
-                matching_categories.update(cats)
-
-        for category in matching_categories:
-            if category not in requested:
-                continue
-            if basename_lower in seen_basenames[category]:
-                continue
-            ext_set = _ARTEFACT_EXTENSIONS_LOWER.get(category, frozenset())
-            if suffix not in ext_set:
-                continue
-            if category == DATABASES and not _is_database_included(filename):
-                continue
-            category_members[category].append(name)
-            seen_basenames[category].add(basename_lower)
-
-    return category_members
 
 
 def _filter_empty(
@@ -362,6 +387,15 @@ def _filter_empty(
         else:
             kept.append(item)
     return kept
+
+
+def _remove_empty_dir(path: Path) -> None:
+    """Remove a directory if it exists and is empty."""
+    try:
+        if path.is_dir() and not any(path.iterdir()):
+            path.rmdir()
+    except OSError:
+        pass
 
 
 def _find_ios_parsed_root(state: State, ios_source: Evidence | None) -> Path | None:
@@ -396,16 +430,56 @@ def _extract_android_sources(
         or android_archive.suffix.lower() == EXTENSION_ZIP[0]
     )
     categories = CONTROLLER_ARTEFACT_CATEGORIES
+
     if is_logical:
         member_names = _member_names(android_archive)
-        members_by_category = _collect_members_by_category(
-            member_names,
-            [cat for cat in categories if cat != ACCOUNT_DATA],
-        )
-        account_members = _collect_account_members(member_names, "android")
+        installed_apps = _android_installed_apps(state)
+        if not installed_apps:
+            state.raise_anomaly(
+                3, IDENTIFICATION_CONTROLLER_ANDROID,
+                "installed DJI apps not found in P2 output, extraction aborted",
+            )
+            _remove_empty_dir(controller_android_dir)
+            return extracted
+
+        scope_roots = _android_discover_scope_roots(member_names, installed_apps)
+        if not scope_roots:
+            state.raise_anomaly(
+                3, IDENTIFICATION_CONTROLLER_ANDROID,
+                "no DJI app directories found in archive for installed apps, extraction aborted",
+            )
+            _remove_empty_dir(controller_android_dir)
+            return extracted
+
         for category in categories:
             try:
-                members = account_members if category == ACCOUNT_DATA else members_by_category.get(category, [])
+                if category == ACCOUNT_DATA:
+                    members = _collect_account_members(
+                        member_names, "android", scope_prefixes=scope_roots
+                    )
+                else:
+                    path_tokens = {
+                        p.replace("\\", "/").lower()
+                        for p in ANDROID_ARTEFACT_PATHS.get(category, set())
+                    }
+                    ext_set = _ARTEFACT_EXTENSIONS_LOWER.get(category, frozenset())
+                    category_roots = [
+                        scope + token
+                        for scope in scope_roots
+                        for token in path_tokens
+                    ]
+                    seen: set[str] = set()
+                    members = []
+                    for name in member_names:
+                        normalised = name.replace("\\", "/").lower()
+                        if not any(normalised.startswith(cat_root) for cat_root in category_roots):
+                            continue
+                        if Path(name).suffix.lower() not in ext_set:
+                            continue
+                        if normalised not in seen:
+                            seen.add(normalised)
+                            members.append(name)
+
                 if members:
                     output_dir_cat = controller_android_dir / safe_segment(category)
                     evidence_list = _filter_empty(
@@ -420,11 +494,18 @@ def _extract_android_sources(
                         IDENTIFICATION_CONTROLLER_ANDROID,
                         category,
                     )
+                    _remove_empty_dir(output_dir_cat)
                     extracted.extend(evidence_list)
                 else:
-                    state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, "no artefacts found", category=category)
+                    state.raise_anomaly(
+                        3, IDENTIFICATION_CONTROLLER_ANDROID, "no artefacts found", category=category
+                    )
             except Exception as exc:
-                state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, f"extraction failed: {exc}", category=category)
+                state.raise_anomaly(
+                    3, IDENTIFICATION_CONTROLLER_ANDROID, f"extraction failed: {exc}", category=category
+                )
+        _remove_empty_dir(controller_android_dir)
+
     else:
         precomputed_entries = _get_cached_entries(state, android_archive)
         offset_sectors = _get_cached_offset(state, android_archive)
@@ -435,7 +516,7 @@ def _extract_android_sources(
                 if category == ACCOUNT_DATA:
                     include_paths = list(_account_targets("android"))
                 else:
-                    include_paths = sorted(ARTEFACT_PATHS.get(category, set()))
+                    include_paths = sorted(ANDROID_ARTEFACT_PATHS.get(category, set()))
                 evidence_list = extract_tsk_image(
                     android_archive,
                     output_dir_cat,
@@ -461,17 +542,21 @@ def _extract_android_sources(
                     if suffix not in ext_set:
                         stored_path.unlink(missing_ok=True)
                         continue
-                    if category == DATABASES and not _is_database_included(stored_path.name):
-                        stored_path.unlink(missing_ok=True)
-                        continue
                     filtered.append(item)
                 filtered = _filter_empty(filtered, state, IDENTIFICATION_CONTROLLER_ANDROID, category)
+                _remove_empty_dir(output_dir_cat)
                 if filtered:
                     extracted.extend(filtered)
                 else:
-                    state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, "no artefacts found", category=category)
+                    state.raise_anomaly(
+                        3, IDENTIFICATION_CONTROLLER_ANDROID, "no artefacts found", category=category
+                    )
             except Exception as exc:
-                state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, f"extraction failed: {exc}", category=category)
+                state.raise_anomaly(
+                    3, IDENTIFICATION_CONTROLLER_ANDROID, f"extraction failed: {exc}", category=category
+                )
+        _remove_empty_dir(controller_android_dir)
+
     return extracted
 
 
@@ -488,12 +573,23 @@ def _extract_ios_sources(
     controller_ios_dir = phase_dir / "controller_ios"
     clear_and_make(controller_ios_dir)
     print("  Extracting from controller_ios")
+
+    app_roots = _ios_discover_app_roots(ios_parsed_root)
+    if not app_roots:
+        state.raise_anomaly(
+            3, IDENTIFICATION_CONTROLLER_IOS,
+            "no DJI app directories found in parsed backup, extraction aborted",
+        )
+        _remove_empty_dir(controller_ios_dir)
+        return extracted
+
     for category in CONTROLLER_ARTEFACT_CATEGORIES:
         try:
             if category == ACCOUNT_DATA:
-                matched_files = _collect_account_files(ios_parsed_root, "ios")
+                matched_files = _collect_account_files(app_roots, "ios")
             else:
-                matched_files = _collect_parsed_files(ios_parsed_root, category)
+                matched_files = _ios_collect_category_files(app_roots, category)
+
             if matched_files:
                 output_dir_cat = controller_ios_dir / safe_segment(category)
                 evidence_list = _filter_empty(
@@ -509,11 +605,17 @@ def _extract_ios_sources(
                     IDENTIFICATION_CONTROLLER_IOS,
                     category,
                 )
+                _remove_empty_dir(output_dir_cat)
                 extracted.extend(evidence_list)
             else:
-                state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, "no artefacts found", category=category)
+                state.raise_anomaly(
+                    3, IDENTIFICATION_CONTROLLER_IOS, "no artefacts found", category=category
+                )
         except Exception as exc:
-            state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, f"extraction failed: {exc}", category=category)
+            state.raise_anomaly(
+                3, IDENTIFICATION_CONTROLLER_IOS, f"extraction failed: {exc}", category=category
+            )
+    _remove_empty_dir(controller_ios_dir)
     return extracted
 
 
@@ -541,6 +643,9 @@ def _extract_drone_sd_sources(
                     IDENTIFICATION_DRONE_SD,
                     index=idx + 1,
                 )
+                for cat_dir in list(drone_sd_dir.iterdir()) if drone_sd_dir.exists() else []:
+                    _remove_empty_dir(cat_dir)
+                _remove_empty_dir(drone_sd_dir)
                 extracted.extend(evidence_list)
                 if not evidence_list:
                     state.raise_anomaly(3, IDENTIFICATION_DRONE_SD, "no artefacts found", index=idx + 1)
@@ -582,6 +687,7 @@ def _extract_flight_storage_sources(
                 IDENTIFICATION_DRONE_FLIGHT_STORAGE,
                 DRONE_LOGS,
             )
+            _remove_empty_dir(drone_flight_dir)
             extracted.extend(evidence_list)
             if not evidence_list:
                 state.raise_anomaly(
@@ -595,6 +701,7 @@ def _extract_flight_storage_sources(
             f"unsupported archive format for {flight_archive.name}",
             category=DRONE_LOGS,
         )
+    _remove_empty_dir(drone_flight_dir)
     return extracted
 
 

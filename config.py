@@ -102,33 +102,35 @@ CONTROLLER_ARTEFACT_CATEGORIES = [
     VIDEOS,
 ]
 
+# Only used for controller
 ARTEFACT_EXTENSIONS = {
     # ACCOUNT_DATA: For Android .xml and for iOS .plist.
     DATABASES: {".db"},
     # DEVICE_AND_BACKUP_INFO: already handled in phase 2.
     DRONE_LOGS: {".DAT"},
-    FLIGHT_LOGS: {".txt", ".dat"},
+    FLIGHT_LOGS: {".txt", ".dat", ""},
     FLIGHT_RECORDS: {".txt"},
     IMAGES: {".jpg", ".jpeg", ".thumbnail"},
     VIDEOS: {".mp4", ".mov", ".info"},
 }
 
+# Only used for drone SD
 ARTEFACT_EXTENSIONS_DRONE_SD = {".MP4", ".THM"}
 
 IOS_ARTEFACT_PATHS = {
     DATABASES: {"Documents/", "Library/"},
-    DRONE_LOGS: {"FlightRecords/"},
-    FLIGHT_LOGS: {"FlightLogs/", "Logs/"},
-    FLIGHT_RECORDS: {"FlightRecords/"},
-    IMAGES: {"videoCache/"},
-    VIDEOS: {"videoCache/"},
+    DRONE_LOGS: {"Documents/FlightRecords/"},
+    FLIGHT_LOGS: {"Documents/FlightLogs/", "Documents/Logs/"},
+    FLIGHT_RECORDS: {"Documents/FlightRecords/"},
+    IMAGES: {"Documents/videoCache/"},
+    VIDEOS: {"Documents/videoCache/"},
 }
 
 ANDROID_ARTEFACT_PATHS = {
-    DATABASES: {"databases/", "db/", "dbData/", ".space_db/", "space_db/", "files/"},
-    DRONE_LOGS: {"FlightRecord/", "FlightRecords/"},
-    FLIGHT_LOGS: {"FlightLog/", "FlightLogs/", "LOG/"},
-    FLIGHT_RECORDS: {"FlightRecord/", "FlightRecords/"},
+    DATABASES: {"databases/", "db/", "files/"},
+    DRONE_LOGS: {"FlightRecord/"},
+    FLIGHT_LOGS: {"FlightLog/", "LOG/"},
+    FLIGHT_RECORDS: {"FlightRecord/"},
     IMAGES: {"CACHE_IMAGE/"},
     VIDEOS: {"DJI_RECORD/"},
 }
