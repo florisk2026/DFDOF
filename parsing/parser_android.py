@@ -274,16 +274,19 @@ def _merge_list_if_empty(target: dict[str, Any], key: str, value: list[str]) -> 
 
 def _flatten_extracted_files(
     output_root: Path, extracted_files: list[Evidence]
-) -> None:
-    """Move extracted files into the output root to avoid nested folders."""
+) -> list[Evidence]:
+    """Move extracted files into the output root and return updated Evidence objects."""
+    result: list[Evidence] = []
     for evidence_item in extracted_files:
         stored_path = Path(str(evidence_item.stored_path))
         if stored_path.parent == output_root:
+            result.append(evidence_item)
             continue
         target_path = ensure_unique_path(output_root / stored_path.name)
         target_path.parent.mkdir(parents=True, exist_ok=True)
         stored_path.replace(target_path)
-        evidence_item.stored_path = target_path
+        updated = Evidence.from_dict({**evidence_item.to_dict(), "stored_path": str(target_path)})
+        result.append(updated)
 
     # Clean up empty directories left behind after flattening.
     for directory in sorted(
@@ -295,6 +298,8 @@ def _flatten_extracted_files(
             directory.rmdir()
         except OSError:
             pass
+
+    return result
 
 
 def parse_android_source(
@@ -361,7 +366,7 @@ def parse_android_source(
 
     # Only flatten when physical extraction returned nested paths; logical extraction writes flat basenames.
     if not is_logical:
-        _flatten_extracted_files(output_root, extracted_files)
+        extracted_files = _flatten_extracted_files(output_root, extracted_files)
 
     observations: list[Observation] = []
 

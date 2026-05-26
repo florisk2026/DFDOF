@@ -20,7 +20,7 @@ import shutil
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from config import (
     ACQUISITION_DATCON,
@@ -55,14 +55,94 @@ from state import State
 
 _PHASE_NAME = Path(__file__).stem
 
-_SPEED_THRESHOLD_MS = 80.0
-_TIMESTAMP_GAP_S = 60.0
-_ALTITUDE_SPIKE_MS = 20.0
-_ALTITUDE_NEGATIVE_M = -0.1
+# ===========================================================================
+# PHASE 5: FORENSIC SCREENING CONFIGURATION & THRESHOLD JUSTIFICATION
+# ===========================================================================
+# CRITICAL FORENSIC METHODOLOGY NOTE:
+# These metrics serve as conservative forensic screening thresholds designed 
+# to isolate telemetry anomalies requiring examiner review. They function as 
+# indicators of structural, physical, or logging inconsistencies; they do not 
+# independently constitute definitive mathematical proof of malicious tampering.
+#
+# Threshold Derivation Matrix:
+# 1. Physics & Manufacturer Specs : Lithium Polymer/High-Voltage (LiPo/LiHV) bounds
+# 2. GNSS Engineering Standards   : Multi-lateral satellite positioning constraints
+# 3. Operational Heuristics       : Conservative UAV flight profile envelopes
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Category 1: Physics & Manufacturer-Backed Thresholds (Highly Defensible)
+# ---------------------------------------------------------------------------
+
+# LiPo/LiHV absolute deep-discharge danger zone.
+# Cells degrade severely below ~2.8V-3.0V. Values below 2.8V signify abnormal 
+# hardware exhaustion, unfinalized log corruption, or telemetry degradation.
+_BATTERY_CELL_MIN_V = 2.8  
+
+# LiHV maximum nominal cell voltage is 4.35V. 
+# Values exceeding 4.4V point directly to sensor noise, parsing bugs, or localized data corruption.
+_BATTERY_CELL_MAX_V = 4.4  
+
+# Severe cell imbalance threshold. 
+# Healthy cells remain within a delta of 0.01V-0.10V under nominal load. A gap 
+# exceeding 0.3V indicates cell degradation, active damage, or telemetry desynchronization.
+_BATTERY_CELL_IMBALANCE_V = 0.3  
+
+# Conservative physical battery temperature envelope.
+# Broadened beyond DJI's strict operational thresholds (0°C to 40°C) to prevent false positives 
+# during extreme ambient storage, severe impact friction, or hardware thermal runaway.
+_BATTERY_TEMP_MIN_C = -20.0
+_BATTERY_TEMP_MAX_C = 80.0  
+
+# Unit quaternion normalization constraint validity tolerance.
+# Physical orientation orientation-vectors must satisfy the equation: ||q|| = 1.
+# Deviations greater than 0.01 demonstrate mathematical invalidity or structural record corruption.
+_QUATERNION_NORM_EPS = 0.01  
+
+
+# ---------------------------------------------------------------------------
+# Category 2: GNSS Engineering Thresholds (Standard Standards)
+# ---------------------------------------------------------------------------
+
+# GNSS Engineering Convention: Horizontal Dilution of Precision (HDOP).
+# Values between 1-2 denote ideal/excellent geometric precision; values > 5.0 
+# reflect degraded positional reliability rendering coordinates legally/forensically speculative.
+_GPS_HDOP_THRESHOLD = 5.0  
+
+# Minimum physical satellite allocation required to compute a valid 3D geometric fix.
+# Telemetry strings asserting 3D coordinates with fewer than 4 locked satellites 
+# represent mathematically impossible or unvalidated tracking states.
+_GPS_POOR_FIX_SATS = 4  
+
+
+# ---------------------------------------------------------------------------
+# Category 3: Heuristic Screening Thresholds (Conservative Plausibility Bounds)
+# ---------------------------------------------------------------------------
+
+# Conservative horizontal velocity plausibility threshold (~288 km/h).
+# Exceeds the mechanical capability of standard consumer DJI platforms. Spikes beyond 80.0 m/s 
+# flag timestamp desynchronization, packet drops, or multi-kilometer GPS signal "jumps."
+_SPEED_THRESHOLD_MS = 80.0  
+
+# Vertical velocity anomaly threshold. 
+# Nominal sport-mode ascent limits scale between 3 m/s and 10 m/s. A vertical delta 
+# exceeding 20.0 m/s indexes data ingestion anomalies, altitude sensor failures, or physical crashes.
+_ALTITUDE_SPIKE_MS = 20.0  
+
+# Operational temporal continuity threshold.
+# Telemetry dropouts exceeding 60.0 seconds indicate record truncation, power interruptions, 
+# or manual manipulation of intermediate logging streams.
+_TIMESTAMP_GAP_S = 60.0  
+
+# Ground-plane floating-point tolerance buffer.
+# Protects the system from flagging standard floating-point calculation variance around 0.0m as an anomaly.
+_ALTITUDE_NEGATIVE_M = -0.1  
+
+# Motor-state altitude inconsistency threshold.
+# If altitude reads >1.0m while internal ESCs register motors are off, it isolates 
+# a structural logging contradiction or sensor desynchronization.
 _MOTOR_AIRBORNE_HEIGHT_M = 1.0
-_GPS_POOR_FIX_SATS = 4
-_GPS_HDOP_THRESHOLD = 5.0
-_QUATERNION_NORM_EPS = 0.01
+
 # Image MIME types that need extension renaming (source extension → not viewable).
 _OPAQUE_IMAGE_EXTENSIONS = {".thumbnail", ".thm"}
 _MIME_TO_EXT: dict[str, str] = {
@@ -73,12 +153,6 @@ _MIME_TO_EXT: dict[str, str] = {
     "image/tiff": ".tiff",
     "image/bmp": ".bmp",
 }
-
-_BATTERY_CELL_MIN_V = 2.8
-_BATTERY_CELL_MAX_V = 4.4
-_BATTERY_CELL_IMBALANCE_V = 0.3
-_BATTERY_TEMP_MIN_C = -20.0
-_BATTERY_TEMP_MAX_C = 80.0
 
 # DatCon column names
 _DATCON_DATE_COL = "GPS:Date"
@@ -285,27 +359,24 @@ def _check_column_values(
             acc["contains_constant_value"].append(col)
 
 
-def _augment_datcon_csv(src: Path, dst: Path) -> dict[str, Any]:
-    """Augment a DatCon CSV with NORM columns and run all anomaly checks.
+def _augment_csv(
+    src: Path,
+    dst: Path,
+    acc_extra: list[str],
+    bind_fn: Callable[[list[str]], Any],
+    norm_header_fn: Callable[[list[str], Any], list[str]],
+    process_row_fn: Callable[[int, list[str], Any, dict], tuple],
+) -> dict[str, Any]:
+    """Shared CSV augmentation driver.
 
-    New NORM columns:
-      [NORM]:ID            — prepended row index
-      [NORM]:GPS:Date      — after GPS:Date  (YYYY-MM-DD)
-      [NORM]:GPS:Time      — after GPS:Time  (HH:MM:SS[.fff])
-      [NORM]:GPS:dateTimeStamp — after GPS:dateTimeStamp (ISO 8601 +00:00)
-
-    Returns dict of {check_name: [row_id, ...]}.
+    process_row_fn(row_id, padded, idx, acc) returns:
+      (new_row, clock_delta_s, cur_gps_dt, lat, lon, height, motor_on, gps_count)
+    Format-specific anomaly checks are applied inside process_row_fn via acc.
     """
     dst.parent.mkdir(parents=True, exist_ok=True)
-
     acc = _make_shared_acc()
-    acc.update({
-        "gps_accuracy_poor": [],
-        "quaternion_invalid": [],
-        "attitude_out_of_bounds": [],
-    })
+    acc.update({k: [] for k in acc_extra})
     prev: dict[str, Any] = {"lat": None, "lon": None, "gps_dt": None, "height": None}
-    prev_clock: float | None = None
 
     with (
         src.open(newline="", encoding="utf-8", errors="replace") as fh_in,
@@ -313,102 +384,19 @@ def _augment_datcon_csv(src: Path, dst: Path) -> dict[str, Any]:
     ):
         reader = csv.reader(fh_in)
         writer = csv.writer(fh_out)
-
         header = next(reader, None)
         if header is None:
             return {k: [] for k in acc}
-
-        # GPS/clock columns use exact match; sensor columns use prefix match
-        # because DatCon appends :C (calculated) or :D (direct) suffixes that vary by version.
-        def _idx(col: str) -> int:
-            return header.index(col) if col in header else -1
-
-        date_idx = _idx(_DATCON_DATE_COL)
-        time_idx = _idx(_DATCON_TIME_COL)
-        dts_idx = _idx(_DATCON_DATETIME_STAMP_COL)
-        lat_idx = _idx(_DATCON_LAT_COL)
-        lon_idx = _idx(_DATCON_LON_COL)
-        numsv_idx = _idx(_DATCON_NUMSV_COL)
-        hdop_idx = _idx(_DATCON_HDOP_COL)
-        clock_idx = _idx(_DATCON_CLOCK_COL)
-        # Sensor columns: prefix match handles :C/:D suffix variants
-        height_idx = _find_col(header, _DATCON_HEIGHT_COL)
-        motor_idx = _find_col(header, _DATCON_MOTOR_COL)
-        roll_idx = _find_col(header, _DATCON_ROLL_COL)
-        pitch_idx = _find_col(header, _DATCON_PITCH_COL)
-        quatw_idx = _find_col(header, _DATCON_QUATW_COL)
-        quatx_idx = _find_col(header, _DATCON_QUATX_COL)
-        quaty_idx = _find_col(header, _DATCON_QUATY_COL)
-        quatz_idx = _find_col(header, _DATCON_QUATZ_COL)
-
-        new_header: list[str] = ["[NORM]:ID"]
-        for col in header:
-            new_header.append(col)
-            if col == _DATCON_DATE_COL:
-                new_header.append("[NORM]:GPS:Date")
-            elif col == _DATCON_TIME_COL:
-                new_header.append("[NORM]:GPS:Time")
-            elif col == _DATCON_DATETIME_STAMP_COL:
-                new_header.append("[NORM]:GPS:dateTimeStamp")
-        writer.writerow(new_header)
-
+        idx = bind_fn(header)
+        writer.writerow(norm_header_fn(header, idx))
         column_values: dict[str, list[str]] = {col: [] for col in header}
 
         for row_id, row in enumerate(reader):
             padded = row + [""] * max(0, len(header) - len(row))
-
-            def _val(idx: int) -> str:
-                return padded[idx].strip() if idx >= 0 else ""
-
-            date_val = _val(date_idx)
-            time_val = _val(time_idx)
-            dts_val = _val(dts_idx)
-            date_norm = parse_datcon_date(date_val) or ""
-            time_norm = parse_datcon_time(time_val) or ""
-            dts_norm = parse_iso_timestamp(dts_val) or ""
-
-            new_row: list[str] = [str(row_id)]
-            for i, val in enumerate(padded):
-                new_row.append(val)
-                if i == date_idx:
-                    new_row.append(date_norm)
-                elif i == time_idx:
-                    new_row.append(time_norm)
-                elif i == dts_idx:
-                    new_row.append(dts_norm)
+            new_row, clock_delta_s, cur_gps_dt, lat, lon, height, motor_on, gps_count = (
+                process_row_fn(row_id, padded, idx, acc)
+            )
             writer.writerow(new_row)
-
-            # --- parse values for checks ---
-            lat = _try_float(_val(lat_idx))
-            lon = _try_float(_val(lon_idx))
-            height = _try_float(_val(height_idx))
-            numsv = _try_float(_val(numsv_idx))
-            gps_count = int(numsv) if numsv is not None else None
-
-            # motor: 0 = off, non-zero = on
-            motor_str = _val(motor_idx)
-            motor_on: bool | None = None
-            if motor_str:
-                mv = _try_float(motor_str)
-                if mv is not None:
-                    motor_on = mv != 0.0
-
-            # clock delta (high-frequency)
-            clock_val = _try_float(_val(clock_idx))
-            clock_delta_s: float | None = None
-            if clock_val is not None and prev_clock is not None:
-                clock_delta_s = clock_val - prev_clock
-            if clock_val is not None:
-                prev_clock = clock_val
-
-            # GPS datetime (1 Hz) for coordinate speed check
-            cur_gps_dt: datetime | None = None
-            if dts_norm:
-                try:
-                    cur_gps_dt = datetime.fromisoformat(dts_norm)
-                except ValueError:
-                    pass
-
             _apply_shared_checks(
                 row_id=row_id,
                 clock_delta_s=clock_delta_s,
@@ -421,33 +409,135 @@ def _augment_datcon_csv(src: Path, dst: Path) -> dict[str, Any]:
                 acc=acc,
                 prev=prev,
             )
-
-            # --- DatCon-specific checks ---
-            hdop = _try_float(_val(hdop_idx))
-            if hdop is not None and hdop > _GPS_HDOP_THRESHOLD:
-                acc["gps_accuracy_poor"].append(row_id)
-
-            qw = _try_float(_val(quatw_idx))
-            qx = _try_float(_val(quatx_idx))
-            qy = _try_float(_val(quaty_idx))
-            qz = _try_float(_val(quatz_idx))
-            if qw is not None and qx is not None and qy is not None and qz is not None:
-                norm = math.sqrt(qw**2 + qx**2 + qy**2 + qz**2)
-                if abs(norm - 1.0) > _QUATERNION_NORM_EPS:
-                    acc["quaternion_invalid"].append(row_id)
-
-            roll = _try_float(_val(roll_idx))
-            pitch = _try_float(_val(pitch_idx))
-            if roll is not None and abs(roll) > 180.0:
-                acc["attitude_out_of_bounds"].append(row_id)
-            elif pitch is not None and abs(pitch) > 90.0:
-                acc["attitude_out_of_bounds"].append(row_id)
-
             for i, col in enumerate(header):
                 column_values[col].append(padded[i].strip())
 
     _check_column_values(header, column_values, acc)
     return {k: sorted(v) for k, v in acc.items()}
+
+
+def _augment_datcon_csv(src: Path, dst: Path) -> dict[str, Any]:
+    """Augment a DatCon CSV with NORM columns and run all anomaly checks.
+
+    New NORM columns:
+      [NORM]:ID            — prepended row index
+      [NORM]:GPS:Date      — after GPS:Date  (YYYY-MM-DD)
+      [NORM]:GPS:Time      — after GPS:Time  (HH:MM:SS[.fff])
+      [NORM]:GPS:dateTimeStamp — after GPS:dateTimeStamp (ISO 8601 +00:00)
+
+    Returns dict of {check_name: [row_id, ...]}.
+    """
+
+    def _bind(header: list[str]) -> dict:
+        # GPS/clock columns use exact match; sensor columns use prefix match
+        # because DatCon appends :C (calculated) or :D (direct) suffixes that vary by version.
+        def _i(col: str) -> int:
+            return header.index(col) if col in header else -1
+        return {
+            "date_idx": _i(_DATCON_DATE_COL),
+            "time_idx": _i(_DATCON_TIME_COL),
+            "dts_idx": _i(_DATCON_DATETIME_STAMP_COL),
+            "lat_idx": _i(_DATCON_LAT_COL),
+            "lon_idx": _i(_DATCON_LON_COL),
+            "numsv_idx": _i(_DATCON_NUMSV_COL),
+            "hdop_idx": _i(_DATCON_HDOP_COL),
+            "clock_idx": _i(_DATCON_CLOCK_COL),
+            "height_idx": _find_col(header, _DATCON_HEIGHT_COL),
+            "motor_idx": _find_col(header, _DATCON_MOTOR_COL),
+            "roll_idx": _find_col(header, _DATCON_ROLL_COL),
+            "pitch_idx": _find_col(header, _DATCON_PITCH_COL),
+            "quatw_idx": _find_col(header, _DATCON_QUATW_COL),
+            "quatx_idx": _find_col(header, _DATCON_QUATX_COL),
+            "quaty_idx": _find_col(header, _DATCON_QUATY_COL),
+            "quatz_idx": _find_col(header, _DATCON_QUATZ_COL),
+        }
+
+    def _norm_header(header: list[str], idx: dict) -> list[str]:
+        new_header: list[str] = ["[NORM]:ID"]
+        for col in header:
+            new_header.append(col)
+            if col == _DATCON_DATE_COL:
+                new_header.append("[NORM]:GPS:Date")
+            elif col == _DATCON_TIME_COL:
+                new_header.append("[NORM]:GPS:Time")
+            elif col == _DATCON_DATETIME_STAMP_COL:
+                new_header.append("[NORM]:GPS:dateTimeStamp")
+        return new_header
+
+    prev_clock: list[float | None] = [None]
+
+    def _process_row(row_id: int, padded: list[str], idx: dict, acc: dict) -> tuple:
+        def _val(i: int) -> str:
+            return padded[i].strip() if i >= 0 else ""
+
+        date_norm = parse_datcon_date(_val(idx["date_idx"])) or ""
+        time_norm = parse_datcon_time(_val(idx["time_idx"])) or ""
+        dts_norm = parse_iso_timestamp(_val(idx["dts_idx"])) or ""
+
+        new_row: list[str] = [str(row_id)]
+        for i, val in enumerate(padded):
+            new_row.append(val)
+            if i == idx["date_idx"]:
+                new_row.append(date_norm)
+            elif i == idx["time_idx"]:
+                new_row.append(time_norm)
+            elif i == idx["dts_idx"]:
+                new_row.append(dts_norm)
+
+        lat = _try_float(_val(idx["lat_idx"]))
+        lon = _try_float(_val(idx["lon_idx"]))
+        height = _try_float(_val(idx["height_idx"]))
+        numsv = _try_float(_val(idx["numsv_idx"]))
+        gps_count = int(numsv) if numsv is not None else None
+
+        motor_str = _val(idx["motor_idx"])
+        motor_on: bool | None = None
+        if motor_str:
+            mv = _try_float(motor_str)
+            if mv is not None:
+                motor_on = mv != 0.0
+
+        clock_val = _try_float(_val(idx["clock_idx"]))
+        clock_delta_s: float | None = None
+        if clock_val is not None and prev_clock[0] is not None:
+            clock_delta_s = clock_val - prev_clock[0]
+        if clock_val is not None:
+            prev_clock[0] = clock_val
+
+        cur_gps_dt: datetime | None = None
+        if dts_norm:
+            try:
+                cur_gps_dt = datetime.fromisoformat(dts_norm)
+            except ValueError:
+                pass
+
+        hdop = _try_float(_val(idx["hdop_idx"]))
+        if hdop is not None and hdop > _GPS_HDOP_THRESHOLD:
+            acc["gps_accuracy_poor"].append(row_id)
+
+        qw = _try_float(_val(idx["quatw_idx"]))
+        qx = _try_float(_val(idx["quatx_idx"]))
+        qy = _try_float(_val(idx["quaty_idx"]))
+        qz = _try_float(_val(idx["quatz_idx"]))
+        if qw is not None and qx is not None and qy is not None and qz is not None:
+            norm = math.sqrt(qw**2 + qx**2 + qy**2 + qz**2)
+            if abs(norm - 1.0) > _QUATERNION_NORM_EPS:
+                acc["quaternion_invalid"].append(row_id)
+
+        roll = _try_float(_val(idx["roll_idx"]))
+        pitch = _try_float(_val(idx["pitch_idx"]))
+        if roll is not None and abs(roll) > 180.0:
+            acc["attitude_out_of_bounds"].append(row_id)
+        elif pitch is not None and abs(pitch) > 90.0:
+            acc["attitude_out_of_bounds"].append(row_id)
+
+        return new_row, clock_delta_s, cur_gps_dt, lat, lon, height, motor_on, gps_count
+
+    return _augment_csv(
+        src, dst,
+        ["gps_accuracy_poor", "quaternion_invalid", "attitude_out_of_bounds"],
+        _bind, _norm_header, _process_row,
+    )
 
 
 def _augment_flight_record_csv(src: Path, dst: Path) -> dict[str, Any]:
@@ -459,131 +549,94 @@ def _augment_flight_record_csv(src: Path, dst: Path) -> dict[str, Any]:
 
     Returns dict of {check_name: [row_id, ...]}.
     """
-    dst.parent.mkdir(parents=True, exist_ok=True)
 
-    acc = _make_shared_acc()
-    acc.update({
-        "battery_cell_voltage_out_of_range": [],
-        "battery_cell_imbalance": [],
-        "battery_temperature_out_of_range": [],
-        "motor_on_empty_battery": [],
-    })
-    prev: dict[str, Any] = {"lat": None, "lon": None, "gps_dt": None, "height": None}
-    prev_dt: datetime | None = None
-
-    with (
-        src.open(newline="", encoding="utf-8", errors="replace") as fh_in,
-        dst.open("w", newline="", encoding="utf-8") as fh_out,
-    ):
-        reader = csv.reader(fh_in)
-        writer = csv.writer(fh_out)
-
-        header = next(reader, None)
-        if header is None:
-            return {k: [] for k in acc}
-
-        def _idx(col: str) -> int:
+    def _bind(header: list[str]) -> dict:
+        def _i(col: str) -> int:
             return header.index(col) if col in header else -1
+        return {
+            "time_idx": _i(_FR_TIME_COL),
+            "lat_idx": _i(_FR_LAT_COL),
+            "lon_idx": _i(_FR_LON_COL),
+            "height_idx": _i(_FR_HEIGHT_COL),
+            "numsv_idx": _i(_FR_NUMSV_COL),
+            "motor_idx": _i(_FR_MOTOR_COL),
+            "batt_cap_idx": _i(_FR_BATTERY_CAPACITY_COL),
+            "cell_indices": [_i(c) for c in _FR_BATTERY_CELLS],
+            "temp_idx": _i(_FR_BATTERY_TEMP_COL),
+        }
 
-        time_idx = _idx(_FR_TIME_COL)
-        lat_idx = _idx(_FR_LAT_COL)
-        lon_idx = _idx(_FR_LON_COL)
-        height_idx = _idx(_FR_HEIGHT_COL)
-        numsv_idx = _idx(_FR_NUMSV_COL)
-        motor_idx = _idx(_FR_MOTOR_COL)
-        batt_cap_idx = _idx(_FR_BATTERY_CAPACITY_COL)
-        cell_indices = [_idx(c) for c in _FR_BATTERY_CELLS]
-        temp_idx = _idx(_FR_BATTERY_TEMP_COL)
-
+    def _norm_header(header: list[str], idx: dict) -> list[str]:
         new_header: list[str] = ["[NORM]:ID"]
         for col in header:
             new_header.append(col)
             if col == _FR_TIME_COL:
                 new_header.append("[NORM]:CUSTOM.updateTime")
-        writer.writerow(new_header)
+        return new_header
 
-        column_values: dict[str, list[str]] = {col: [] for col in header}
+    prev_dt: list[datetime | None] = [None]
 
-        for row_id, row in enumerate(reader):
-            padded = row + [""] * max(0, len(header) - len(row))
+    def _process_row(row_id: int, padded: list[str], idx: dict, acc: dict) -> tuple:
+        def _val(i: int) -> str:
+            return padded[i].strip() if i >= 0 else ""
 
-            def _val(idx: int) -> str:
-                return padded[idx].strip() if idx >= 0 else ""
+        time_norm = parse_flightrecord_timestamp(_val(idx["time_idx"])) or ""
 
-            time_val = _val(time_idx)
-            time_norm = parse_flightrecord_timestamp(time_val) or ""
+        new_row: list[str] = [str(row_id)]
+        for i, val in enumerate(padded):
+            new_row.append(val)
+            if i == idx["time_idx"]:
+                new_row.append(time_norm)
 
-            new_row: list[str] = [str(row_id)]
-            for i, val in enumerate(padded):
-                new_row.append(val)
-                if i == time_idx:
-                    new_row.append(time_norm)
-            writer.writerow(new_row)
+        lat = _try_float(_val(idx["lat_idx"]))
+        lon = _try_float(_val(idx["lon_idx"]))
+        height = _try_float(_val(idx["height_idx"]))
+        numsv = _try_float(_val(idx["numsv_idx"]))
+        gps_count = int(numsv) if numsv is not None else None
 
-            # --- parse values for checks ---
-            lat = _try_float(_val(lat_idx))
-            lon = _try_float(_val(lon_idx))
-            height = _try_float(_val(height_idx))
-            numsv = _try_float(_val(numsv_idx))
-            gps_count = int(numsv) if numsv is not None else None
+        motor_str = _val(idx["motor_idx"])
+        motor_on: bool | None = None
+        if motor_str:
+            motor_on = motor_str == "True"
 
-            motor_str = _val(motor_idx)
-            motor_on: bool | None = None
-            if motor_str:
-                motor_on = motor_str == "True"
+        cur_dt: datetime | None = None
+        clock_delta_s: float | None = None
+        if time_norm:
+            try:
+                cur_dt = datetime.fromisoformat(time_norm)
+            except ValueError:
+                pass
+        if cur_dt is not None and prev_dt[0] is not None:
+            clock_delta_s = (cur_dt - prev_dt[0]).total_seconds()
+        if cur_dt is not None:
+            prev_dt[0] = cur_dt
 
-            # clock delta from CUSTOM.updateTime (ms precision)
-            cur_dt: datetime | None = None
-            clock_delta_s: float | None = None
-            if time_norm:
-                try:
-                    cur_dt = datetime.fromisoformat(time_norm)
-                except ValueError:
-                    pass
-            if cur_dt is not None and prev_dt is not None:
-                clock_delta_s = (cur_dt - prev_dt).total_seconds()
-            if cur_dt is not None:
-                prev_dt = cur_dt
+        cells: list[float] = []
+        for ci in idx["cell_indices"]:
+            v = _try_float(_val(ci))
+            if v is not None and v != 0.0:
+                cells.append(v)
+                if v < _BATTERY_CELL_MIN_V or v > _BATTERY_CELL_MAX_V:
+                    acc["battery_cell_voltage_out_of_range"].append(row_id)
 
-            _apply_shared_checks(
-                row_id=row_id,
-                clock_delta_s=clock_delta_s,
-                cur_gps_dt=cur_dt,
-                lat=lat,
-                lon=lon,
-                height=height,
-                motor_on=motor_on,
-                gps_count=gps_count,
-                acc=acc,
-                prev=prev,
-            )
+        if len(cells) >= 2 and max(cells) - min(cells) > _BATTERY_CELL_IMBALANCE_V:
+            acc["battery_cell_imbalance"].append(row_id)
 
-            # --- FlightRecord-specific checks ---
-            cells: list[float] = []
-            for ci in cell_indices:
-                v = _try_float(_val(ci))
-                if v is not None and v != 0.0:
-                    cells.append(v)
-                    if v < _BATTERY_CELL_MIN_V or v > _BATTERY_CELL_MAX_V:
-                        acc["battery_cell_voltage_out_of_range"].append(row_id)
+        temp = _try_float(_val(idx["temp_idx"]))
+        if temp is not None and (temp < _BATTERY_TEMP_MIN_C or temp > _BATTERY_TEMP_MAX_C):
+            acc["battery_temperature_out_of_range"].append(row_id)
 
-            if len(cells) >= 2:
-                if max(cells) - min(cells) > _BATTERY_CELL_IMBALANCE_V:
-                    acc["battery_cell_imbalance"].append(row_id)
+        batt_cap = _try_float(_val(idx["batt_cap_idx"]))
+        if motor_on is True and batt_cap is not None and batt_cap <= 0:
+            acc["motor_on_empty_battery"].append(row_id)
 
-            temp = _try_float(_val(temp_idx))
-            if temp is not None and (temp < _BATTERY_TEMP_MIN_C or temp > _BATTERY_TEMP_MAX_C):
-                acc["battery_temperature_out_of_range"].append(row_id)
+        return new_row, clock_delta_s, cur_dt, lat, lon, height, motor_on, gps_count
 
-            batt_cap = _try_float(_val(batt_cap_idx))
-            if motor_on is True and batt_cap is not None and batt_cap <= 0:
-                acc["motor_on_empty_battery"].append(row_id)
-
-            for i, col in enumerate(header):
-                column_values[col].append(padded[i].strip())
-
-    _check_column_values(header, column_values, acc)
-    return {k: sorted(v) for k, v in acc.items()}
+    return _augment_csv(
+        src, dst,
+        ["battery_cell_voltage_out_of_range", "battery_cell_imbalance",
+         "battery_temperature_out_of_range", "motor_on_empty_battery"],
+        _bind, _norm_header, _process_row,
+    )
 
 
 def _decode_image(
@@ -612,8 +665,10 @@ def _decode_image(
             exif_data = json.loads(stored_path.read_text(encoding="utf-8"))
         except Exception:
             return None
+    if exif_data is None:
+        return None
 
-    data = exif_data
+    data: dict[str, Any] = exif_data
     mime = str(data.get("MIMEType") or "").lower()
     ext = _MIME_TO_EXT.get(mime)
     if not ext:
@@ -652,7 +707,9 @@ def _process_exif(
             exif_data = json.loads(stored_path.read_text(encoding="utf-8"))
         except Exception:
             return None
-    data = exif_data
+    if exif_data is None:
+        return None
+    data: dict[str, Any] = exif_data
 
     date_val = data.get("DateTimeOriginal") or data.get("CreateDate")
     exif_zero_date = not date_val or date_val == "0000:00:00 00:00:00"

@@ -9,8 +9,9 @@ This phase:
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from pathlib import Path
-from typing import TypedDict, cast
+from typing import Any
 
 from config import (
     SOURCE_IDENTIFICATION_TYPES,
@@ -42,15 +43,25 @@ from state import State
 _SUPPORTED_INPUT_EXTS = {ext.lower() for ext in SUPPORTED_IMAGE_EXTENSIONS}
 
 
-class SourceRecord(TypedDict):
+@dataclass
+class SourceRecord:
     source_path: str
     identified: bool
     identified_as: str
-    operator_confirmed: bool
-    identified_by_operator_as: str | None
+    operator_confirmed: bool = False
+    identified_by_operator_as: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "source_path": self.source_path,
+            "identified": self.identified,
+            "identified_as": self.identified_as,
+            "operator_confirmed": self.operator_confirmed,
+            "identified_by_operator_as": self.identified_by_operator_as,
+        }
 
 
-def _record_source_path(record: dict[str, object]) -> str:
+def _record_source_path(record: dict[str, Any]) -> str:
     """Return the preserved source path."""
     return str(record.get("source_path") or "")
 
@@ -147,31 +158,26 @@ def run_phase_1(state: State, *, confirm_all: bool = True) -> State:
             state.raise_anomaly(1, identified_as, message)
 
         p1_outputs.append(
-            cast(
-                SourceRecord,
-                {
-                    "source_path": str(evidence.source_path),
-                    "identified": identified_as != IDENTIFICATION_UNCLASSIFIED,
-                    "identified_as": identified_as,
-                    "operator_confirmed": False,
-                    "identified_by_operator_as": None,
-                },
+            SourceRecord(
+                source_path=str(evidence.source_path),
+                identified=identified_as != IDENTIFICATION_UNCLASSIFIED,
+                identified_as=identified_as,
             )
         )
 
     # Enforce no unidentified sources if confirm_all.
     if confirm_all and p1_outputs:
         for record in p1_outputs:
-            if not record["identified"]:
+            if not record.identified:
                 raise ValueError(
-                    f"Unidentified source: {_record_source_path(cast(dict[str, object], record))}. Identify all sources before proceeding."
+                    f"Unidentified source: {record.source_path}. Identify all sources before proceeding."
                 )
-            record["operator_confirmed"] = True
+            record.operator_confirmed = True
 
     _order = {v: i for i, v in enumerate(SOURCE_IDENTIFICATION_TYPES)}
     p1_outputs.sort(
         key=lambda r: _order.get(
-            str(r.get("identified_by_operator_as") or r.get("identified_as", "")),
+            r.identified_by_operator_as or r.identified_as,
             len(_order),
         )
     )
@@ -182,7 +188,7 @@ def run_phase_1(state: State, *, confirm_all: bool = True) -> State:
     )
     state.phase_outputs["p1_provenance"] = {
         "completed_at": now,
-        "identified_evidence": p1_outputs,
+        "identified_evidence": [r.to_dict() for r in p1_outputs],
         "operator_final_confirmation": {"accepted": None, "timestamp": None},
         "image_metadata": image_metadata,
     }
@@ -192,7 +198,7 @@ def run_phase_1(state: State, *, confirm_all: bool = True) -> State:
     return state
 
 
-def _show_summary(sources: list[SourceRecord]) -> None:
+def _show_summary(sources: list[dict[str, Any]]) -> None:
     """Display a compact summary of all identifications."""
     if not sources:
         print("No evidence sources detected.")
@@ -200,14 +206,14 @@ def _show_summary(sources: list[SourceRecord]) -> None:
 
     # Calculate maximum lengths for alignment.
     max_filename_len = max(
-        len(Path(_record_source_path(cast(dict[str, object], record))).name)
+        len(Path(_record_source_path(record)).name)
         for record in sources
     )
     max_ident_len = max(len(record["identified_as"]) for record in sources)
 
     print("Evidence sources detected:")
     for idx, record in enumerate(sources, start=1):
-        filename = Path(_record_source_path(cast(dict[str, object], record))).name
+        filename = Path(_record_source_path(record)).name
         identified_as = record["identified_as"]
         identified = record["identified"]
         print(
@@ -215,12 +221,12 @@ def _show_summary(sources: list[SourceRecord]) -> None:
         )
 
 
-def _prompt_override_identifications(sources: list[SourceRecord]) -> None:
+def _prompt_override_identifications(sources: list[dict[str, Any]]) -> None:
     """Allow operator to override identifications interactively."""
     all_idents = sorted(SOURCE_IDENTIFICATION_TYPES)
     for idx, record in enumerate(sources, start=1):
         print(
-            f"\nSource [{idx}] {Path(_record_source_path(cast(dict[str, object], record))).name}"
+            f"\nSource [{idx}] {Path(_record_source_path(record)).name}"
         )
         print(f"  Current: {record['identified_as']}")
         for c_idx, ident in enumerate(all_idents, start=1):
@@ -244,15 +250,15 @@ def _prompt_override_identifications(sources: list[SourceRecord]) -> None:
             pass
 
 
-def _has_unidentified_sources(sources: list[SourceRecord]) -> bool:
+def _has_unidentified_sources(sources: list[dict[str, Any]]) -> bool:
     """Check if any sources remain unidentified."""
     return any(not record["identified"] for record in sources)
 
 
 def prompt_phase_1_summary_and_confirm(state: State) -> bool:
     """Print summary and request operator confirmation with override option."""
-    p1 = cast(dict[str, object], state.phase_outputs.get("p1_provenance", {}))
-    sources = cast(list[SourceRecord], p1.get("identified_evidence", []))
+    p1 = state.phase_outputs.get("p1_provenance", {})
+    sources = p1.get("identified_evidence", [])
     now = utc_now_iso()
 
     while True:

@@ -229,7 +229,8 @@ def extract_tsk_image(
         sanitised_relative = sanitise_path(relative_path)
         out_path = ensure_unique_path(working_dir / sanitised_relative.name)
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        with out_path.open("wb") as output_handle:
+        icat_tmp = out_path.parent / (out_path.name + ".tmp")
+        with icat_tmp.open("wb") as output_handle:
             icat_result = run_command(
                 [
                     str(TSK_ICAT),
@@ -242,7 +243,12 @@ def extract_tsk_image(
                 stdout=output_handle,
             )
         if icat_result.returncode != 0:
-            raise RuntimeError(f"icat failed for inode {inode} in {image_path}")
+            icat_tmp.unlink(missing_ok=True)
+            raise RuntimeError(
+                f"icat failed for inode {inode} in {image_path}: "
+                f"{icat_result.stderr or icat_result.stdout}"
+            )
+        icat_tmp.replace(out_path)
         state.log_command_result(
             tool_name="icat",
             result=icat_result,

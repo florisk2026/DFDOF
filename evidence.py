@@ -62,6 +62,9 @@ def _path_size(path: Path) -> int:
     return path.stat().st_size
 
 
+_IMMUTABLE_ONCE_SET: frozenset[str] = frozenset({"sha256", "sha1", "hash_timestamp", "parent_sha256"})
+
+
 @dataclass
 class Evidence:
     """A forensically tracked file or derived artefact."""
@@ -100,6 +103,11 @@ class Evidence:
         self.parent_sha256 = self.parent.sha256 if self.parent is not None else None
         if self.source_identification is None and self.parent is not None:
             self.source_identification = self.parent.source_identification
+
+    def __setattr__(self, name: str, value: object) -> None:
+        if name in _IMMUTABLE_ONCE_SET and self.__dict__.get(name):
+            raise AttributeError(f"Evidence.{name} is immutable once set")
+        super().__setattr__(name, value)
 
     def compute_hash(self) -> None:
         """Compute hash if it wasn't done during initialization."""

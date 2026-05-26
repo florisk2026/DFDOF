@@ -3,6 +3,8 @@ from __future__ import annotations
 import zipfile
 from pathlib import Path
 
+import pytest
+
 import config
 from config import DEVICE_AND_BACKUP_INFO
 from evidence import make_evidence
@@ -47,6 +49,26 @@ def test_extract_logical_files_batch_returns_parsed_evidence(tmp_path: Path) -> 
     assert extracted[0].sha1
     assert extracted[0].hash_timestamp
     assert extracted[0].size == len(b"device info contents")
+
+
+def test_extract_logical_files_hash_mismatch_raises(
+    tmp_path: Path, monkeypatch
+) -> None:
+    archive = tmp_path / "test.zip"
+    with zipfile.ZipFile(archive, "w") as z:
+        z.writestr("file.txt", b"content")
+    source = make_evidence(
+        source_path=archive,
+        stored_path=archive,
+        parent=None,
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
+    )
+    import parsing.extract_logical as ext
+
+    monkeypatch.setattr(ext, "hash_file", lambda _p: ("a" * 64, "b" * 40))
+    with pytest.raises(RuntimeError, match="Verification failed"):
+        extract_logical_files(source, tmp_path / "out", ["file.txt"])
 
 
 def test_find_acquisition_pdf_member_prefers_depth_folder_with_txt(

@@ -177,7 +177,8 @@ def _extract_drone_sd_physical(
         output_dir = output_root / safe_segment(category)
         output_dir.mkdir(parents=True, exist_ok=True)
         output_path = ensure_unique_path(output_dir / Path(rel_path).name)
-        with output_path.open("wb") as output_handle:
+        icat_tmp = output_path.parent / (output_path.name + ".tmp")
+        with icat_tmp.open("wb") as output_handle:
             result = run_command(
                 [
                     str(TSK_ICAT),
@@ -190,7 +191,12 @@ def _extract_drone_sd_physical(
                 stdout=output_handle,
             )
         if result.returncode != 0:
-            raise RuntimeError(f"icat failed for inode {inode} in {sd_archive}")
+            icat_tmp.unlink(missing_ok=True)
+            raise RuntimeError(
+                f"icat failed for inode {inode} in {sd_archive}: "
+                f"{result.stderr or result.stdout}"
+            )
+        icat_tmp.replace(output_path)
         state.log_command_result(
             tool_name="icat",
             result=result,
@@ -334,21 +340,262 @@ def _filter_empty(
     category: str | None = None,
     index: int | None = None,
 ) -> list[Evidence]:
-    """Remove 0-byte evidence items, delete their files, and flag an anomaly for each."""
+    """Move 0-byte evidence items to _rejected/ and flag an anomaly for each."""
     kept: list[Evidence] = []
+    rejected_dir = output_dir() / state.case_id / "_rejected"
     for item in evidence_list:
         if item.size == 0:
-            Path(str(item.stored_path)).unlink(missing_ok=True)
+            file_path = Path(str(item.stored_path))
+            rejected_dir.mkdir(parents=True, exist_ok=True)
+            rejected_path = ensure_unique_path(rejected_dir / file_path.name)
+            try:
+                file_path.replace(rejected_path)
+            except OSError:
+                file_path.unlink(missing_ok=True)
             state.raise_anomaly(
                 3,
                 identification,
-                f"empty file skipped: {Path(str(item.stored_path)).name}",
+                f"empty file moved to _rejected: {file_path.name}",
                 category=category or item.artefact_category,
                 index=index,
             )
         else:
             kept.append(item)
     return kept
+
+
+def _find_ios_parsed_root(state: State, ios_source: Evidence | None) -> Path | None:
+    """Locate the P2-parsed iOS directory from state.phase_outputs."""
+    if ios_source is None:
+        return None
+    for record in state.phase_outputs.get("p2_image_parsing", {}).get("parsed_evidence", []):
+        if not isinstance(record, dict):
+            continue
+        if record.get("artefact_category") != DEVICE_AND_BACKUP_INFO:
+            continue
+        if str(record.get("source_path")) != str(ios_source.source_path):
+            continue
+        stored_path = Path(str(record.get("stored_path")))
+        if stored_path.exists() and stored_path.is_dir():
+            return stored_path
+    return None
+
+
+def _extract_android_sources(
+    state: State, android_source: Evidence, phase_dir: Path
+) -> list[Evidence]:
+    """Extract all artefact categories for the Android controller source."""
+    extracted: list[Evidence] = []
+    controller_android_dir = phase_dir / "controller_android"
+    clear_and_make(controller_android_dir)
+    print("  Extracting from controller_android")
+    android_archive = Path(str(android_source.stored_path))
+    acquisition_method = normalise_acquisition_method(android_source.acquisition_method)
+    is_logical = (
+        acquisition_method == ACQUISITION_LOGICAL
+        or android_archive.suffix.lower() == EXTENSION_ZIP[0]
+    )
+    categories = CONTROLLER_ARTEFACT_CATEGORIES
+    if is_logical:
+        member_names = _member_names(android_archive)
+        members_by_category = _collect_members_by_category(
+            member_names,
+            [cat for cat in categories if cat != ACCOUNT_DATA],
+        )
+        account_members = _collect_account_members(member_names, "android")
+        for category in categories:
+            try:
+                members = account_members if category == ACCOUNT_DATA else members_by_category.get(category, [])
+                if members:
+                    output_dir_cat = controller_android_dir / safe_segment(category)
+                    evidence_list = _filter_empty(
+                        extract_logical_files(
+                            android_source,
+                            output_dir_cat,
+                            members,
+                            artefact_category=category,
+                            missing_ok=True,
+                        ),
+                        state,
+                        IDENTIFICATION_CONTROLLER_ANDROID,
+                        category,
+                    )
+                    extracted.extend(evidence_list)
+                else:
+                    state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, "no artefacts found", category=category)
+            except Exception as exc:
+                state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, f"extraction failed: {exc}", category=category)
+    else:
+        precomputed_entries = _get_cached_entries(state, android_archive)
+        offset_sectors = _get_cached_offset(state, android_archive)
+        for category in categories:
+            try:
+                output_dir_cat = controller_android_dir / safe_segment(category)
+                output_dir_cat.mkdir(parents=True, exist_ok=True)
+                if category == ACCOUNT_DATA:
+                    include_paths = list(_account_targets("android"))
+                else:
+                    include_paths = sorted(ARTEFACT_PATHS.get(category, set()))
+                evidence_list = extract_tsk_image(
+                    android_archive,
+                    output_dir_cat,
+                    include_paths=include_paths,
+                    parent=android_source,
+                    artefact_category=category,
+                    precomputed_entries=precomputed_entries,
+                    offset_sectors=offset_sectors,
+                    state=state,
+                )
+                filtered: list[Evidence] = []
+                ext_set = _ARTEFACT_EXTENSIONS_LOWER.get(category, frozenset())
+                account_targets = _account_targets("android")
+                for item in evidence_list:
+                    stored_path = Path(str(item.stored_path))
+                    suffix = stored_path.suffix.lower()
+                    if category == ACCOUNT_DATA:
+                        if stored_path.name.lower() not in account_targets:
+                            stored_path.unlink(missing_ok=True)
+                            continue
+                        filtered.append(item)
+                        continue
+                    if suffix not in ext_set:
+                        stored_path.unlink(missing_ok=True)
+                        continue
+                    if category == DATABASES and not _is_database_included(stored_path.name):
+                        stored_path.unlink(missing_ok=True)
+                        continue
+                    filtered.append(item)
+                filtered = _filter_empty(filtered, state, IDENTIFICATION_CONTROLLER_ANDROID, category)
+                if filtered:
+                    extracted.extend(filtered)
+                else:
+                    state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, "no artefacts found", category=category)
+            except Exception as exc:
+                state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, f"extraction failed: {exc}", category=category)
+    return extracted
+
+
+def _extract_ios_sources(
+    state: State, ios_source: Evidence, ios_parsed_root: Path, phase_dir: Path
+) -> list[Evidence]:
+    """Extract all artefact categories for the iOS controller source."""
+    extracted: list[Evidence] = []
+    ios_acquisition = normalise_acquisition_method(ios_source.acquisition_method)
+    ios_acquisition_method = (
+        ACQUISITION_EXTRACT_PHYSICAL if ios_acquisition == ACQUISITION_PHYSICAL
+        else ACQUISITION_EXTRACT_LOGICAL
+    )
+    controller_ios_dir = phase_dir / "controller_ios"
+    clear_and_make(controller_ios_dir)
+    print("  Extracting from controller_ios")
+    for category in CONTROLLER_ARTEFACT_CATEGORIES:
+        try:
+            if category == ACCOUNT_DATA:
+                matched_files = _collect_account_files(ios_parsed_root, "ios")
+            else:
+                matched_files = _collect_parsed_files(ios_parsed_root, category)
+            if matched_files:
+                output_dir_cat = controller_ios_dir / safe_segment(category)
+                evidence_list = _filter_empty(
+                    _copy_parsed_files(
+                        ios_parsed_root,
+                        matched_files,
+                        output_dir_cat,
+                        ios_source,
+                        category,
+                        ios_acquisition_method,
+                    ),
+                    state,
+                    IDENTIFICATION_CONTROLLER_IOS,
+                    category,
+                )
+                extracted.extend(evidence_list)
+            else:
+                state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, "no artefacts found", category=category)
+        except Exception as exc:
+            state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, f"extraction failed: {exc}", category=category)
+    return extracted
+
+
+def _extract_drone_sd_sources(
+    state: State, sd_sources: list[Evidence], phase_dir: Path
+) -> list[Evidence]:
+    """Extract drone SD artefacts from all SD sources."""
+    extracted: list[Evidence] = []
+    for idx, sd_source in enumerate(sd_sources):
+        drone_sd_dir = phase_dir / drone_sd_label(idx + 1)
+        clear_and_make(drone_sd_dir)
+        print(f"  Extracting from drone_sd {idx + 1}")
+        sd_archive = Path(str(sd_source.stored_path))
+        acquisition_method = normalise_acquisition_method(sd_source.acquisition_method)
+        if (
+            acquisition_method != ACQUISITION_PHYSICAL
+            and sd_archive.suffix.lower() == EXTENSION_ZIP[0]
+        ):
+            state.raise_anomaly(3, IDENTIFICATION_DRONE_SD, "physical acquisition required", index=idx + 1)
+        else:
+            try:
+                evidence_list = _filter_empty(
+                    _extract_drone_sd_physical(state, sd_source, drone_sd_dir),
+                    state,
+                    IDENTIFICATION_DRONE_SD,
+                    index=idx + 1,
+                )
+                extracted.extend(evidence_list)
+                if not evidence_list:
+                    state.raise_anomaly(3, IDENTIFICATION_DRONE_SD, "no artefacts found", index=idx + 1)
+            except Exception as exc:
+                state.raise_anomaly(3, IDENTIFICATION_DRONE_SD, f"extraction failed: {exc}", index=idx + 1)
+    return extracted
+
+
+def _extract_flight_storage_sources(
+    state: State, flight_source: Evidence, phase_dir: Path
+) -> list[Evidence]:
+    """Extract DAT files from drone flight storage."""
+    extracted: list[Evidence] = []
+    drone_flight_dir = phase_dir / "drone_flight_storage"
+    clear_and_make(drone_flight_dir)
+    print("  Extracting from drone_flight_storage")
+    flight_archive = Path(str(flight_source.stored_path))
+    if flight_archive.suffix.lower() == EXTENSION_ZIP[0]:
+        member_names = _member_names(flight_archive)
+        dat_members = [
+            name for name in member_names if Path(name).suffix.lower() == ".dat"
+        ]
+        if not dat_members:
+            state.raise_anomaly(
+                3, IDENTIFICATION_DRONE_FLIGHT_STORAGE,
+                f"no DAT files found in {flight_archive.name}",
+                category=DRONE_LOGS,
+            )
+        else:
+            evidence_list = _filter_empty(
+                extract_logical_files(
+                    flight_source,
+                    drone_flight_dir,
+                    dat_members,
+                    artefact_category=DRONE_LOGS,
+                    missing_ok=True,
+                ),
+                state,
+                IDENTIFICATION_DRONE_FLIGHT_STORAGE,
+                DRONE_LOGS,
+            )
+            extracted.extend(evidence_list)
+            if not evidence_list:
+                state.raise_anomaly(
+                    3, IDENTIFICATION_DRONE_FLIGHT_STORAGE,
+                    "no artefacts extracted",
+                    category=DRONE_LOGS,
+                )
+    else:
+        state.raise_anomaly(
+            3, IDENTIFICATION_DRONE_FLIGHT_STORAGE,
+            f"unsupported archive format for {flight_archive.name}",
+            category=DRONE_LOGS,
+        )
+    return extracted
 
 
 def run_phase_3(state: State) -> State:
@@ -358,264 +605,37 @@ def run_phase_3(state: State) -> State:
 
     phase_dir = output_dir() / state.case_id / _PHASE_NAME
     clear_and_make(phase_dir)
-
     extracted: list[Evidence] = []
 
-    # Controller Android.
-    android_sources = find_input_evidence_list_by_identification(
-        state, IDENTIFICATION_CONTROLLER_ANDROID
-    )
+    android_sources = find_input_evidence_list_by_identification(state, IDENTIFICATION_CONTROLLER_ANDROID)
     android_source = android_sources[0] if android_sources else None
     if android_source is None:
         state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, "source evidence not found")
     else:
-        controller_android_dir = phase_dir / "controller_android"
-        clear_and_make(controller_android_dir)
-        print("  Extracting from controller_android")
-        android_archive = Path(str(android_source.stored_path))
-        acquisition_method = normalise_acquisition_method(
-            android_source.acquisition_method
-        )
-        is_logical = (
-            acquisition_method == ACQUISITION_LOGICAL
-            or android_archive.suffix.lower() == EXTENSION_ZIP[0]
-        )
-        categories = CONTROLLER_ARTEFACT_CATEGORIES
-        if is_logical:
-            member_names = _member_names(android_archive)
-            members_by_category = _collect_members_by_category(
-                member_names,
-                [cat for cat in categories if cat != ACCOUNT_DATA],
-            )
-            account_members = _collect_account_members(member_names, "android")
-            for category in categories:
-                try:
-                    members = []
-                    if category == ACCOUNT_DATA:
-                        members = account_members
-                    else:
-                        members = members_by_category.get(category, [])
-                    evidence_list: list[Evidence] = []
-                    if members:
-                        output_dir_cat = controller_android_dir / safe_segment(category)
-                        evidence_list = _filter_empty(
-                            extract_logical_files(
-                                android_source,
-                                output_dir_cat,
-                                members,
-                                artefact_category=category,
-                                missing_ok=True,
-                            ),
-                            state,
-                            IDENTIFICATION_CONTROLLER_ANDROID,
-                            category,
-                        )
-                        extracted.extend(evidence_list)
-                    else:
-                        state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, "no artefacts found", category=category)
-                except Exception as exc:
-                    state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, f"extraction failed: {exc}", category=category)
-        else:
-            precomputed_entries = _get_cached_entries(state, android_archive)
-            offset_sectors = _get_cached_offset(state, android_archive)
-            for category in categories:
-                try:
-                    output_dir_cat = controller_android_dir / safe_segment(category)
-                    output_dir_cat.mkdir(parents=True, exist_ok=True)
-                    if category == ACCOUNT_DATA:
-                        include_paths = list(_account_targets("android"))
-                    else:
-                        include_paths = sorted(ARTEFACT_PATHS.get(category, set()))
+        extracted.extend(_extract_android_sources(state, android_source, phase_dir))
 
-                    evidence_list = extract_tsk_image(
-                        android_archive,
-                        output_dir_cat,
-                        include_paths=include_paths,
-                        parent=android_source,
-                        artefact_category=category,
-                        precomputed_entries=precomputed_entries,
-                        offset_sectors=offset_sectors,
-                        state=state,
-                    )
-
-                    filtered: list[Evidence] = []
-                    ext_set = _ARTEFACT_EXTENSIONS_LOWER.get(category, frozenset())
-                    account_targets = _account_targets("android")
-                    for item in evidence_list:
-                        stored_path = Path(str(item.stored_path))
-                        suffix = stored_path.suffix.lower()
-                        if category == ACCOUNT_DATA:
-                            if stored_path.name.lower() not in account_targets:
-                                stored_path.unlink(missing_ok=True)
-                                continue
-                            filtered.append(item)
-                            continue
-                        if suffix not in ext_set:
-                            stored_path.unlink(missing_ok=True)
-                            continue
-                        if category == DATABASES and not _is_database_included(
-                            stored_path.name
-                        ):
-                            stored_path.unlink(missing_ok=True)
-                            continue
-                        filtered.append(item)
-
-                    filtered = _filter_empty(
-                        filtered, state, IDENTIFICATION_CONTROLLER_ANDROID, category
-                    )
-                    if filtered:
-                        extracted.extend(filtered)
-                    else:
-                        state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, "no artefacts found", category=category)
-                except Exception as exc:
-                    state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_ANDROID, f"extraction failed: {exc}", category=category)
-
-    # Controller iOS.
-    ios_sources = find_input_evidence_list_by_identification(
-        state, IDENTIFICATION_CONTROLLER_IOS
-    )
+    ios_sources = find_input_evidence_list_by_identification(state, IDENTIFICATION_CONTROLLER_IOS)
     ios_source = ios_sources[0] if ios_sources else None
-    ios_parsed_root: Path | None = None
-    if ios_source is not None:
-        p2_records = state.phase_outputs.get("p2_image_parsing", {}).get(
-            "parsed_evidence", []
-        )
-        for record in p2_records:
-            if not isinstance(record, dict):
-                continue
-            if record.get("artefact_category") != DEVICE_AND_BACKUP_INFO:
-                continue
-            if str(record.get("source_path")) != str(ios_source.source_path):
-                continue
-            stored_path = Path(str(record.get("stored_path")))
-            if stored_path.exists() and stored_path.is_dir():
-                ios_parsed_root = stored_path
-                break
-
+    ios_parsed_root = _find_ios_parsed_root(state, ios_source)
     if ios_source is None:
         state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, "source evidence not found")
     elif ios_parsed_root is None:
         state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, "parsed iOS root was not found")
     else:
-        ios_acquisition = normalise_acquisition_method(ios_source.acquisition_method)
-        if ios_acquisition == ACQUISITION_PHYSICAL:
-            ios_acquisition_method = ACQUISITION_EXTRACT_PHYSICAL
-        else:
-            ios_acquisition_method = ACQUISITION_EXTRACT_LOGICAL
-        controller_ios_dir = phase_dir / "controller_ios"
-        clear_and_make(controller_ios_dir)
-        print("  Extracting from controller_ios")
-        categories = CONTROLLER_ARTEFACT_CATEGORIES
-        for category in categories:
-            try:
-                if category == ACCOUNT_DATA:
-                    matched_files = _collect_account_files(ios_parsed_root, "ios")
-                else:
-                    matched_files = _collect_parsed_files(ios_parsed_root, category)
-                if matched_files:
-                    output_dir_cat = controller_ios_dir / safe_segment(category)
-                    evidence_list = _filter_empty(
-                        _copy_parsed_files(
-                            ios_parsed_root,
-                            matched_files,
-                            output_dir_cat,
-                            ios_source,
-                            category,
-                            ios_acquisition_method,
-                        ),
-                        state,
-                        IDENTIFICATION_CONTROLLER_IOS,
-                        category,
-                    )
-                    extracted.extend(evidence_list)
-                else:
-                    state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, "no artefacts found", category=category)
-            except Exception as exc:
-                state.raise_anomaly(3, IDENTIFICATION_CONTROLLER_IOS, f"extraction failed: {exc}", category=category)
+        extracted.extend(_extract_ios_sources(state, ios_source, ios_parsed_root, phase_dir))
 
-    # Drone SD.
-    sd_sources = find_input_evidence_list_by_identification(
-        state, IDENTIFICATION_DRONE_SD
-    )
+    sd_sources = find_input_evidence_list_by_identification(state, IDENTIFICATION_DRONE_SD)
     if not sd_sources:
         state.raise_anomaly(3, IDENTIFICATION_DRONE_SD, "source evidence not found")
     else:
-        for idx, sd_source in enumerate(sd_sources):
-            drone_sd_dir = phase_dir / drone_sd_label(idx + 1)
-            clear_and_make(drone_sd_dir)
-            print(f"  Extracting from drone_sd {idx + 1}")
-            sd_archive = Path(str(sd_source.stored_path))
-            acquisition_method = normalise_acquisition_method(
-                sd_source.acquisition_method
-            )
-            if (
-                acquisition_method != ACQUISITION_PHYSICAL
-                and sd_archive.suffix.lower() == EXTENSION_ZIP[0]
-            ):
-                state.raise_anomaly(3, IDENTIFICATION_DRONE_SD, "physical acquisition required", index=idx + 1)
-            else:
-                try:
-                    evidence_list = _filter_empty(
-                        _extract_drone_sd_physical(state, sd_source, drone_sd_dir),
-                        state,
-                        IDENTIFICATION_DRONE_SD,
-                        index=idx + 1,
-                    )
-                    extracted.extend(evidence_list)
-                    if not evidence_list:
-                        state.raise_anomaly(3, IDENTIFICATION_DRONE_SD, "no artefacts found", index=idx + 1)
-                except Exception as exc:
-                    state.raise_anomaly(3, IDENTIFICATION_DRONE_SD, f"extraction failed: {exc}", index=idx + 1)
+        extracted.extend(_extract_drone_sd_sources(state, sd_sources, phase_dir))
 
-    # Drone flight storage.
-    flight_sources = find_input_evidence_list_by_identification(
-        state, IDENTIFICATION_DRONE_FLIGHT_STORAGE
-    )
+    flight_sources = find_input_evidence_list_by_identification(state, IDENTIFICATION_DRONE_FLIGHT_STORAGE)
     flight_source = flight_sources[0] if flight_sources else None
     if flight_source is None:
         state.raise_anomaly(3, IDENTIFICATION_DRONE_FLIGHT_STORAGE, "source evidence not found")
     else:
-        drone_flight_dir = phase_dir / "drone_flight_storage"
-        clear_and_make(drone_flight_dir)
-        print("  Extracting from drone_flight_storage")
-        flight_archive = Path(str(flight_source.stored_path))
-        if flight_archive.suffix.lower() == EXTENSION_ZIP[0]:
-            member_names = _member_names(flight_archive)
-            dat_members = [
-                name for name in member_names if Path(name).suffix.lower() == ".dat"
-            ]
-            if not dat_members:
-                state.raise_anomaly(
-                    3, IDENTIFICATION_DRONE_FLIGHT_STORAGE,
-                    f"no DAT files found in {flight_archive.name}",
-                    category=DRONE_LOGS,
-                )
-            else:
-                evidence_list = _filter_empty(
-                    extract_logical_files(
-                        flight_source,
-                        drone_flight_dir,
-                        dat_members,
-                        artefact_category=DRONE_LOGS,
-                        missing_ok=True,
-                    ),
-                    state,
-                    IDENTIFICATION_DRONE_FLIGHT_STORAGE,
-                    DRONE_LOGS,
-                )
-                extracted.extend(evidence_list)
-                if not evidence_list:
-                    state.raise_anomaly(
-                        3, IDENTIFICATION_DRONE_FLIGHT_STORAGE,
-                        "no artefacts extracted",
-                        category=DRONE_LOGS,
-                    )
-        else:
-            state.raise_anomaly(
-                3, IDENTIFICATION_DRONE_FLIGHT_STORAGE,
-                f"unsupported archive format for {flight_archive.name}",
-                category=DRONE_LOGS,
-            )
+        extracted.extend(_extract_flight_storage_sources(state, flight_source, phase_dir))
 
     state.phase_outputs[_PHASE_NAME] = {
         "completed_at": utc_now_iso(),

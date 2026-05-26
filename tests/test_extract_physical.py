@@ -4,6 +4,8 @@ import subprocess
 from pathlib import Path
 from typing import cast
 
+import pytest
+
 import config
 from evidence import make_evidence
 from parsing.extract_physical import extract_tsk_image, parse_mmls_offset
@@ -90,6 +92,46 @@ def test_tsk_image_extraction_invokes_icat_for_matching_paths(
     assert extracted[0].source_path == "FlightRecord\\DJIFlightRecord_2024-01-01.txt"
     assert state.tool_invocation_log
     assert any(Path(command[0]).name.lower().startswith("icat") for command in commands)
+
+
+def test_icat_failure_cleans_up_tmp_and_raises(
+    tmp_path: Path, monkeypatch
+) -> None:
+    image_path = tmp_path / "image.E01"
+    image_path.write_bytes(b"fake image")
+    out_dir = tmp_path / "out"
+    state = State(case_id="ICAT-FAIL", operator="Tester")
+    parent = make_evidence(
+        source_path=image_path,
+        stored_path=image_path,
+        parent=None,
+        acquisition_method=config.ACQUISITION_PHYSICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
+    )
+
+    def fake_run(command, capture_output=True, text=True, check=False, stdout=None):
+        executable = Path(command[0]).name.lower()
+        if executable.startswith("mmls"):
+            return subprocess.CompletedProcess(
+                command,
+                0,
+                stdout="002:  000:000   0000002048   0000012345   0000010298   5.0M   Primary\n",
+            )
+        if executable.startswith("fls"):
+            return subprocess.CompletedProcess(command, 0, stdout="r/r 99: file.txt\n")
+        if executable.startswith("icat"):
+            if stdout is not None:
+                stdout.write(b"partial garbage")
+            return subprocess.CompletedProcess(command, 1, stdout="", stderr="icat error")
+        raise AssertionError(f"Unexpected command: {command}")
+
+    monkeypatch.setattr("parsing.extract_physical.subprocess.run", fake_run)
+
+    with pytest.raises(RuntimeError, match="icat failed"):
+        extract_tsk_image(image_path, out_dir, parent=parent, state=state)
+
+    assert not list(out_dir.rglob("*.tmp"))
+    assert not list(out_dir.rglob("file.txt"))
 
 
 def test_sanitise_path_blocks_traversal() -> None:

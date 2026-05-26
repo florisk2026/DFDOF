@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 import config
 from config import DEVICE_AND_BACKUP_INFO
 from evidence import Evidence, make_evidence
@@ -180,3 +182,50 @@ def test_parse_android_source_flags_missing_key_files(tmp_path: Path, monkeypatc
         f"[p2 - controller android - device and backup info]: ApplicationInfo.xml not found for {source_zip.name}"
         in case_state.anomaly_flags
     )
+
+
+def test_flatten_extracted_files_raises_on_move_failure(
+    tmp_path: Path, monkeypatch
+) -> None:
+    output_root = tmp_path / "output"
+    output_root.mkdir()
+    subdir = output_root / "sub"
+    subdir.mkdir()
+
+    files = [subdir / f"file{i}.txt" for i in range(3)]
+    for f in files:
+        f.write_bytes(b"content")
+
+    source = make_evidence(
+        source_path=files[0],
+        stored_path=files[0],
+        parent=None,
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
+        skip_hash=True,
+    )
+    evidences = [
+        make_evidence(
+            source_path=f,
+            stored_path=f,
+            parent=source,
+            acquisition_method=config.ACQUISITION_EXTRACT_LOGICAL,
+            type=config.EVIDENCE_TYPE_EXTRACTED,
+            skip_hash=True,
+        )
+        for f in files
+    ]
+
+    call_count = [0]
+    _original_replace = Path.replace
+
+    def failing_replace(self, target):
+        call_count[0] += 1
+        if call_count[0] == 2:
+            raise OSError("simulated disk full")
+        return _original_replace(self, target)
+
+    monkeypatch.setattr(Path, "replace", failing_replace)
+
+    with pytest.raises(OSError, match="simulated disk full"):
+        parser_android._flatten_extracted_files(output_root, evidences)

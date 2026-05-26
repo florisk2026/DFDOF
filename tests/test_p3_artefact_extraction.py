@@ -391,7 +391,7 @@ def test_run_phase_3_android_logical_skips_empty_files(tmp_path: Path, monkeypat
     artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]
     stored_names = [Path(item["stored_path"]).name for item in artefacts]
     assert "sys_log_empty.txt" not in stored_names
-    assert any("empty file skipped" in flag for flag in result.anomaly_flags)
+    assert any("empty file moved to _rejected" in flag for flag in result.anomaly_flags)
 
 
 def test_run_phase_3_android_logical_deduplicates_by_basename(tmp_path: Path, monkeypatch) -> None:
@@ -427,3 +427,43 @@ def test_run_phase_3_android_logical_deduplicates_by_basename(tmp_path: Path, mo
     db_names = [Path(item["stored_path"]).name for item in db_artefacts]
     assert db_names.count("djiFMDB.db") == 1
     assert "djiFMDB_1.db" not in db_names
+
+
+def test_p1_p2_p3_android_integration(tmp_path: Path, monkeypatch) -> None:
+    project_root = tmp_path
+    (project_root / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    ev_dir = tmp_path / "evidence"
+    ev_dir.mkdir()
+    android_zip = ev_dir / "android_backup.zip"
+    _write_zip(
+        android_zip,
+        {
+            "data/data/com.dji.go/shared_prefs/dji.go.v4.xml": "<map/>",
+            "DJI/FlightRecords/flight.txt": "flight data",
+        },
+    )
+
+    state = State(case_id="INTEG-01", operator="Tester", evidence_directory=str(ev_dir))
+
+    from phases.p1_provenance import run_phase_1
+    from phases.p2_image_parsing import run_phase_2
+    from phases.p3_artefact_extraction import run_phase_3
+    from parsing.parser_android import AndroidParserResult
+
+    def fake_parse_android(source_ev, output_root, state):
+        output_root.mkdir(parents=True, exist_ok=True)
+        (output_root / "backup_info.json").write_text('{"device_name": "test"}', encoding="utf-8")
+        return AndroidParserResult(output_root=output_root, parsed_evidence=[], observations=[])
+
+    monkeypatch.setattr("phases.p2_image_parsing.parse_android_source", fake_parse_android)
+
+    state = run_phase_1(state, confirm_all=True)
+    state = run_phase_2(state)
+    state = run_phase_3(state)
+
+    assert "p1_provenance" in state.phase_outputs
+    assert "p2_image_parsing" in state.phase_outputs
+    assert "p3_artefact_extraction" in state.phase_outputs
+    assert isinstance(state.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"], list)
