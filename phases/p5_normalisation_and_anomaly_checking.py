@@ -161,10 +161,11 @@ _PROBE_BYTES = 8192
 _NON_PRINTABLE_THRESHOLD = 0.15
 
 # Flight log format regexes
-_TIMESTAMP_RE = re.compile(
-    r"\d{4}[-/]\d{2}[-/]\d{2}[\sT]\d{2}:\d{2}:\d{2}|\d{2}:\d{2}:\d{2}"
-)
 _BRACKET_RE = re.compile(r"\[([^\]]+),\s*([^\]]+)\]")
+_BRACKET_INLINE_RE = re.compile(r"^\[([^\]]+)\](.+)$", re.MULTILINE)
+_CRASH_SECTION_RE = re.compile(r"=+\s*Crash\s*=+", re.IGNORECASE)
+_SECTION_RE = re.compile(r"=+\s*(.+?)\s*=+")
+_HEADING_TS_RE = re.compile(r"^##\s+(\d{2}:\d{2}:\d{2})\s*$", re.MULTILINE)
 
 # DatCon column names
 _DATCON_DATE_COL = "GPS:Date"
@@ -763,23 +764,59 @@ def _is_non_readable(path: Path) -> bool:
 
 
 def _parse_crash_dump(text: str) -> list[dict[str, Any]]:
-    """Extract (timestamp, message) pairs from Java-style crash/error logs."""
+    """Extract structured failure entries from DJI Android crash log format."""
     entries: list[dict[str, Any]] = []
-    last_ts: str | None = None
+    section = ""
+    in_crash_section = False
+    exception_found = False
     for line in text.splitlines():
-        m = _TIMESTAMP_RE.search(line)
+        m = _SECTION_RE.match(line.strip())
         if m:
-            last_ts = m.group(0)
-        if line.strip().startswith("Failed"):
-            entries.append({"timestamp": last_ts, "message": line.strip()})
+            section = m.group(1).strip().lower()
+            in_crash_section = "crash" in section
+            exception_found = False
+            continue
+        if in_crash_section and not exception_found:
+            stripped = line.strip()
+            if stripped and not stripped.startswith("at ") and "\tat" not in stripped[:4]:
+                if ": " in stripped:
+                    exc_type, _, exc_msg = stripped.partition(": ")
+                    entries.append({"type": "java_exception", "exception": exc_type, "message": exc_msg})
+                    exception_found = True
+                elif "Error" in stripped or "Exception" in stripped:
+                    entries.append({"type": "java_exception", "exception": stripped, "message": ""})
+                    exception_found = True
+        if "thread" in section and line.strip().lower().startswith("crash name:"):
+            name = line.strip()[len("crash name:"):].strip()
+            if name and name.lower() != "null":
+                entries.append({"type": "thread_crash", "name": name})
     return entries
 
 
-def _parse_bracketed_log(text: str) -> list[dict[str, Any]]:
-    """Extract [timestamp, message] pairs from bracketed log format."""
+def _parse_heading_log(text: str) -> list[dict[str, Any]]:
+    """Extract (timestamp, message) pairs from ## HH:MM:SS / message format."""
+    entries: list[dict[str, Any]] = []
+    current_ts: str | None = None
+    for line in text.splitlines():
+        m = _HEADING_TS_RE.match(line)
+        if m:
+            current_ts = m.group(1)
+        elif current_ts is not None and line.strip():
+            entries.append({"timestamp": current_ts, "message": line.strip()})
+            current_ts = None
+    return entries
+
+
+def _parse_bracketed_log(text: str, inline: bool = False) -> list[dict[str, Any]]:
+    """Extract timestamp/message pairs from bracketed log formats.
+
+    inline=False: [timestamp, message]  (comma-separated inside brackets)
+    inline=True:  [timestamp]message    (message follows closing bracket)
+    """
+    pattern = _BRACKET_INLINE_RE if inline else _BRACKET_RE
     return [
         {"timestamp": m.group(1).strip(), "message": m.group(2).strip()}
-        for m in _BRACKET_RE.finditer(text)
+        for m in pattern.finditer(text)
     ]
 
 
@@ -787,9 +824,12 @@ def _classify_flight_log(text: str) -> tuple[str, list[dict[str, Any]]]:
     """Classify a flight log text and return (format_name, entries)."""
     if _BRACKET_RE.search(text):
         return "bracketed_log", _parse_bracketed_log(text)
-    crash = _parse_crash_dump(text)
-    if crash:
-        return "crash_dump", crash
+    if _BRACKET_INLINE_RE.search(text):
+        return "bracketed_log", _parse_bracketed_log(text, inline=True)
+    if _CRASH_SECTION_RE.search(text):
+        return "crash_dump", _parse_crash_dump(text)
+    if _HEADING_TS_RE.search(text):
+        return "heading_log", _parse_heading_log(text)
     return "unknown", []
 
 

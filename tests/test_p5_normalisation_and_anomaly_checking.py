@@ -704,17 +704,20 @@ def test_is_non_readable_text(tmp_path: Path) -> None:
 
 def test_parse_crash_dump_extracts_failed_with_timestamp() -> None:
     text = (
-        "2018-04-19 17:24:45 INFO boot sequence\n"
-        "Failed to initialise GPS module\n"
-        "2018-04-19 17:25:01 DEBUG retrying\n"
-        "Failed to connect to server\n"
+        "===== Crash =====\n"
+        "java.lang.OutOfMemoryError: Failed to allocate memory\n"
+        "\tat java.util.Arrays.copyOf(Arrays.java:3210)\n"
+        "=======Thread info======\n"
+        "Crash name:java.lang.OutOfMemoryError: Failed to allocate memory\n"
+        " Cause is:null\n"
     )
     entries = p5._parse_crash_dump(text)
     assert len(entries) == 2
-    assert entries[0]["timestamp"] == "2018-04-19 17:24:45"
-    assert entries[0]["message"] == "Failed to initialise GPS module"
-    assert entries[1]["timestamp"] == "2018-04-19 17:25:01"
-    assert entries[1]["message"] == "Failed to connect to server"
+    assert entries[0]["type"] == "java_exception"
+    assert entries[0]["exception"] == "java.lang.OutOfMemoryError"
+    assert entries[0]["message"] == "Failed to allocate memory"
+    assert entries[1]["type"] == "thread_crash"
+    assert "OutOfMemoryError" in entries[1]["name"]
 
 
 def test_parse_crash_dump_no_matches() -> None:
@@ -738,10 +741,11 @@ def test_parse_bracketed_log_multiple() -> None:
 
 
 def test_classify_flight_log_crash() -> None:
-    text = "2018-04-19 17:24:45 ERROR\nFailed to arm motors\n"
+    text = "===== Crash =====\njava.lang.RuntimeException: Failed to arm motors\n"
     fmt, entries = p5._classify_flight_log(text)
     assert fmt == "crash_dump"
     assert len(entries) == 1
+    assert entries[0]["type"] == "java_exception"
 
 
 def test_classify_flight_log_bracketed() -> None:
@@ -821,7 +825,7 @@ def test_run_phase_5_flight_log_crash_dump(tmp_path: Path, monkeypatch) -> None:
 
     log = tmp_path / "crash.txt"
     log.write_text(
-        "2018-04-19 17:24:45 ERROR\nFailed to initialise GPS\n",
+        "===== Crash =====\njava.lang.RuntimeException: Failed to initialise GPS\n",
         encoding="utf-8",
     )
 
@@ -833,6 +837,7 @@ def test_run_phase_5_flight_log_crash_dump(tmp_path: Path, monkeypatch) -> None:
     obs = anomalies[0]["observations"][0]
     assert obs["format"] == "crash_dump"
     assert len(obs["entries"]) == 1
+    assert obs["entries"][0]["type"] == "java_exception"
     assert obs["entries"][0]["message"] == "Failed to initialise GPS"
 
 
