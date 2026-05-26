@@ -875,7 +875,9 @@ def run_phase_5(state: State) -> State:
             try:
                 text = stored_path.read_text(encoding="utf-8", errors="replace")
                 fmt, entries = _classify_flight_log(text)
-                obs_data = {"format": fmt, "entries": entries}
+                obs_data: dict[str, Any] = {"format": fmt}
+                if fmt != "unknown":
+                    obs_data["entries"] = entries
             except OSError as exc:
                 state.raise_anomaly(5, identification, f"flight_log read failed: {exc}", category=FLIGHT_LOGS)
                 continue
