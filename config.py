@@ -113,24 +113,24 @@ ARTEFACT_EXTENSIONS = {
     VIDEOS: {".mp4", ".mov", ".info"},
 }
 
-# Controller only.
-ARTEFACT_PATHS = {
-    # ACCOUNT_DATA: derived via DJI_APP_DOMAINS
-    DATABASES: {"db/", "dbData/", ".space_db/", },
-    # DEVICE_AND_BACKUP_INFO: already handled in phase 2
-    DRONE_LOGS: {"FlightRecords/", "FlightRecords/MCDatFlightRecords/"},
-    FLIGHT_LOGS: {"FlightLogs/", "LOG/", "Logs/"},
-    FLIGHT_RECORDS: {"FlightRecord", "FlightRecords/"},
-    IMAGES: {"CACHE_IMAGE/", "videoCache/"},
-    VIDEOS: {"DJI_RECORD/", "videoCache/"},
+ARTEFACT_EXTENSIONS_DRONE_SD = {".MP4", ".THM"}
+
+IOS_ARTEFACT_PATHS = {
+    DATABASES: {"Documents/", "Library/"},
+    DRONE_LOGS: {"FlightRecords/"},
+    FLIGHT_LOGS: {"FlightLogs/", "Logs/"},
+    FLIGHT_RECORDS: {"FlightRecords/"},
+    IMAGES: {"videoCache/"},
+    VIDEOS: {"videoCache/"},
 }
 
-ARTEFACT_EXTENSIONS_DRONE_SD = {".MP4", ".THM"}
-ARTEFACT_DATABASES_INCLUDES = {
-    "mbgl-offline",
-    "datastore",
-    "dji",
-    "flysafe_areas_djigo",
+ANDROID_ARTEFACT_PATHS = {
+    DATABASES: {"databases/", "db/", "dbData/", ".space_db/", "space_db/", "files/"},
+    DRONE_LOGS: {"FlightRecord/", "FlightRecords/"},
+    FLIGHT_LOGS: {"FlightLog/", "FlightLogs/", "LOG/"},
+    FLIGHT_RECORDS: {"FlightRecord/", "FlightRecords/"},
+    IMAGES: {"CACHE_IMAGE/"},
+    VIDEOS: {"DJI_RECORD/"},
 }
 
 MAX_SUMMARY_LENGTH = 125
@@ -179,18 +179,6 @@ SLEUTH_KIT_BIN = _env_path(
     "DFDOF_SLEUTH_KIT_BIN",
     r"C:\Users\Floris\Documents\sleuthkit\bin",
 )
-TSK_MMLS = _env_path(
-    "DFDOF_TSK_MMLS",
-    str(SLEUTH_KIT_BIN / "mmls.exe"),
-)
-TSK_FLS = _env_path(
-    "DFDOF_TSK_FLS",
-    str(SLEUTH_KIT_BIN / "fls.exe"),
-)
-TSK_ICAT = _env_path(
-    "DFDOF_TSK_ICAT",
-    str(SLEUTH_KIT_BIN / "icat.exe"),
-)
 EXTRACT_DJI_EXE = _env_path(
     "DFDOF_EXTRACT_DJI_EXE",
     r"C:\Program Files (x86)\CsvView\ExtractDJI.exe",
@@ -209,6 +197,21 @@ TXTLOGTOCSV = _env_path(
 EXIFTOOL = _env_path(
     "DFDOF_EXIFTOOL",
     r"C:\Users\Floris\Documents\exiftool\exiftool.exe",
+)
+
+
+# AUTO-DERIVED FROM SLEUTH_KIT_BIN
+TSK_MMLS = _env_path(
+    "DFDOF_TSK_MMLS",
+    str(SLEUTH_KIT_BIN / "mmls.exe"),
+)
+TSK_FLS = _env_path(
+    "DFDOF_TSK_FLS",
+    str(SLEUTH_KIT_BIN / "fls.exe"),
+)
+TSK_ICAT = _env_path(
+    "DFDOF_TSK_ICAT",
+    str(SLEUTH_KIT_BIN / "icat.exe"),
 )
 
 
