@@ -4,7 +4,7 @@ This phase:
  - augments DatCon CSVs with [NORM]:ID, [NORM]:GPS:Date, [NORM]:GPS:Time,
    [NORM]:GPS:dateTimeStamp columns,
  - augments FlightRecord CSVs with [NORM]:ID and [NORM]:CUSTOM.updateTime,
- - runs 10 shared + format-specific single-source anomaly checks,
+ - runs 9 shared + format-specific single-source anomaly checks,
  - stores anomaly findings as Observations (not state anomaly flags),
  - wraps augmented CSVs as Evidence objects,
  - copies opaque-extension image files (.thumbnail, .THM) to viewable
@@ -321,15 +321,13 @@ def _apply_shared_checks(
     acc: dict[str, list[int]],
     prev: dict[str, Any],
 ) -> None:
-    """Apply 10 shared anomaly checks for one row. Mutates acc and prev in place.
+    """Apply 9 shared anomaly checks for one row. Mutates acc and prev in place.
 
     clock_delta_s: elapsed seconds since previous row (high-frequency clock).
     cur_gps_dt:    GPS/app datetime for coordinate-speed check (1 Hz for DatCon).
     """
     # --- interval-based checks (use high-frequency clock) ---
     if clock_delta_s is not None:
-        if clock_delta_s == 0.0 and row_id > 0:
-            acc["duplicate_timestamp"].append(row_id)
         if clock_delta_s < 0.0:
             acc["timestamp_regression"].append(row_id)
         if clock_delta_s > _TIMESTAMP_GAP_S:
@@ -382,7 +380,6 @@ def _apply_shared_checks(
 
 def _make_shared_acc() -> dict[str, list]:
     return {
-        "duplicate_timestamp": [],
         "timestamp_regression": [],
         "timestamp_gap": [],
         "missing_gps": [],

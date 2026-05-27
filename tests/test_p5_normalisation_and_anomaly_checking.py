@@ -305,28 +305,6 @@ def test_datcon_timestamp_regression(tmp_path: Path, monkeypatch) -> None:
     assert 1 in obs["timestamp_regression"]
 
 
-def test_datcon_duplicate_timestamp(tmp_path: Path, monkeypatch) -> None:
-    """Identical Clock:offsetTime for two consecutive rows → duplicate_timestamp contains row_id 1."""
-    project_root = tmp_path
-    (project_root / "Documents").mkdir(parents=True)
-    monkeypatch.setattr(Path, "home", lambda: project_root)
-
-    p4_csv = tmp_path / "FLY_dup.csv"
-    _write_datcon_csv(p4_csv, [
-        _datcon_row(offset="1.0"),
-        _datcon_row(tick="1", offset="1.0"),  # same offset → duplicate
-    ])
-
-    state = _build_state(
-        tmp_path, config.IDENTIFICATION_CONTROLLER_IOS,
-        p4_csv, config.ACQUISITION_DATCON, config.DRONE_LOGS,
-    )
-    result = p5.run_phase_5(state)
-
-    obs = result.phase_outputs[p5._PHASE_NAME]["derived_anomalies"][0]["observations"][0]
-    assert 1 in obs["duplicate_timestamp"]
-
-
 def test_datcon_altitude_negative(tmp_path: Path, monkeypatch) -> None:
     """Relative height below -2 m → altitude_negative contains that row_id."""
     project_root = tmp_path
