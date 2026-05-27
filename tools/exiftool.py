@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import subprocess
 from pathlib import Path
+from typing import Any
 
 from config import (
 	ACQUISITION_EXIFTOOL,
@@ -12,7 +13,6 @@ from config import (
 	EXIFTOOL,
 	IMAGES,
 )
-
 from evidence import Evidence, make_evidence
 from observation import Observation, make_observation
 from parsing.utils_parse import to_windows_path
@@ -60,6 +60,23 @@ _EXIF_VIDEO_FIELDS: set[str] = {
 _ZERO_DATE = "0000:00:00 00:00:00"
 
 
+def _exif_find(data: Any, field: str) -> Any:
+	if isinstance(data, dict):
+		value = data.get(field)
+		if value not in (None, ""):
+			return value
+		for item in data.values():
+			found = _exif_find(item, field)
+			if found is not None:
+				return found
+	elif isinstance(data, list):
+		for item in data:
+			found = _exif_find(item, field)
+			if found is not None:
+				return found
+	return None
+
+
 def run_exiftool(
 	file_path: Path,
 	output_dir: Path,
@@ -70,20 +87,17 @@ def run_exiftool(
 ) -> tuple[Evidence | None, Observation | None]:
 	json_path = output_dir / f"{file_path.stem}_exif.json"
 	version = _get_exiftool_version()
+	# -b option is not used here because it emits large binary data not really relevant
+	command = [str(EXIFTOOL), "-a", "-u", "-g1", "-s", "-ee", "-json", "-n", str(file_path)]
 
 	# Run exiftool with JSON output and capture complete process.
 	try:
-		proc = subprocess.run(
-			[str(EXIFTOOL), "-json", "-n", str(file_path)],
-			capture_output=True,
-			text=True,
-			timeout=30,
-		)
+		proc = subprocess.run(command, capture_output=True, text=True, timeout=30)
 	except Exception as exc:
 		state.log_tool_invocation(
 			tool_name=ACQUISITION_EXIFTOOL,
 			version=version,
-			args=[str(EXIFTOOL), str(file_path)],
+			args=command,
 			return_code=1,
 			stdout=None,
 			stderr=str(exc),
@@ -93,20 +107,18 @@ def run_exiftool(
 		return None, None
 
 	# Parse JSON stdout if available.
-	metadata_list = []
+	metadata: Any = []
 	if proc.stdout:
 		try:
-			metadata_list = json.loads(proc.stdout)
+			metadata = json.loads(proc.stdout)
 		except Exception:
-			metadata_list = []
+			metadata = []
 
-	raw_metadata = metadata_list[0] if metadata_list else {}
 	field_filter = _EXIF_IMAGE_FIELDS if artefact_category == IMAGES else _EXIF_VIDEO_FIELDS
-	metadata = {k: v for k, v in raw_metadata.items() if v not in (None, "")}
 	filtered_metadata = {
 		key: value
-		for key, value in raw_metadata.items()
-		if key in field_filter and value not in (None, "", _ZERO_DATE)
+		for key in field_filter
+		if (value := _exif_find(metadata, key)) not in (None, "", _ZERO_DATE)
 	}
 
 	observation = make_observation(
@@ -118,9 +130,9 @@ def run_exiftool(
 	)
 
 	output_dir.mkdir(parents=True, exist_ok=True)
-	# Write full raw metadata to disk (unfiltered).
+	# Persist the command output directly as the JSON artefact.
 	try:
-		json_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+		json_path.write_text(proc.stdout or json.dumps(metadata), encoding="utf-8")
 	except Exception:
 		pass
 

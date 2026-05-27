@@ -251,6 +251,53 @@ def _try_float(value: str) -> float | None:
         return None
 
 
+def _exif_root(exif_data: Any) -> dict[str, Any] | None:
+    if isinstance(exif_data, list) and exif_data and isinstance(exif_data[0], dict):
+        return exif_data[0]
+    return None
+
+
+def _exif_find(data: Any, field: str) -> Any:
+    if isinstance(data, dict):
+        value = data.get(field)
+        if value not in (None, ""):
+            return value
+        for item in data.values():
+            found = _exif_find(item, field)
+            if found is not None:
+                return found
+    elif isinstance(data, list):
+        for item in data:
+            found = _exif_find(item, field)
+            if found is not None:
+                return found
+    return None
+
+
+def _parse_gps_coordinates(value: Any) -> tuple[float, float] | None:
+    if not isinstance(value, str):
+        return None
+    parts = re.findall(r"[-+]?\d+(?:\.\d+)?", value)
+    if len(parts) < 2:
+        return None
+    lat = _try_float(parts[0])
+    lon = _try_float(parts[1])
+    if lat is None or lon is None:
+        return None
+    return lat, lon
+
+
+def _exif_location(data: Any) -> tuple[float | None, float | None]:
+    lat = _try_float(str(_exif_find(data, "GPSLatitude") or ""))
+    lon = _try_float(str(_exif_find(data, "GPSLongitude") or ""))
+    if lat is not None and lon is not None:
+        return lat, lon
+    parsed = _parse_gps_coordinates(_exif_find(data, "GPSCoordinates"))
+    if parsed is not None:
+        return parsed
+    return None, None
+
+
 def _find_col(header: list[str], base: str) -> int:
     """Find a column index by exact match, then by base-name prefix (handles DatCon :D/:C suffixes)."""
     if base in header:
@@ -656,7 +703,7 @@ def _decode_image(
     artefact: dict[str, Any],
     phase_dir: Path,
     identification: str,
-    exif_data: dict[str, Any] | None = None,
+    exif_data: Any = None,
 ) -> Evidence | None:
     """Copy an opaque-extension image to a viewable file with the correct extension.
 
@@ -678,11 +725,11 @@ def _decode_image(
             exif_data = json.loads(stored_path.read_text(encoding="utf-8"))
         except Exception:
             return None
-    if exif_data is None:
+    data = _exif_root(exif_data)
+    if data is None:
         return None
 
-    data: dict[str, Any] = exif_data
-    mime = str(data.get("MIMEType") or "").lower()
+    mime = str(_exif_find(data, "MIMEType") or "").lower()
     ext = _MIME_TO_EXT.get(mime)
     if not ext:
         return None
@@ -705,7 +752,7 @@ def _decode_image(
 
 def _process_exif(
     artefact: dict[str, Any],
-    exif_data: dict[str, Any] | None = None,
+    exif_data: Any = None,
 ) -> Observation | None:
     """Normalise EXIF timestamps and check for zero-date / missing GPS.
 
@@ -720,13 +767,14 @@ def _process_exif(
             exif_data = json.loads(stored_path.read_text(encoding="utf-8"))
         except Exception:
             return None
-    if exif_data is None:
+    data = _exif_root(exif_data)
+    if data is None:
         return None
-    data: dict[str, Any] = exif_data
 
-    date_val = data.get("DateTimeOriginal") or data.get("CreateDate")
+    date_val = _exif_find(data, "DateTimeOriginal") or _exif_find(data, "CreateDate")
     exif_zero_date = not date_val or date_val == "0000:00:00 00:00:00"
-    exif_missing_gps = "GPSLatitude" not in data or "GPSLongitude" not in data
+    lat, lon = _exif_location(data)
+    exif_missing_gps = lat is None or lon is None
 
     parsed = parse_exif_date(date_val or "")
 
@@ -736,6 +784,9 @@ def _process_exif(
     obs: dict[str, Any] = {}
     if parsed:
         obs["norm_date"], obs["norm_time"] = parsed
+    if lat is not None and lon is not None:
+        obs["gps_latitude"] = lat
+        obs["gps_longitude"] = lon
     if exif_zero_date:
         obs["exif_zero_date"] = True
     if exif_missing_gps:

@@ -473,7 +473,11 @@ def test_exif_anomaly_observation(tmp_path: Path, monkeypatch) -> None:
 
     exif_json = tmp_path / "DJI_0001_exif.json"
     exif_json.write_text(
-        json.dumps({"FileName": "DJI_0001.MP4", "CreateDate": "0000:00:00 00:00:00"}),
+        json.dumps([{
+            "SourceFile": str(exif_json),
+            "File": {"FileName": "DJI_0001.MP4", "MIMEType": "video/mp4"},
+            "QuickTime": {"CreateDate": "0000:00:00 00:00:00"},
+        }]),
         encoding="utf-8",
     )
 
@@ -505,12 +509,12 @@ def test_exif_valid_date_normalised(tmp_path: Path, monkeypatch) -> None:
 
     exif_json = tmp_path / "DJI_0002_exif.json"
     exif_json.write_text(
-        json.dumps({
-            "FileName": "DJI_0002.MP4",
-            "CreateDate": "2018:04:19 17:24:49",
-            "GPSLatitude": 39.961,
-            "GPSLongitude": -106.216,
-        }),
+        json.dumps([{
+            "SourceFile": str(exif_json),
+            "File": {"FileName": "DJI_0002.MP4", "MIMEType": "video/mp4"},
+            "QuickTime": {"CreateDate": "2018:04:19 17:24:49"},
+            "Track1": {"GPSCoordinates": "39.961 -106.216 2380.0"},
+        }]),
         encoding="utf-8",
     )
 
@@ -526,6 +530,8 @@ def test_exif_valid_date_normalised(tmp_path: Path, monkeypatch) -> None:
     obs = anomaly["observations"][0]
     assert obs["norm_date"] == "2018-04-19"
     assert obs["norm_time"] == "17:24:49"
+    assert obs["gps_latitude"] == 39.961
+    assert obs["gps_longitude"] == -106.216
     assert "exif_zero_date" not in obs
     assert "exif_missing_gps" not in obs
     parent_sha = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"][0]["sha256"]
@@ -565,8 +571,12 @@ def test_no_empty_output_dirs(tmp_path: Path, monkeypatch) -> None:
 
     exif_json = tmp_path / "DJI_0001_exif.json"
     exif_json.write_text(
-        json.dumps({"FileName": "DJI_0001.MP4", "GPSLatitude": 39.96, "GPSLongitude": -106.21,
-                    "CreateDate": "2018:04:19 17:24:49"}),
+        json.dumps([{
+            "SourceFile": str(exif_json),
+            "File": {"FileName": "DJI_0001.MP4", "MIMEType": "video/mp4"},
+            "QuickTime": {"CreateDate": "2018:04:19 17:24:49"},
+            "Track1": {"GPSCoordinates": "39.96 -106.21 2380.0"},
+        }]),
         encoding="utf-8",
     )
 

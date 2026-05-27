@@ -80,12 +80,15 @@ def test_run_exiftool_image_fields_filtered_correctly(tmp_path: Path, monkeypatc
     output_dir = tmp_path / "output"
 
     exif_data = [{
-        "FileName": "photo.jpg",
-        "DateTimeOriginal": "2018:04:19 11:24:49",
-        "GPSLatitude": 39.96,
-        "GPSLongitude": -106.21,
-        "Make": "DJI",
-        "UnrelatedField": "should_be_excluded",
+        "SourceFile": str(img),
+        "File": {"FileName": "photo.jpg", "MIMEType": "image/jpeg"},
+        "ExifIFD": {
+            "DateTimeOriginal": "2018:04:19 11:24:49",
+            "GPSLatitude": 39.96,
+            "GPSLongitude": -106.21,
+            "Make": "DJI",
+            "UnrelatedField": "should_be_excluded",
+        },
     }]
     monkeypatch.setattr(subprocess, "run", _fake_run(stdout=json.dumps(exif_data)))
 
@@ -107,9 +110,12 @@ def test_run_exiftool_zero_date_excluded_from_observation(tmp_path: Path, monkey
     output_dir = tmp_path / "output"
 
     exif_data = [{
-        "FileName": "photo.jpg",
-        "DateTimeOriginal": "0000:00:00 00:00:00",
-        "Make": "DJI",
+        "SourceFile": str(img),
+        "File": {"FileName": "photo.jpg", "MIMEType": "image/jpeg"},
+        "ExifIFD": {
+            "DateTimeOriginal": "0000:00:00 00:00:00",
+            "Make": "DJI",
+        },
     }]
     monkeypatch.setattr(subprocess, "run", _fake_run(stdout=json.dumps(exif_data)))
 
@@ -135,11 +141,14 @@ def test_run_exiftool_video_uses_video_field_filter(tmp_path: Path, monkeypatch)
     output_dir = tmp_path / "output"
 
     exif_data = [{
-        "FileName": "clip.mp4",
-        "Duration": 12.5,
-        "DateTimeOriginal": "2018:04:19 11:24:49",  # image-only field
-        "CreateDate": "2018:04:19 11:24:49",
-        "GPSLatitude": 39.96,  # image-only field
+        "SourceFile": str(vid),
+        "File": {"FileName": "clip.mp4", "MIMEType": "video/mp4"},
+        "QuickTime": {
+            "Duration": 12.5,
+            "DateTimeOriginal": "2018:04:19 11:24:49",  # image-only field
+            "CreateDate": "2018:04:19 11:24:49",
+        },
+        "Track1": {"GPSCoordinates": "39.96 -106.21 2380"},
     }]
     monkeypatch.setattr(subprocess, "run", _fake_run(stdout=json.dumps(exif_data)))
 
@@ -149,7 +158,7 @@ def test_run_exiftool_video_uses_video_field_filter(tmp_path: Path, monkeypatch)
     assert obs["Duration"] == 12.5
     assert obs["CreateDate"] == "2018:04:19 11:24:49"
     assert "DateTimeOriginal" not in obs
-    assert "GPSLatitude" not in obs
+    assert obs["GPSCoordinates"] == "39.96 -106.21 2380"
 
 
 def test_run_exiftool_writes_json_to_disk(tmp_path: Path, monkeypatch) -> None:
@@ -158,7 +167,11 @@ def test_run_exiftool_writes_json_to_disk(tmp_path: Path, monkeypatch) -> None:
     img = tmp_path / "photo.jpg"
     output_dir = tmp_path / "output"
 
-    exif_data = [{"FileName": "photo.jpg", "Make": "DJI", "UnrelatedField": "kept_on_disk"}]
+    exif_data = [{
+        "SourceFile": str(img),
+        "File": {"FileName": "photo.jpg", "MIMEType": "image/jpeg"},
+        "ExifIFD": {"Make": "DJI", "UnrelatedField": "kept_on_disk"},
+    }]
     monkeypatch.setattr(subprocess, "run", _fake_run(stdout=json.dumps(exif_data)))
 
     evidence, _ = run_exiftool(img, output_dir, state, parent, config.IMAGES)
@@ -166,8 +179,9 @@ def test_run_exiftool_writes_json_to_disk(tmp_path: Path, monkeypatch) -> None:
     json_path = Path(str(evidence.stored_path))
     assert json_path.exists()
     written = json.loads(json_path.read_text(encoding="utf-8"))
-    assert written["FileName"] == "photo.jpg"
-    assert written["UnrelatedField"] == "kept_on_disk"
+    assert isinstance(written, list)
+    assert written[0]["File"]["FileName"] == "photo.jpg"
+    assert written[0]["ExifIFD"]["UnrelatedField"] == "kept_on_disk"
 
 
 def test_run_exiftool_evidence_metadata(tmp_path: Path, monkeypatch) -> None:
