@@ -161,6 +161,7 @@ _PROBE_BYTES = 8192
 _NON_PRINTABLE_THRESHOLD = 0.15
 
 # Flight log format regexes
+_JSON_ARRAY_LOG_RE = re.compile(r'\["(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})","([^"]*)","([^"]*)"\]')
 _BRACKET_RE = re.compile(r"\[([^\]]+),\s*([^\]]+)\]")
 _BRACKET_INLINE_RE = re.compile(r"^\[([^\]]+)\](.+)$", re.MULTILINE)
 _CRASH_SECTION_RE = re.compile(r"=+\s*Crash\s*=+", re.IGNORECASE)
@@ -868,8 +869,28 @@ def _parse_bracketed_log(text: str, inline: bool = False) -> list[dict[str, Any]
     ]
 
 
+def _parse_json_array_log(text: str) -> list[dict[str, Any]]:
+    """Extract entries from iOS JSON-array-of-arrays flight log format.
+
+    Each record: ["timestamp", "level", "message"]
+    level is included in the message when non-empty.
+    """
+    entries = []
+    for m in _JSON_ARRAY_LOG_RE.finditer(text):
+        ts = m.group(1)
+        level = m.group(2).strip()
+        msg = m.group(3).strip()
+        entries.append({
+            "timestamp": ts,
+            "message": f"[{level}] {msg}" if level else msg,
+        })
+    return entries
+
+
 def _classify_flight_log(text: str) -> tuple[str, list[dict[str, Any]]]:
     """Classify a flight log text and return (format_name, entries)."""
+    if _JSON_ARRAY_LOG_RE.search(text):
+        return "json_array_log", _parse_json_array_log(text)
     if _BRACKET_RE.search(text):
         return "bracketed_log", _parse_bracketed_log(text)
     if _BRACKET_INLINE_RE.search(text):

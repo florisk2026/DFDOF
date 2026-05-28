@@ -750,6 +750,49 @@ def test_classify_flight_log_unknown() -> None:
     assert entries == []
 
 
+def test_parse_json_array_log_basic() -> None:
+    text = '[["2018-04-19 11:25:15","","Home Point Recorded."]]'
+    entries = p5._parse_json_array_log(text)
+    assert len(entries) == 1
+    assert entries[0]["timestamp"] == "2018-04-19 11:25:15"
+    assert entries[0]["message"] == "Home Point Recorded."
+
+
+def test_parse_json_array_log_with_level() -> None:
+    text = '[["2018-04-19 11:26:34","Warning","Low battery warning"]]'
+    entries = p5._parse_json_array_log(text)
+    assert len(entries) == 1
+    assert entries[0]["timestamp"] == "2018-04-19 11:26:34"
+    assert entries[0]["message"] == "[Warning] Low battery warning"
+
+
+def test_parse_json_array_log_multiple() -> None:
+    text = (
+        '[["2018-04-19 11:25:15","","Home Point Recorded."]],'
+        '[["2018-04-19 11:26:00","","Taking off"]],'
+        '[["2018-04-19 11:26:34","Warning","Low battery warning"]]'
+    )
+    entries = p5._parse_json_array_log(text)
+    assert len(entries) == 3
+    assert entries[0]["timestamp"] == "2018-04-19 11:25:15"
+    assert entries[2]["message"] == "[Warning] Low battery warning"
+
+
+def test_classify_flight_log_json_array() -> None:
+    text = '[["2018-04-19 11:25:15","","Home Point Recorded."]],[["2018-04-19 11:26:34","Warning","msg"]]'
+    fmt, entries = p5._classify_flight_log(text)
+    assert fmt == "json_array_log"
+    assert len(entries) == 2
+
+
+def test_classify_flight_log_bracketed_not_affected_by_json_array() -> None:
+    text = "[2018-04-19 17:24:45, signal lost]"
+    fmt, entries = p5._classify_flight_log(text)
+    assert fmt == "bracketed_log"
+    assert entries[0]["timestamp"] == "2018-04-19 17:24:45"
+    assert entries[0]["message"] == "signal lost"
+
+
 # ---------------------------------------------------------------------------
 # Flight log parsing — integration tests (run_phase_5)
 # ---------------------------------------------------------------------------
