@@ -27,6 +27,7 @@ from config import (
     ACQUISITION_DATCON,
     ACQUISITION_EXIFTOOL,
     ACQUISITION_NORMALISE,
+    ACQUISITION_SELECT_ACCOUNT_DATA,
     ACQUISITION_TXTLOGTOCSV,
     DATABASES,
     DRONE_LOGS,
@@ -35,6 +36,7 @@ from config import (
     FLIGHT_RECORDS,
     IDENTIFICATION_DRONE_SD,
     IMAGES,
+    VIDEOS,
     SOURCE_IDENTIFICATION_TYPES,
     clear_and_make,
     output_dir,
@@ -1094,6 +1096,37 @@ def run_phase_5(state: State) -> State:
             obs = _process_exif(artefact, exif_data)
             if obs is not None:
                 anomalies.append(obs)
+
+        elif acquisition == ACQUISITION_SELECT_ACCOUNT_DATA and category == VIDEOS:
+            # .info sidecar: P4 wrote the parsed key/value dict as JSON at stored_path.
+            # Emit a normalised observation so P6 EXIF correlation picks it up.
+            if VIDEOS not in _announced_categories:
+                print(f"  Normalising and Anomaly Checking {VIDEOS}")
+                _announced_categories.add(VIDEOS)
+            info_stored = Path(str(artefact.get("stored_path") or ""))
+            if not info_stored.exists():
+                continue
+            try:
+                info_data: dict[str, Any] = json.loads(info_stored.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            # CaptureDate is local time with no timezone — cannot be safely treated as UTC.
+            # Emit GPS only so P6 uses the bbox (possible) path instead of the time window path.
+            lat = _try_float(str(info_data.get("PositionGPSLat") or ""))
+            lon = _try_float(str(info_data.get("PositionGPSLng") or ""))
+            obs_fields: dict[str, Any] = {}
+            if lat is not None and lon is not None:
+                obs_fields["gps_latitude"] = lat
+                obs_fields["gps_longitude"] = lon
+            if not obs_fields:
+                continue
+            anomalies.append(make_observation(
+                stored_path=str(info_stored),
+                evidence_sha256=str(artefact.get("parent_sha256") or ""),
+                evidence_category=VIDEOS,
+                acquisition_method=ACQUISITION_NORMALISE,
+                observations=[obs_fields],
+            ))
 
     _id_rank = {ident: i for i, ident in enumerate(SOURCE_IDENTIFICATION_TYPES)}
 

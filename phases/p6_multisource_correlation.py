@@ -425,7 +425,7 @@ def _boundary_events(
 ) -> list[dict[str, Any]]:
     """Return [log_started, log_ended] events for a single flight candidate."""
     ev_dict = cand["evidence_dict"]
-    source = f"{ev_dict.get('source_identification', '')}: {ev_dict.get('artefact_category', '')}"
+    source = f"{ev_dict.get('source_identification', '')}:{ev_dict.get('artefact_category', '')}"
     sha = ev_dict.get("sha256", "")
     rows = cand["rows"]
 
@@ -468,7 +468,7 @@ def _peak_height_event(
 ) -> dict[str, Any] | None:
     """Return a single 'Reached peak height' event for the highest row."""
     ev_dict = cand["evidence_dict"]
-    source = f"{ev_dict.get('source_identification', '')}: {ev_dict.get('artefact_category', '')}"
+    source = f"{ev_dict.get('source_identification', '')}:{ev_dict.get('artefact_category', '')}"
     sha = ev_dict.get("sha256", "")
     rows = cand["rows"]
 
@@ -508,7 +508,7 @@ def _motor_events(
 ) -> list[dict[str, Any]]:
     """Return events for motor state: initial state + every transition."""
     ev_dict = cand["evidence_dict"]
-    source = f"{ev_dict.get('source_identification', '')}: {ev_dict.get('artefact_category', '')}"
+    source = f"{ev_dict.get('source_identification', '')}:{ev_dict.get('artefact_category', '')}"
     sha = ev_dict.get("sha256", "")
     rows = cand["rows"]
 
@@ -550,7 +550,7 @@ def _fly_mode_events(
 ) -> list[dict[str, Any]]:
     """Return an event for every fly-mode change (value transitions only)."""
     ev_dict = cand["evidence_dict"]
-    source = f"{ev_dict.get('source_identification', '')}: {ev_dict.get('artefact_category', '')}"
+    source = f"{ev_dict.get('source_identification', '')}:{ev_dict.get('artefact_category', '')}"
     sha = ev_dict.get("sha256", "")
     rows = cand["rows"]
 
@@ -586,7 +586,7 @@ def _log_message_events(
 ) -> list[dict[str, Any]]:
     """Return a log-message event for every non-empty warn/log column value."""
     ev_dict = cand["evidence_dict"]
-    source = f"{ev_dict.get('source_identification', '')}: {ev_dict.get('artefact_category', '')}"
+    source = f"{ev_dict.get('source_identification', '')}:{ev_dict.get('artefact_category', '')}"
     sha = ev_dict.get("sha256", "")
     rows = cand["rows"]
     events = []
@@ -618,7 +618,7 @@ def _state_change_events(
 ) -> list[dict[str, Any]]:
     """Emit an event on every value transition; optionally also on first occurrence."""
     ev_dict = cand["evidence_dict"]
-    source = f"{ev_dict.get('source_identification', '')}: {ev_dict.get('artefact_category', '')}"
+    source = f"{ev_dict.get('source_identification', '')}:{ev_dict.get('artefact_category', '')}"
     sha = ev_dict.get("sha256", "")
     rows = cand["rows"]
     events = []
@@ -762,7 +762,7 @@ def _correlate_exif_observations(
                 flight["events"].append(_make_event(
                     timestamp      = ts_str,
                     timezone       = _ts_timezone(ts_str),
-                    source         = f"{source_id}: {category}",
+                    source         = f"{source_id}:{category}",
                     source_pointer = pointer,
                     event          = "Plausible media metadata correlation found",
                     data           = {
@@ -777,10 +777,8 @@ def _correlate_exif_observations(
                 bbox = flight.get("_bbox")
                 if bbox is None or not _point_in_bbox(obs_lat, obs_lon, bbox):
                     continue
-                if pointer not in flight["plausibly_correlated"]:
-                    flight["plausibly_correlated"].append(pointer)
                 flight["possibly_correlated"].append({
-                    "source":         f"{source_id}: {category}",
+                    "source":         f"{source_id}:{category}",
                     "source_pointer": pointer,
                     "data": {"longitude": obs_lon, "latitude": obs_lat},
                 })

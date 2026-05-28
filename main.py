@@ -15,6 +15,7 @@ Orchestrates the forensic workflow:
 from __future__ import annotations
 
 import argparse
+import shutil
 from pathlib import Path
 from typing import cast
 
@@ -24,6 +25,8 @@ from phases.p3_artefact_extraction import run_phase_3
 from phases.p4_decision_and_orchestration import run_phase_4
 from phases.p5_normalisation_and_anomaly_checking import run_phase_5
 from phases.p6_multisource_correlation import run_phase_6
+from phases.p7_analysis_and_validation import run_phase_7
+from config import output_dir
 from state import State
 
 
@@ -66,7 +69,7 @@ def run_phases(
     evidence_dir: str | None,
     state_path: str | Path,
 ) -> State:
-    """Orchestrate the forensic analysis phases."""
+    """Orchestrate the forensic analysis phases P1→P7."""
 
     # Case intake.
     print("Case intake:")
@@ -125,7 +128,15 @@ def run_phases(
     state.save(state_path)
     print()
 
-    # Future phases.
+    # Phase 7: Analysis and validation.
+    print("[Phase 7] Analysis and Validation:")
+    state = run_phase_7(state)
+    state.save(state_path)
+    print()
+
+    case_dir = output_dir() / state.case_id
+    case_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(state_path, case_dir / Path(state_path).name)
 
     print(f"Workflow complete. State written to {state_path}")
     print(f"All results are stored in {state.evidence_directory}\n")

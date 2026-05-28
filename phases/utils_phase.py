@@ -65,6 +65,12 @@ def compact_json(data: Any) -> str:
     _str_arr = r'\[(\s*"[^"]*"(?:,\s*"[^"]*")*\s*)\]'
     text = re.sub(r'(?<="contains_no_value": )' + _str_arr, _collapse, text, flags=re.DOTALL)
     text = re.sub(r'(?<="contains_constant_value": )' + _str_arr, _collapse, text, flags=re.DOTALL)
+    # Collapse single-key {"evidence_sha256": "..."} objects onto one line.
+    text = re.sub(
+        r'\{\s*"evidence_sha256":\s*("(?:[^"\\]|\\.)*")\s*\}',
+        lambda m: '{"evidence_sha256": ' + m.group(1) + "}",
+        text,
+    )
     return text
 
 

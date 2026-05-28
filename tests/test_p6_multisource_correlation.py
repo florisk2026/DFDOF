@@ -941,7 +941,7 @@ def test_exif_correlation_no_match(tmp_path: Path, monkeypatch) -> None:
 
 
 def test_exif_correlation_gps_only_in_bbox(tmp_path: Path, monkeypatch) -> None:
-    """GPS-only obs inside flight bbox → pointer in plausibly_correlated + possibly_correlated entry."""
+    """GPS-only obs inside flight bbox → pointer in possibly_correlated only, not plausibly_correlated."""
     rows_data = _overlapping_rows(n=10, interval_s=3, lat="39.9612", lon="-106.2165")
     fr_csv = tmp_path / "fr.csv"
     _write_norm_fr_csv(fr_csv, [_fr_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3]) for r in rows_data])
@@ -963,7 +963,7 @@ def test_exif_correlation_gps_only_in_bbox(tmp_path: Path, monkeypatch) -> None:
     result = p6.run_phase_6(state)
 
     flight = result.phase_outputs[p6._PHASE_NAME]["flights"][0]
-    assert f"p5:{exif_sha}" in flight["plausibly_correlated"]
+    assert f"p5:{exif_sha}" not in flight["plausibly_correlated"]
     assert len(flight["possibly_correlated"]) == 1
     entry = flight["possibly_correlated"][0]
     assert entry["source_pointer"] == f"p5:{exif_sha}"
