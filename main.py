@@ -23,6 +23,7 @@ from phases.p2_image_parsing import run_phase_2
 from phases.p3_artefact_extraction import run_phase_3
 from phases.p4_decision_and_orchestration import run_phase_4
 from phases.p5_normalisation_and_anomaly_checking import run_phase_5
+from phases.p6_multisource_correlation import run_phase_6
 from state import State
 
 
@@ -118,9 +119,16 @@ def run_phases(
     state.save(state_path)
     print()
 
+    # Phase 6: Multi-source correlation.
+    print("[Phase 6] Multi-Source Correlation:")
+    state = run_phase_6(state)
+    state.save(state_path)
+    print()
+
     # Future phases.
 
-    print(f"Workflow complete. State written to {state_path}\n")
+    print(f"Workflow complete. State written to {state_path}")
+    print(f"All results are stored in {state.evidence_directory}\n")
     return state
 
 

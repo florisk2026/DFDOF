@@ -1,0 +1,1106 @@
+"""DFDOF Phase 6: Multi-Source Correlation.
+
+This phase:
+ - creates a phase 6 output directory,
+ - loads P5-normalised FLIGHT_RECORDS and DRONE_LOGS CSVs,
+ - correlates each flight record against each drone log by temporal overlap
+   and spatial distance (primary GPS rule),
+ - builds a unified per-flight event timeline with ordered events,
+ - writes one timeline_flightXX.json per identified flight and a compact state summary.
+"""
+
+from __future__ import annotations
+
+import bisect
+import csv
+import re
+import statistics
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+from config import (
+    ACQUISITION_NORMALISE,
+    DRONE_LOGS,
+    FLIGHT_LOGS,
+    FLIGHT_RECORDS,
+    clear_and_make,
+    output_dir,
+    utc_now_iso,
+)
+from phases.utils_phase import haversine_m, write_json
+from state import State
+
+_PHASE_NAME = Path(__file__).stem
+
+# ===========================================================================
+# PHASE 6: MULTI-SOURCE CORRELATION CONFIGURATION & THRESHOLD JUSTIFICATION
+# ===========================================================================
+# FORENSIC METHODOLOGY NOTE:
+# These thresholds govern the decision logic for pairing drone logs with flight
+# records and for extracting discrete flight events from telemetry streams. They
+# are conservative engineering choices designed to minimise false correlations;
+# no single threshold constitutes definitive proof of a matched or unmatched flight.
+#
+# Threshold Derivation Matrix:
+# 1. Correlation Geometry : Temporal overlap and spatial plausibility bounds
+# 2. Flight Physics       : Manufacturer-grounded event-detection boundaries
+# 3. GNSS Engineering     : Multi-lateral satellite positioning constraints
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Category 1: Correlation Geometry (Conservative Plausibility Bounds)
+# ---------------------------------------------------------------------------
+
+# Primary GPS-assisted temporal overlap floor (seconds) and minimum fraction.
+# DatCon at 30 Hz, FlightRecord at 10 Hz — 60 s yields ≥600 rows at the slower rate,
+# sufficient for meaningful spatial comparison. The 10 % fraction prevents
+# edge-matching of long flights that briefly overlap (Clark et al., 2017).
+_OVERLAP_MIN_S = 60.0
+_OVERLAP_MIN_FRACTION = 0.10
+
+# Half-width of the bisect window for nearest-neighbour GPS point matching (seconds).
+# A ±2 s association gate absorbs independent-clock offsets between log sources
+# without pairing GPS points from different manoeuvres.
+_SPATIAL_WINDOW_S = 2.0
+
+# Maximum median haversine distance for two candidates to represent the same flight.
+# Consumer DJI GPS achieves 1.5–3 m CEP; ICAO Annex 10 SPS accuracy is 13 m (95 %).
+# 100 m is a coarse plausibility filter — generous enough to tolerate multi-path
+# errors and clock offset, strict enough to reject genuinely distinct flights.
+_SPATIAL_MAX_MEDIAN_M = 100.0
+
+# Minimum GPS point pairs required to compute a valid median distance.
+# Fewer than 5 matched pairs do not characterise the spatial relationship reliably;
+# the flight pair is left unmatched below this count.
+_SPATIAL_MIN_PAIRS = 5
+
+# ---------------------------------------------------------------------------
+# Column name constants (mirrors P5)
+# ---------------------------------------------------------------------------
+
+# DatCon
+_DRONE_TS_COL     = "[NORM]:GPS:dateTimeStamp"
+_DRONE_LAT_COL    = "GPS:Lat"
+_DRONE_LON_COL    = "GPS:Long"
+_DRONE_ALT_COL    = "IMU_ATTI(0):alti:D"
+_DRONE_MODE_COL   = "Controller:ctrl_mode"
+_DRONE_HEIGHT_COL = "IMUCalcs(0):height:C"
+_DRONE_MOTOR_COL  = "Controller:motor_state:D"
+_DRONE_DIST_COL   = "IMU_ATTI(0):distanceTravelled:C"
+_DRONE_WARN_COL   = "eventLog"
+_DRONE_ATTR_COL   = "Attribute|Value"
+
+# FlightRecord
+_FR_TS_COL     = "[NORM]:CUSTOM.updateTime"
+_FR_LAT_COL    = "OSD.latitude"
+_FR_LON_COL    = "OSD.longitude"
+_FR_ALT_COL    = "OSD.altitude [m]"
+_FR_STATE_COL  = "OSD.flycState"
+_FR_HEIGHT_COL = "OSD.height [m]"
+_FR_MOTOR_COL  = "OSD.isMotorUp"
+_FR_DIST_COL      = "CALC.travelled [m]"
+_FR_DETAILS_APP_TYPE    = "DETAILS.appType"
+_FR_DETAILS_APP_VER     = "DETAILS.appVersion"
+_FR_DETAILS_AC_NAME     = "DETAILS.aircraftName"
+_FR_DETAILS_AC_SN       = "DETAILS.aircraftSnBytes"
+_FR_DETAILS_BATT_SN     = "DETAILS.batterySn"
+_FR_DETAILS_RC_SN       = "DETAILS.rcSn"
+_FR_DETAILS_CAM_SN      = "DETAILS.cameraSn"
+_FR_WARN_COL      = "APP_WARN.warn"
+_FR_TIP_COL       = "APP_TIP.tip"
+_FR_REC_STATE_COL = "CAMERA_INFO.recordState"
+_FR_PHOTO_COL     = "CAMERA_INFO.photoState"
+_FR_SD_COL        = "CAMERA_INFO.sdCardState"
+
+def _try_float(value: str) -> float | None:
+    """Return float(value) or None on parse failure."""
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return None
+
+
+def _norm_msg(s: str) -> str:
+    """Normalise a log message for cross-format comparison.
+
+    Absorbs level-prefix formatting differences ([Warning] vs Warning:),
+    punctuation variation (comma vs period), non-breaking spaces, and
+    Unicode replacement characters that arise from different DJI subsystems
+    encoding the same event text differently.
+    """
+    s = s.lower()
+    s = s.replace("\xa0", " ").replace("�", " ")
+    s = re.sub(r"[,\.:\;\!\?\[\]]", " ", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
+
+
+def _load_csv_rows(path: Path) -> tuple[list[str], list[dict[str, str]]]:
+    """Read a normalised CSV into (header, rows) — single read, held in memory.
+
+    Each row is a dict keyed by header name; short rows are padded with "".
+    Returns ([], []) on missing file or IO error.
+    """
+    try:
+        with path.open(encoding="utf-8", errors="replace", newline="") as fh:
+            reader = csv.reader(fh)
+            try:
+                header = next(reader)
+            except StopIteration:
+                return [], []
+            rows: list[dict[str, str]] = []
+            for raw in reader:
+                padded = raw + [""] * max(0, len(header) - len(raw))
+                rows.append(dict(zip(header, padded)))
+            return header, rows
+    except OSError:
+        return [], []
+
+
+def _get_ts(row: dict[str, str], ts_col: str) -> datetime | None:
+    """Parse the normalised UTC timestamp column from a row dict.
+
+    Both [NORM] columns are already ISO 8601 +00:00 after P5 normalisation.
+    Returns a timezone-aware datetime or None.
+    """
+    val = row.get(ts_col, "").strip()
+    if not val:
+        return None
+    try:
+        dt = datetime.fromisoformat(val)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+def _build_time_index(
+    rows: list[dict[str, str]], ts_col: str
+) -> list[tuple[datetime, int]]:
+    """Build sorted (datetime, row_list_index) pairs for O(log n) lookup."""
+    index: list[tuple[datetime, int]] = []
+    for i, row in enumerate(rows):
+        dt = _get_ts(row, ts_col)
+        if dt is not None:
+            index.append((dt, i))
+    index.sort(key=lambda t: t[0])
+    return index
+
+
+def _build_candidate(
+    evidence_dict: dict[str, Any],
+    rows: list[dict[str, str]],
+    ts_col: str,
+    lat_col: str,
+    lon_col: str,
+    header: list[str],
+) -> dict[str, Any] | None:
+    """Build a FlightCandidate dict from an in-memory CSV row list.
+
+    Returns None if no parseable timestamps exist (artefact is unusable).
+    The returned dict holds references to the row list and header — not copies.
+    """
+    start_dt: datetime | None = None
+    end_dt: datetime | None = None
+    gps_count = 0
+
+    for row in rows:
+        dt = _get_ts(row, ts_col)
+        if dt is not None:
+            if start_dt is None or dt < start_dt:
+                start_dt = dt
+            if end_dt is None or dt > end_dt:
+                end_dt = dt
+
+        lat = _try_float(row.get(lat_col, ""))
+        lon = _try_float(row.get(lon_col, ""))
+        if lat is not None and lon is not None and (lat != 0.0 or lon != 0.0):
+            gps_count += 1
+
+    if start_dt is None:
+        return None
+
+    duration_s = (end_dt - start_dt).total_seconds() if end_dt else 0.0
+
+    return {
+        "evidence_dict": evidence_dict,
+        "rows": rows,
+        "header": header,
+        "ts_col": ts_col,
+        "lat_col": lat_col,
+        "lon_col": lon_col,
+        "start_dt": start_dt,
+        "end_dt": end_dt,
+        "duration_s": duration_s,
+        "gps_count": gps_count,
+        "has_usable_gps": gps_count >= 10,
+        "time_index": None,  # populated externally for drone candidates
+    }
+
+
+def _compute_overlap(cand_a: dict[str, Any], cand_b: dict[str, Any]) -> float:
+    """Return temporal overlap in seconds between two flight candidates."""
+    lo = max(cand_a["start_dt"], cand_b["start_dt"])
+    hi = min(cand_a["end_dt"], cand_b["end_dt"])
+    return max(0.0, (hi - lo).total_seconds())
+
+
+def _compute_spatial(
+    fr_cand: dict[str, Any],
+    drone_cand: dict[str, Any],
+) -> tuple[float | None, float]:
+    """Return (median_distance_m, match_rate) using bisect nearest-neighbour.
+
+    For each FR row with valid GPS, find the nearest drone row within
+    ±_SPATIAL_WINDOW_S seconds. Returns (None, 0.0) if < _SPATIAL_MIN_PAIRS
+    matched pairs found.
+    """
+    time_index: list[tuple[datetime, int]] = drone_cand["time_index"] or []
+    if not time_index:
+        return None, 0.0
+
+    dt_list = [t[0] for t in time_index]
+    drone_rows = drone_cand["rows"]
+
+    distances: list[float] = []
+    fr_gps_total = 0
+
+    for row in fr_cand["rows"]:
+        fr_dt = _get_ts(row, fr_cand["ts_col"])
+        if fr_dt is None:
+            continue
+        fr_lat = _try_float(row.get(fr_cand["lat_col"], ""))
+        fr_lon = _try_float(row.get(fr_cand["lon_col"], ""))
+        if fr_lat is None or fr_lon is None or (fr_lat == 0.0 and fr_lon == 0.0):
+            continue
+        fr_gps_total += 1
+
+        lo_dt = datetime.fromtimestamp(
+            fr_dt.timestamp() - _SPATIAL_WINDOW_S, tz=timezone.utc
+        )
+        hi_dt = datetime.fromtimestamp(
+            fr_dt.timestamp() + _SPATIAL_WINDOW_S, tz=timezone.utc
+        )
+        left = bisect.bisect_left(dt_list, lo_dt)
+        right = bisect.bisect_right(dt_list, hi_dt)
+        if left >= right:
+            continue
+
+        best_idx: int | None = None
+        best_delta = float("inf")
+        for k in range(left, right):
+            delta = abs((dt_list[k] - fr_dt).total_seconds())
+            if delta < best_delta:
+                best_delta = delta
+                best_idx = time_index[k][1]
+
+        if best_idx is not None:
+            d_row = drone_rows[best_idx]
+            d_lat = _try_float(d_row.get(drone_cand["lat_col"], ""))
+            d_lon = _try_float(d_row.get(drone_cand["lon_col"], ""))
+            if d_lat is not None and d_lon is not None:
+                distances.append(haversine_m(fr_lat, fr_lon, d_lat, d_lon))
+
+    if len(distances) < _SPATIAL_MIN_PAIRS or fr_gps_total == 0:
+        return None, 0.0
+
+    match_rate = len(distances) / fr_gps_total
+    return statistics.median(distances), match_rate
+
+
+def _make_event(
+    *,
+    timestamp: str | None,
+    timezone: str,
+    source: str,
+    source_pointer: str | None,
+    event: str,
+    data: dict[str, Any],
+    confidence: str,
+) -> dict[str, Any]:
+    """Return a canonical event dict with all required schema fields."""
+    ts = timestamp.strip() if isinstance(timestamp, str) else timestamp
+    return {
+        "timestamp": ts or None,
+        "timezone": timezone,
+        "source": source,
+        "source_pointer": source_pointer,
+        "event": event,
+        "data": data,
+        "confidence": confidence,
+    }
+
+
+def _ts_timezone(ts_str: str) -> str:
+    """Return "UTC" if the timestamp string carries an explicit UTC marker, else "unknown"."""
+    s = ts_str.strip()
+    if s.endswith("Z") or "+00:00" in s or "+0000" in s:
+        return "UTC"
+    return "unknown"
+
+
+def _event_data_drone(rows: list[dict[str, str]], row_id: int) -> dict[str, Any]:
+    """Standard event data block for a drone log row."""
+    row = rows[row_id]
+    return {
+        "latitude":  _try_float(row.get(_DRONE_LAT_COL, "")),
+        "longitude": _try_float(row.get(_DRONE_LON_COL, "")),
+        "altitude":  _try_float(row.get(_DRONE_ALT_COL, "")),
+    }
+
+
+def _event_data_fr(rows: list[dict[str, str]], row_id: int) -> dict[str, Any]:
+    """Standard event data block for a flight record row."""
+    row = rows[row_id]
+    return {
+        "latitude":  _try_float(row.get(_FR_LAT_COL, "")),
+        "longitude": _try_float(row.get(_FR_LON_COL, "")),
+        "altitude":  _try_float(row.get(_FR_ALT_COL, "")),
+    }
+
+
+def _event_confidence(ts_str: str, coord: dict[str, Any]) -> str:
+    """Four-tier confidence based on GPS presence and UTC timestamp certainty."""
+    lat = coord.get("latitude")
+    lon = coord.get("longitude")
+    has_gps = lat is not None and lon is not None and (lat != 0.0 or lon != 0.0)
+    ts_utc = _ts_timezone(ts_str) == "UTC"
+    if has_gps and ts_utc:
+        return "high"
+    if has_gps or ts_utc:
+        return "medium"
+    return "low"
+
+
+def _drone_log_start_extras(rows: list[dict[str, str]]) -> dict[str, Any]:
+    """Extract name_drone from the ACType Attribute|Value row."""
+    for row in rows:
+        cell = row.get(_DRONE_ATTR_COL, "").strip()
+        if cell.startswith("ACType|"):
+            return {"name_drone": cell.split("|", 1)[1].strip() or None}
+    return {"name_drone": None}
+
+
+def _fr_log_start_extras(rows: list[dict[str, str]]) -> dict[str, Any]:
+    """Extract DETAILS metadata fields from the first populated row."""
+    for row in rows:
+        def _get(col: str) -> str | None:
+            v = row.get(col, "").strip()
+            return v or None
+        phone_os        = _get(_FR_DETAILS_APP_TYPE)
+        dji_app_version = _get(_FR_DETAILS_APP_VER)
+        name_drone      = _get(_FR_DETAILS_AC_NAME)
+        serial_drone    = _get(_FR_DETAILS_AC_SN)
+        serial_battery  = _get(_FR_DETAILS_BATT_SN)
+        serial_controller = _get(_FR_DETAILS_RC_SN)
+        serial_camera   = _get(_FR_DETAILS_CAM_SN)
+        if any(v is not None for v in (
+            phone_os, dji_app_version, name_drone,
+            serial_drone, serial_battery, serial_controller, serial_camera,
+        )):
+            return {
+                "phone_os":           phone_os,
+                "dji_app_version":    dji_app_version,
+                "name_drone":         name_drone,
+                "serial_drone":       serial_drone,
+                "serial_battery":     serial_battery,
+                "serial_controller":  serial_controller,
+                "serial_camera":      serial_camera,
+            }
+    return {
+        "phone_os": None, "dji_app_version": None, "name_drone": None,
+        "serial_drone": None, "serial_battery": None,
+        "serial_controller": None, "serial_camera": None,
+    }
+
+
+def _boundary_events(
+    cand: dict[str, Any],
+    data_fn: Any,
+    ts_col: str,
+    dist_col: str,
+    start_extras_fn: Any = None,
+) -> list[dict[str, Any]]:
+    """Return [log_started, log_ended] events for a single flight candidate."""
+    ev_dict = cand["evidence_dict"]
+    source = f"{ev_dict.get('source_identification', '')}: {ev_dict.get('artefact_category', '')}"
+    sha = ev_dict.get("sha256", "")
+    rows = cand["rows"]
+
+    first_idx = next((i for i, r in enumerate(rows) if _get_ts(r, ts_col) is not None), None)
+    last_idx = next((i for i, r in enumerate(reversed(rows)) if _get_ts(r, ts_col) is not None), None)
+    if last_idx is not None:
+        last_idx = len(rows) - 1 - last_idx
+
+    extras = start_extras_fn(rows) if start_extras_fn is not None else {}
+
+    events = []
+    for idx, label in ((first_idx, "Log started"), (last_idx, "Log ended")):
+        if idx is None:
+            continue
+        row = rows[idx]
+        ts_val = row.get(ts_col, "")
+        norm_id = row.get("[NORM]:ID", "")
+        data = data_fn(rows, idx)
+        if label == "Log started":
+            data = {**data, **extras}
+        if label == "Log ended":
+            data = {**data, "distance_travelled": _try_float(row.get(dist_col, ""))}
+        events.append(_make_event(
+            timestamp=ts_val,
+            timezone=_ts_timezone(ts_val),
+            source=source,
+            source_pointer=f"{sha}:{norm_id}",
+            event=label,
+            data=data,
+            confidence=_event_confidence(ts_val, data),
+        ))
+    return events
+
+
+def _peak_height_event(
+    cand: dict[str, Any],
+    data_fn: Any,
+    ts_col: str,
+    height_col: str,
+) -> dict[str, Any] | None:
+    """Return a single 'Reached peak height' event for the highest row."""
+    ev_dict = cand["evidence_dict"]
+    source = f"{ev_dict.get('source_identification', '')}: {ev_dict.get('artefact_category', '')}"
+    sha = ev_dict.get("sha256", "")
+    rows = cand["rows"]
+
+    best_idx: int | None = None
+    best_h = float("-inf")
+    for i, row in enumerate(rows):
+        h = _try_float(row.get(height_col, ""))
+        if h is not None and h > best_h:
+            best_h = h
+            best_idx = i
+
+    if best_idx is None:
+        return None
+
+    row = rows[best_idx]
+    ts_val = row.get(ts_col, "")
+    norm_id = row.get("[NORM]:ID", "")
+    data = {**data_fn(rows, best_idx), "relative_height": best_h}
+    return _make_event(
+        timestamp=ts_val,
+        timezone=_ts_timezone(ts_val),
+        source=source,
+        source_pointer=f"{sha}:{norm_id}",
+        event="Reached peak height",
+        data=data,
+        confidence=_event_confidence(ts_val, data),
+    )
+
+
+def _motor_events(
+    cand: dict[str, Any],
+    data_fn: Any,
+    ts_col: str,
+    motor_col: str,
+    on_val: str,
+    off_val: str,
+) -> list[dict[str, Any]]:
+    """Return events for motor state: initial state + every transition."""
+    ev_dict = cand["evidence_dict"]
+    source = f"{ev_dict.get('source_identification', '')}: {ev_dict.get('artefact_category', '')}"
+    sha = ev_dict.get("sha256", "")
+    rows = cand["rows"]
+
+    events = []
+    prev: str | None = None
+    for i, row in enumerate(rows):
+        raw = row.get(motor_col, "").strip().upper()
+        if not raw:
+            continue
+        if raw == on_val.upper():
+            state = "on"
+        elif raw == off_val.upper():
+            state = "off"
+        else:
+            continue
+        if prev is None or state != prev:
+            label = "Motor turned on" if state == "on" else "Motor turned off"
+            ts_val = row.get(ts_col, "")
+            norm_id = row.get("[NORM]:ID", "")
+            data = {**data_fn(rows, i), "motor_state": state}
+            events.append(_make_event(
+                timestamp=ts_val,
+                timezone=_ts_timezone(ts_val),
+                source=source,
+                source_pointer=f"{sha}:{norm_id}",
+                event=label,
+                data=data,
+                confidence=_event_confidence(ts_val, data),
+            ))
+            prev = state
+    return events
+
+
+def _fly_mode_events(
+    cand: dict[str, Any],
+    data_fn: Any,
+    ts_col: str,
+    mode_col: str,
+) -> list[dict[str, Any]]:
+    """Return an event for every fly-mode change (value transitions only)."""
+    ev_dict = cand["evidence_dict"]
+    source = f"{ev_dict.get('source_identification', '')}: {ev_dict.get('artefact_category', '')}"
+    sha = ev_dict.get("sha256", "")
+    rows = cand["rows"]
+
+    events = []
+    prev: str | None = None
+    for i, row in enumerate(rows):
+        mode = row.get(mode_col, "").strip() or None
+        if mode is None:
+            continue
+        if mode != prev:
+            ts_val = row.get(ts_col, "")
+            norm_id = row.get("[NORM]:ID", "")
+            data = {**data_fn(rows, i), "fly_mode": mode}
+            events.append(_make_event(
+                timestamp=ts_val,
+                timezone=_ts_timezone(ts_val),
+                source=source,
+                source_pointer=f"{sha}:{norm_id}",
+                event="Fly mode changed",
+                data=data,
+                confidence=_event_confidence(ts_val, data),
+            ))
+            prev = mode
+    return events
+
+
+def _log_message_events(
+    cand: dict[str, Any],
+    data_fn: Any,
+    ts_col: str,
+    warn_col: str,
+    event_label: str = "Log message",
+) -> list[dict[str, Any]]:
+    """Return a log-message event for every non-empty warn/log column value."""
+    ev_dict = cand["evidence_dict"]
+    source = f"{ev_dict.get('source_identification', '')}: {ev_dict.get('artefact_category', '')}"
+    sha = ev_dict.get("sha256", "")
+    rows = cand["rows"]
+    events = []
+    for i, row in enumerate(rows):
+        msg = row.get(warn_col, "").strip() or None
+        if msg is None:
+            continue
+        ts_val = row.get(ts_col, "")
+        norm_id = row.get("[NORM]:ID", "")
+        data = {**data_fn(rows, i), "log_message": msg}
+        events.append(_make_event(
+            timestamp=ts_val,
+            timezone=_ts_timezone(ts_val),
+            source=source,
+            source_pointer=f"{sha}:{norm_id}",
+            event=event_label,
+            data=data,
+            confidence=_event_confidence(ts_val, data),
+        ))
+    return events
+
+
+def _state_change_events(
+    cand: dict[str, Any],
+    col: str,
+    event_label: str,
+    data_key: str,
+    include_initial: bool,
+) -> list[dict[str, Any]]:
+    """Emit an event on every value transition; optionally also on first occurrence."""
+    ev_dict = cand["evidence_dict"]
+    source = f"{ev_dict.get('source_identification', '')}: {ev_dict.get('artefact_category', '')}"
+    sha = ev_dict.get("sha256", "")
+    rows = cand["rows"]
+    events = []
+    prev: str | None = None
+    for i, row in enumerate(rows):
+        val = row.get(col, "").strip() or None
+        if val is None:
+            continue
+        if (prev is None and include_initial) or (prev is not None and val != prev):
+            ts_val = row.get(_FR_TS_COL, "")
+            norm_id = row.get("[NORM]:ID", "")
+            data = {**_event_data_fr(rows, i), data_key: val}
+            events.append(_make_event(
+                timestamp=ts_val,
+                timezone=_ts_timezone(ts_val),
+                source=source,
+                source_pointer=f"{sha}:{norm_id}",
+                event=event_label,
+                data=data,
+                confidence=_event_confidence(ts_val, data),
+            ))
+        prev = val
+    return events
+
+
+def _exif_obs_datetime(obs_data: dict[str, Any]) -> datetime | None:
+    """Combine norm_date + norm_time into a UTC-aware datetime.
+
+    parse_exif_date in utils_phase.py treats all EXIF timestamps as UTC
+    (strips timezone suffix, confirmed DJI-only pipeline).
+    """
+    d = obs_data.get("norm_date", "")
+    t = obs_data.get("norm_time", "")
+    if not d or not t:
+        return None
+    try:
+        return datetime.fromisoformat(f"{d}T{t}").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def _parse_flight_dt(val: Any) -> datetime | None:
+    """Parse an ISO string from flights_identified start/end into a datetime."""
+    if not val:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(val))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except ValueError:
+        return None
+
+
+def _flight_covers_dt(flight: dict[str, Any], dt: datetime) -> bool:
+    """Return True if dt falls within any flights_identified time window."""
+    for seg in flight["flights_identified"]:
+        s = _parse_flight_dt(seg.get("start"))
+        e = _parse_flight_dt(seg.get("end"))
+        if s and e and s <= dt <= e:
+            return True
+    return False
+
+
+def _build_bbox(
+    cand: dict[str, Any],
+    lat_col: str,
+    lon_col: str,
+) -> tuple[float, float, float, float] | None:
+    """Return (lat_min, lat_max, lon_min, lon_max) from all valid GPS rows, or None."""
+    lats: list[float] = []
+    lons: list[float] = []
+    for row in cand["rows"]:
+        lat = _try_float(row.get(lat_col, ""))
+        lon = _try_float(row.get(lon_col, ""))
+        if lat is not None and lon is not None and (lat != 0.0 or lon != 0.0):
+            lats.append(lat)
+            lons.append(lon)
+    if not lats:
+        return None
+    return min(lats), max(lats), min(lons), max(lons)
+
+
+def _merge_bboxes(
+    a: tuple[float, float, float, float] | None,
+    b: tuple[float, float, float, float] | None,
+) -> tuple[float, float, float, float] | None:
+    if a is None:
+        return b
+    if b is None:
+        return a
+    return min(a[0], b[0]), max(a[1], b[1]), min(a[2], b[2]), max(a[3], b[3])
+
+
+def _point_in_bbox(lat: float, lon: float, bbox: tuple[float, float, float, float]) -> bool:
+    lat_min, lat_max, lon_min, lon_max = bbox
+    return lat_min <= lat <= lat_max and lon_min <= lon <= lon_max
+
+
+def _correlate_exif_observations(
+    flights: list[dict[str, Any]],
+    p5_anomalies: list[dict[str, Any]],
+    sha_to_source: dict[str, str],
+) -> None:
+    """Match P5 EXIF observations to flights by temporal window and/or GPS bounding box.
+
+    Mutates each flight dict: appends to plausibly_correlated, possibly_correlated,
+    and events.
+    """
+    for obs_dict in p5_anomalies:
+        if obs_dict.get("acquisition_method") != ACQUISITION_NORMALISE:
+            continue
+        obs_list = obs_dict.get("observations", [])
+        if not obs_list:
+            continue
+        obs_data = obs_list[0]
+        norm_date = obs_data.get("norm_date", "")
+        norm_time = obs_data.get("norm_time", "")
+        obs_lat   = obs_data.get("gps_latitude")
+        obs_lon   = obs_data.get("gps_longitude")
+        has_dt  = bool(norm_date and norm_time)
+        has_gps = obs_lat is not None and obs_lon is not None
+
+        if not has_dt and not has_gps:
+            continue
+
+        sha       = obs_dict.get("evidence_sha256", "")
+        category  = obs_dict.get("evidence_category", "")
+        source_id = sha_to_source.get(sha, "")
+        pointer   = f"p5:{sha}"
+
+        for flight in flights:
+            if has_dt:
+                dt = _exif_obs_datetime(obs_data)
+                if dt is None or not _flight_covers_dt(flight, dt):
+                    continue
+                if pointer not in flight["plausibly_correlated"]:
+                    flight["plausibly_correlated"].append(pointer)
+                ts_str = f"{norm_date}T{norm_time}+00:00"
+                coord  = {"latitude": obs_lat, "longitude": obs_lon}
+                flight["events"].append(_make_event(
+                    timestamp      = ts_str,
+                    timezone       = _ts_timezone(ts_str),
+                    source         = f"{source_id}: {category}",
+                    source_pointer = pointer,
+                    event          = "Plausible media metadata correlation found",
+                    data           = {
+                        **coord,
+                        "date":       norm_date,
+                        "time":       norm_time,
+                        "media_type": category,
+                    },
+                    confidence     = _event_confidence(ts_str, coord),
+                ))
+            elif has_gps:
+                bbox = flight.get("_bbox")
+                if bbox is None or not _point_in_bbox(obs_lat, obs_lon, bbox):
+                    continue
+                if pointer not in flight["plausibly_correlated"]:
+                    flight["plausibly_correlated"].append(pointer)
+                flight["possibly_correlated"].append({
+                    "source":         f"{source_id}: {category}",
+                    "source_pointer": pointer,
+                    "data": {"longitude": obs_lon, "latitude": obs_lat},
+                })
+
+
+def _correlate_flight_log_observations(
+    flights: list[dict[str, Any]],
+    p5_anomalies: list[dict[str, Any]],
+    sha_to_source: dict[str, str],
+) -> None:
+    """Match P5 flight_log observations to flights by log-message subset check.
+
+    For each flight_log observation with message entries (not crash_dump),
+    appends to possibly_correlated of every flight whose 'Log message' event set
+    is a superset of the observation's messages.
+    """
+    flight_log_messages: list[set[str]] = [
+        {
+            _norm_msg(e["data"]["log_message"])
+            for e in f["events"]
+            if e.get("event") == "Log message"
+            and isinstance(e.get("data"), dict)
+            and "log_message" in e["data"]
+        }
+        for f in flights
+    ]
+
+    for obs_dict in p5_anomalies:
+        if obs_dict.get("evidence_category") != FLIGHT_LOGS:
+            continue
+        obs_list = obs_dict.get("observations", [])
+        if not obs_list:
+            continue
+        obs_data = obs_list[0]
+        fmt = obs_data.get("format", "")
+        if not fmt or fmt == "crash_dump":
+            continue
+        entries = obs_data.get("entries", [])
+        if not entries:
+            continue
+
+        valid_entries = [e for e in entries if e.get("message")]
+        if not valid_entries:
+            continue
+        norm_messages = {_norm_msg(e["message"]) for e in valid_entries}
+
+        sha = obs_dict.get("evidence_sha256", "")
+        source_id = sha_to_source.get(sha, "")
+        pointer = f"p5:{sha}"
+
+        for idx, flight in enumerate(flights):
+            if not norm_messages.issubset(flight_log_messages[idx]):
+                continue
+            if pointer not in flight["plausibly_correlated"] and pointer not in [
+                pc.get("source_pointer") for pc in flight["possibly_correlated"]
+            ]:
+                flight["possibly_correlated"].append({
+                    "source": f"{source_id}: {FLIGHT_LOGS}",
+                    "source_pointer": pointer,
+                    "data": {"format": fmt, "entry_count": len(valid_entries)},
+                })
+
+
+def _confidence_from_distance(median_m: float) -> str:
+    if median_m < 10.0:
+        return "high"
+    if median_m < 50.0:
+        return "medium"
+    return "low"
+
+
+def _correlate_primary(
+    fr_cand: dict[str, Any], drone_cand: dict[str, Any]
+) -> dict[str, Any] | None:
+    """Primary GPS+temporal correlation rule.
+
+    Returns a correlation dict on match, None if rule cannot apply or fails.
+    """
+    if not fr_cand["has_usable_gps"] or not drone_cand["has_usable_gps"]:
+        return None
+
+    overlap = _compute_overlap(fr_cand, drone_cand)
+    min_dur = min(fr_cand["duration_s"], drone_cand["duration_s"])
+    if overlap < _OVERLAP_MIN_S or overlap < _OVERLAP_MIN_FRACTION * min_dur:
+        return None
+
+    median_dist, match_rate = _compute_spatial(fr_cand, drone_cand)
+    if median_dist is None or median_dist > _SPATIAL_MAX_MEDIAN_M:
+        return None
+
+    return {
+        "matched": True,
+        "rule": "primary",
+        "confidence": _confidence_from_distance(median_dist),
+        "overlap_s": round(overlap, 1),
+        "median_distance_m": round(median_dist, 2),
+        "match_rate": round(match_rate, 4),
+    }
+
+
+def _build_flight_dict(
+    flight_id: str,
+    fr_cand: dict[str, Any] | None,
+    drone_cand: dict[str, Any] | None,
+    correlation: dict[str, Any],
+) -> dict[str, Any]:
+    """Assemble the full flight dict for timeline.json."""
+    candidates = [c for c in (fr_cand, drone_cand) if c is not None]
+
+    groups = []
+    for c in candidates:
+        s = c["start_dt"]
+        e = c["end_dt"]
+        dur = round((e - s).total_seconds(), 1) if s and e else None
+        groups.append({
+            "evidence_sha256": c["evidence_dict"].get("sha256", ""),
+            "start": s.isoformat() if s else None,
+            "end": e.isoformat() if e else None,
+            "duration_s": dur,
+        })
+
+    events: list[dict[str, Any]] = []
+    if fr_cand is not None:
+        events += _boundary_events(fr_cand, _event_data_fr, _FR_TS_COL, _FR_DIST_COL, _fr_log_start_extras)
+        ph = _peak_height_event(fr_cand, _event_data_fr, _FR_TS_COL, _FR_HEIGHT_COL)
+        if ph:
+            events.append(ph)
+        events += _motor_events(fr_cand, _event_data_fr, _FR_TS_COL, _FR_MOTOR_COL, "TRUE", "FALSE")
+        events += _fly_mode_events(fr_cand, _event_data_fr, _FR_TS_COL, _FR_STATE_COL)
+        events += _log_message_events(fr_cand, _event_data_fr, _FR_TS_COL, _FR_WARN_COL)
+        events += _log_message_events(fr_cand, _event_data_fr, _FR_TS_COL, _FR_TIP_COL)
+        events += _state_change_events(fr_cand, _FR_REC_STATE_COL, "Record mode changed", "record_mode", True)
+        events += _state_change_events(fr_cand, _FR_PHOTO_COL, "Photo mode changed", "photo_mode", True)
+        events += _state_change_events(fr_cand, _FR_SD_COL, "SD storage is full", "sd_state", False)
+    if drone_cand is not None:
+        events += _boundary_events(drone_cand, _event_data_drone, _DRONE_TS_COL, _DRONE_DIST_COL, _drone_log_start_extras)
+        ph = _peak_height_event(drone_cand, _event_data_drone, _DRONE_TS_COL, _DRONE_HEIGHT_COL)
+        if ph:
+            events.append(ph)
+        events += _motor_events(drone_cand, _event_data_drone, _DRONE_TS_COL, _DRONE_MOTOR_COL, "1", "0")
+        events += _fly_mode_events(drone_cand, _event_data_drone, _DRONE_TS_COL, _DRONE_MODE_COL)
+        events += _log_message_events(drone_cand, _event_data_drone, _DRONE_TS_COL, _DRONE_WARN_COL)
+    events.sort(key=lambda e: e["timestamp"] or "")
+
+    bbox = _merge_bboxes(
+        _build_bbox(fr_cand, _FR_LAT_COL, _FR_LON_COL) if fr_cand is not None else None,
+        _build_bbox(drone_cand, _DRONE_LAT_COL, _DRONE_LON_COL) if drone_cand is not None else None,
+    )
+
+    return {
+        "flight_id": flight_id,
+        "flights_identified": groups,
+        "correlation_metadata": correlation,
+        "plausibly_correlated": [],
+        "possibly_correlated": [],
+        "_bbox": bbox,
+        "events": events,
+    }
+
+
+def run_phase_6(state: State) -> State:
+    """Phase 6: Multi-source correlation and unified flight timeline."""
+    phase_dir = output_dir() / state.case_id / _PHASE_NAME
+    clear_and_make(phase_dir)
+
+    p5 = state.phase_outputs.get("p5_normalisation_and_anomaly_checking", {})
+    normalised_artefacts: list[dict[str, Any]] = p5.get("normalised_artefacts", [])
+
+    fr_artefacts = [a for a in normalised_artefacts if a.get("artefact_category") == FLIGHT_RECORDS]
+    drone_artefacts = [a for a in normalised_artefacts if a.get("artefact_category") == DRONE_LOGS]
+
+    fr_candidates: list[dict[str, Any]] = []
+    for ev_dict in fr_artefacts:
+        identification = ev_dict.get("source_identification", "unknown")
+        stored = ev_dict.get("stored_path") or ""
+        try:
+            header, rows = _load_csv_rows(Path(str(stored)))
+            if not rows:
+                state.raise_anomaly(6, identification,
+                    f"empty flight record CSV: {Path(stored).name}",
+                    category=FLIGHT_RECORDS)
+                continue
+            cand = _build_candidate(ev_dict, rows, _FR_TS_COL,
+                                    _FR_LAT_COL, _FR_LON_COL, header)
+            if cand is None:
+                state.raise_anomaly(6, identification,
+                    f"no parseable timestamps in flight record: {Path(stored).name}",
+                    category=FLIGHT_RECORDS)
+                continue
+            fr_candidates.append(cand)
+        except Exception as exc:
+            state.raise_anomaly(6, identification,
+                f"flight record load failed ({Path(stored).name}): {exc}",
+                category=FLIGHT_RECORDS)
+
+    drone_candidates: list[dict[str, Any]] = []
+    for ev_dict in drone_artefacts:
+        identification = ev_dict.get("source_identification", "unknown")
+        stored = ev_dict.get("stored_path") or ""
+        try:
+            header, rows = _load_csv_rows(Path(str(stored)))
+            if not rows:
+                state.raise_anomaly(6, identification,
+                    f"empty drone log CSV: {Path(stored).name}",
+                    category=DRONE_LOGS)
+                continue
+            cand = _build_candidate(ev_dict, rows, _DRONE_TS_COL,
+                                    _DRONE_LAT_COL, _DRONE_LON_COL, header)
+            if cand is None:
+                state.raise_anomaly(6, identification,
+                    f"no parseable timestamps in drone log: {Path(stored).name}",
+                    category=DRONE_LOGS)
+                continue
+            cand["time_index"] = _build_time_index(rows, _DRONE_TS_COL)
+            drone_candidates.append(cand)
+        except Exception as exc:
+            state.raise_anomaly(6, identification,
+                f"drone log load failed ({Path(stored).name}): {exc}",
+                category=DRONE_LOGS)
+
+    matched_fr: set[int] = set()
+    matched_drone: set[int] = set()
+    flights: list[dict[str, Any]] = []
+    flight_counter = 0
+
+    for fi, fr_cand in enumerate(fr_candidates):
+        best_di: int | None = None
+        best_corr: dict[str, Any] | None = None
+        best_overlap = 0.0
+
+        for di, drone_cand in enumerate(drone_candidates):
+            if di in matched_drone:
+                continue
+            try:
+                corr = _correlate_primary(fr_cand, drone_cand)
+                if corr is not None:
+                    ov = corr.get("overlap_s", 0.0)
+                    if ov > best_overlap:
+                        best_overlap = ov
+                        best_di = di
+                        best_corr = corr
+            except Exception as exc:
+                identification = fr_cand["evidence_dict"].get("source_identification", "unknown")
+                state.raise_anomaly(6, identification, f"correlation error: {exc}")
+
+        if best_di is not None and best_corr is not None:
+            flight_counter += 1
+            matched_fr.add(fi)
+            matched_drone.add(best_di)
+            drone_cand = drone_candidates[best_di]
+            flights.append(_build_flight_dict(
+                f"flight_{flight_counter:02d}", fr_cand, drone_cand, best_corr,
+            ))
+
+    for fi, fr_cand in enumerate(fr_candidates):
+        if fi in matched_fr:
+            continue
+        flight_counter += 1
+        flights.append(_build_flight_dict(
+            f"flight_{flight_counter:02d}", fr_cand, None,
+            {"matched": False},
+        ))
+
+    for di, drone_cand in enumerate(drone_candidates):
+        if di in matched_drone:
+            continue
+        flight_counter += 1
+        flights.append(_build_flight_dict(
+            f"flight_{flight_counter:02d}", None, drone_cand,
+            {"matched": False},
+        ))
+
+    flights.sort(key=lambda f: (f["flights_identified"][0]["start"] or "") if f["flights_identified"] else "")
+
+    p4_artefacts: list[dict[str, Any]] = (
+        state.phase_outputs.get("p4_decision_and_orchestration", {})
+        .get("decision_and_orchestration_artefacts", [])
+    )
+    p3_artefacts: list[dict[str, Any]] = (
+        state.phase_outputs.get("p3_artefact_extraction", {})
+        .get("extracted_artefacts", [])
+    )
+    sha_to_source: dict[str, str] = {
+        a.get("sha256", ""): a.get("source_identification", "")
+        for a in (*p4_artefacts, *p3_artefacts)
+    }
+    p5_anomalies: list[dict[str, Any]] = p5.get("derived_anomalies", [])
+    _correlate_exif_observations(flights, p5_anomalies, sha_to_source)
+    _correlate_flight_log_observations(flights, p5_anomalies, sha_to_source)
+
+    _INTERNAL_KEYS = {"_bbox"}
+    for flight in flights:
+        fid = flight["flight_id"]
+        idx = int(fid.split("_")[-1])
+        tl_path = phase_dir / f"timeline_flight{idx:02d}.json"
+        flight["events"].sort(key=lambda e: e["timestamp"] or "")
+        write_json(tl_path, {
+            "generated_at": utc_now_iso(),
+            **{k: v for k, v in flight.items() if k not in _INTERNAL_KEYS and k != "events"},
+            "events": flight["events"],
+        })
+        flight["stored_path"] = str(tl_path)
+
+    compact_flights = [
+        {
+            "stored_path": f["stored_path"],
+            "flight_id": f["flight_id"],
+            "flights_identified": f["flights_identified"],
+            "correlation": f["correlation_metadata"],
+            "plausibly_correlated": f["plausibly_correlated"],
+            "possibly_correlated": f["possibly_correlated"],
+        }
+        for f in flights
+    ]
+
+    state.phase_outputs[_PHASE_NAME] = {
+        "completed_at": utc_now_iso(),
+        "flight_count": len(flights),
+        "flights": compact_flights,
+    }
+    state.completed_phases.append(_PHASE_NAME)
+    print(f"  Identified {len(flights)} flight(s). Timeline files written to {phase_dir}")
+    return state
