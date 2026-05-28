@@ -9,7 +9,7 @@ import base64
 import json
 import math
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -106,23 +106,39 @@ def parse_datcon_time(value: str) -> str | None:
 
 
 def parse_exif_date(value: str) -> tuple[str, str] | None:
-    """Parse EXIF date string to (norm_date, norm_time) in UTC.
+    """Parse EXIF date string and return (norm_date, norm_time) in UTC.
 
-    Input: '2018:04:19 17:24:49' or '2018:04:19 17:24:49+02:00'
-    Output: ('2018-04-19', '17:24:49')
+    Handles: 'YYYY:MM:DD HH:MM:SS', 'YYYY:MM:DD HH:MM:SS.sss',
+             'YYYY:MM:DD HH:MM:SS+HH:MM', 'YYYY:MM:DD HH:MM:SS-HH:MM',
+             'YYYY:MM:DD HH:MM:SSZ'.
+    No timezone suffix → assumed UTC (DJI-native logs carry no offset).
     Returns None for zero date or unparseable input.
-    DJI stores timestamps in UTC; timezone suffix is ignored.
     """
     if not value:
         return None
-    base = value.strip()[:19]  # YYYY:MM:DD HH:MM:SS — drop sub-seconds and TZ
-    if base.startswith("0000"):
+    s = value.strip()
+    if s.startswith("0000"):
         return None
+    base = s[:19]  # YYYY:MM:DD HH:MM:SS
     try:
         dt = datetime.strptime(base, "%Y:%m:%d %H:%M:%S")
     except ValueError:
         return None
-    return dt.strftime("%Y-%m-%d"), dt.strftime("%H:%M:%S")
+    # Strip sub-seconds from tail, isolate timezone suffix
+    tz_part = s[19:].lstrip(".0123456789")  # e.g. "" | "Z" | "+02:00" | "-05:00"
+    if tz_part in ("", "Z"):
+        offset_minutes = 0
+    elif len(tz_part) == 6 and tz_part[0] in ("+", "-"):
+        try:
+            sign = 1 if tz_part[0] == "+" else -1
+            h, m = int(tz_part[1:3]), int(tz_part[4:6])
+            offset_minutes = sign * (h * 60 + m)
+        except ValueError:
+            return None
+    else:
+        return None
+    dt_utc = dt - timedelta(minutes=offset_minutes)
+    return dt_utc.strftime("%Y-%m-%d"), dt_utc.strftime("%H:%M:%S")
 
 
 def parse_iso_timestamp(value: str) -> str | None:

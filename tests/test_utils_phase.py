@@ -170,8 +170,20 @@ def test_parse_exif_date_valid() -> None:
     assert parse_exif_date("2018:04:19 17:24:49") == ("2018-04-19", "17:24:49")
 
 
-def test_parse_exif_date_tz_suffix_stripped() -> None:
-    assert parse_exif_date("2018:04:19 17:24:49+02:00") == ("2018-04-19", "17:24:49")
+def test_parse_exif_date_positive_offset() -> None:
+    assert parse_exif_date("2018:04:19 17:24:49+02:00") == ("2018-04-19", "15:24:49")
+
+
+def test_parse_exif_date_negative_offset() -> None:
+    assert parse_exif_date("2018:04:19 02:00:00-05:00") == ("2018-04-19", "07:00:00")
+
+
+def test_parse_exif_date_utc_z() -> None:
+    assert parse_exif_date("2018:04:19 17:24:49Z") == ("2018-04-19", "17:24:49")
+
+
+def test_parse_exif_date_subseconds_with_offset() -> None:
+    assert parse_exif_date("2018:04:19 17:24:49.123+02:00") == ("2018-04-19", "15:24:49")
 
 
 def test_parse_exif_date_zero_date_returns_none() -> None:
