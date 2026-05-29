@@ -219,6 +219,32 @@ def _artefact_coverage(
     return result
 
 
+def _artefact_coverage_per_source(
+    p3_artefacts: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Count extracted artefacts per source, broken down by category."""
+    counts: dict[str, dict[str, int]] = {}
+    for a in p3_artefacts:
+        src = a.get("source_identification", "")
+        cat = a.get("artefact_category", "")
+        if src and cat:
+            counts.setdefault(src, {})
+            counts[src][cat] = counts[src].get(cat, 0) + 1
+
+    return [
+        {
+            "source": src,
+            "artefacts": [
+                {"category": cat, "count": counts[src][cat]}
+                for cat in CONTROLLER_ARTEFACT_CATEGORIES
+                if cat in counts.get(src, {})
+            ],
+        }
+        for src in SOURCE_IDENTIFICATION_TYPES
+        if src in counts
+    ]
+
+
 # ---------------------------------------------------------------------------
 # Section 2 — Tool execution status
 # ---------------------------------------------------------------------------
@@ -841,6 +867,7 @@ def run_phase_7(state: State) -> State:
     # Compute each analysis section
     source_cov = _source_coverage(state)
     artefact_cov = _artefact_coverage(p3_artefacts, p5_anomalies)
+    artefact_cov_per_source = _artefact_coverage_per_source(p3_artefacts)
     tool_stat = _tool_status(state)
 
     identity_sources = _collect_all_identity_sources(p2_obs, p4_obs, p6_flights)
@@ -862,6 +889,7 @@ def run_phase_7(state: State) -> State:
         "flight_count_analysed": len(flight_analyses),
         "source_coverage": source_cov,
         "artefact_coverage": artefact_cov,
+        "artefact_coverage_per_source": artefact_cov_per_source,
         "tool_status": tool_stat,
         "account_and_drone_analysis": account_and_drone,
         "flight_analyses": flight_analyses,

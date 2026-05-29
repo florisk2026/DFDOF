@@ -173,6 +173,38 @@ def test_artefact_coverage_no_duplicate_categories():
 
 
 # ---------------------------------------------------------------------------
+# Section 1 — Artefact coverage per source
+# ---------------------------------------------------------------------------
+
+def test_artefact_coverage_per_source_basic():
+    p3 = [
+        _p3a(config.FLIGHT_RECORDS, "s1", "controller_ios"),
+        _p3a(config.FLIGHT_RECORDS, "s2", "controller_ios"),
+        _p3a(config.DATABASES, "s3", "controller_android"),
+    ]
+    result = p7._artefact_coverage_per_source(p3)
+    assert len(result) == 2
+    android = next(r for r in result if r["source"] == "controller_android")
+    ios = next(r for r in result if r["source"] == "controller_ios")
+    assert android["artefacts"] == [{"category": config.DATABASES, "count": 1}]
+    assert ios["artefacts"] == [{"category": config.FLIGHT_RECORDS, "count": 2}]
+
+
+def test_artefact_coverage_per_source_source_order():
+    p3 = [
+        _p3a(config.IMAGES, "s1", "controller_ios"),
+        _p3a(config.DATABASES, "s2", "controller_android"),
+    ]
+    result = p7._artefact_coverage_per_source(p3)
+    sources = [r["source"] for r in result]
+    assert sources.index("controller_android") < sources.index("controller_ios")
+
+
+def test_artefact_coverage_per_source_empty():
+    assert p7._artefact_coverage_per_source([]) == []
+
+
+# ---------------------------------------------------------------------------
 # Section 2 — Tool status
 # ---------------------------------------------------------------------------
 
