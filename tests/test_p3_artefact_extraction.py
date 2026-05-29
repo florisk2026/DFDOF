@@ -321,17 +321,22 @@ def test_run_phase_3_empty_file_leaves_no_empty_dir(tmp_path: Path, monkeypatch)
 # Android physical extraction
 # ---------------------------------------------------------------------------
 
-def test_run_phase_3_android_physical_filters_extensions(
-    tmp_path: Path, monkeypatch
-) -> None:
+def _make_android_physical_state(
+    tmp_path: Path,
+    monkeypatch,
+    case_id: str,
+    installed_apps: list[str],
+    image_entries: list[tuple[str, int, str]] | None,
+) -> tuple[State, Evidence]:
+    """Build a State wired for Android physical extraction tests."""
     project_root = tmp_path
-    (project_root / "Documents").mkdir(parents=True)
+    (project_root / "Documents").mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(Path, "home", lambda: project_root)
 
     android_image = tmp_path / "android_image.E01"
     android_image.write_bytes(b"image")
 
-    state = _build_state(tmp_path, "CASE-P3-4")
+    state = _build_state(tmp_path, case_id)
     android_evidence = make_evidence(
         source_path=android_image,
         stored_path=android_image,
@@ -343,83 +348,198 @@ def test_run_phase_3_android_physical_filters_extensions(
     )
     state.input_evidence.append(android_evidence)
 
+    # Write P2 backup_info for installed apps
+    _write_backup_info(tmp_path, case_id, installed_apps)
+
+    # Wire P1 image_metadata cache
+    if image_entries is not None:
+        state.phase_outputs["p1_provenance"]["image_metadata"] = {
+            android_image.name: {
+                "offset_sectors": 2048,
+                "entries": [
+                    {"kind": kind, "inode": inode, "path": path}
+                    for kind, inode, path in image_entries
+                ],
+            }
+        }
+
+    return state, android_evidence
+
+
+def test_android_physical_no_installed_apps_raises_anomaly(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Physical branch raises anomaly and returns empty when no installed apps in P2."""
+    state, _ = _make_android_physical_state(
+        tmp_path, monkeypatch, "CASE-P3-PHYS-1",
+        installed_apps=[],
+        image_entries=[("r/r", 1, "data/data/com.dji.go/databases/dji.db")],
+    )
+    result = p3.run_phase_3(state)
+    flags = result.anomaly_flags
+    assert any("installed DJI apps not found" in f for f in flags)
+    artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]
+    assert artefacts == []
+
+
+def test_android_physical_no_cached_entries_raises_anomaly(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Physical branch raises anomaly and returns empty when P1 image metadata is absent."""
+    state, _ = _make_android_physical_state(
+        tmp_path, monkeypatch, "CASE-P3-PHYS-2",
+        installed_apps=["com.dji.go"],
+        image_entries=None,   # no P1 cache
+    )
+    result = p3.run_phase_3(state)
+    flags = result.anomaly_flags
+    assert any("no cached image entries" in f for f in flags)
+    artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]
+    assert artefacts == []
+
+
+def test_android_physical_no_scope_root_raises_anomaly(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Physical branch raises anomaly when image has no DJI app directory."""
+    state, _ = _make_android_physical_state(
+        tmp_path, monkeypatch, "CASE-P3-PHYS-3",
+        installed_apps=["com.dji.go"],
+        image_entries=[("r/r", 1, "data/data/com.other.app/databases/other.db")],
+    )
+    result = p3.run_phase_3(state)
+    flags = result.anomaly_flags
+    assert any("no DJI app directories found in image" in f for f in flags)
+    artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]
+    assert artefacts == []
+
+
+def test_android_physical_scope_filters_to_dji_app_only(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Physical branch only passes scoped entries to extract_tsk_image.
+
+    Image has two databases/ directories: one under com.dji.go (DJI app) and one
+    under com.other.app (not a DJI app). Only the DJI app entry must be extracted.
+    """
+    dji_entry   = ("r/r", 10, "data/data/com.dji.go/databases/dji.db")
+    other_entry = ("r/r", 20, "data/data/com.other.app/databases/other.db")
+
+    state, android_evidence = _make_android_physical_state(
+        tmp_path, monkeypatch, "CASE-P3-PHYS-4",
+        installed_apps=["com.dji.go"],
+        image_entries=[dji_entry, other_entry],
+    )
+
+    captured: list[list[tuple]] = []
+
     def fake_extract_tsk_image(*_args, **kwargs):
-        working_dir = Path(kwargs.get("working_dir") or _args[1])
+        entries = list(kwargs.get("precomputed_entries") or [])
+        captured.append(entries)
+        working_dir = Path(_args[1] if len(_args) > 1 else kwargs["working_dir"])
         working_dir.mkdir(parents=True, exist_ok=True)
         category = kwargs.get("artefact_category")
-        evidence_items: list[Evidence] = []
-        if category == DATABASES:
-            db_a = working_dir / "djiFMDB.db"
-            db_b = working_dir / "other.db"
-            bad_ext = working_dir / "config.xml"
-            db_a.write_text("db", encoding="utf-8")
-            db_b.write_text("db", encoding="utf-8")
-            bad_ext.write_text("xml", encoding="utf-8")
-            evidence_items.extend(
-                [
-                    make_evidence(
-                        source_path=db_a.name,
-                        stored_path=db_a,
-                        parent=android_evidence,
-                        acquisition_method=config.ACQUISITION_EXTRACT_PHYSICAL,
-                        type=config.EVIDENCE_TYPE_EXTRACTED,
-                        artefact_category=category,
-                    ),
-                    make_evidence(
-                        source_path=db_b.name,
-                        stored_path=db_b,
-                        parent=android_evidence,
-                        acquisition_method=config.ACQUISITION_EXTRACT_PHYSICAL,
-                        type=config.EVIDENCE_TYPE_EXTRACTED,
-                        artefact_category=category,
-                    ),
-                    make_evidence(
-                        source_path=bad_ext.name,
-                        stored_path=bad_ext,
-                        parent=android_evidence,
-                        acquisition_method=config.ACQUISITION_EXTRACT_PHYSICAL,
-                        type=config.EVIDENCE_TYPE_EXTRACTED,
-                        artefact_category=category,
-                    ),
-                ]
-            )
-        elif category == DRONE_LOGS:
-            good_dat = working_dir / "LOG.DAT"
-            bad_bin = working_dir / "LOG.bin"
-            good_dat.write_text("dat", encoding="utf-8")
-            bad_bin.write_text("bin", encoding="utf-8")
-            evidence_items.extend(
-                [
-                    make_evidence(
-                        source_path=good_dat.name,
-                        stored_path=good_dat,
-                        parent=android_evidence,
-                        acquisition_method=config.ACQUISITION_EXTRACT_PHYSICAL,
-                        type=config.EVIDENCE_TYPE_EXTRACTED,
-                        artefact_category=category,
-                    ),
-                    make_evidence(
-                        source_path=bad_bin.name,
-                        stored_path=bad_bin,
-                        parent=android_evidence,
-                        acquisition_method=config.ACQUISITION_EXTRACT_PHYSICAL,
-                        type=config.EVIDENCE_TYPE_EXTRACTED,
-                        artefact_category=category,
-                    ),
-                ]
-            )
-        return evidence_items
+        if category != DATABASES:
+            return []
+        db_file = working_dir / "dji.db"
+        db_file.write_text("db", encoding="utf-8")
+        return [make_evidence(
+            source_path=db_file.name, stored_path=db_file,
+            parent=android_evidence,
+            acquisition_method=config.ACQUISITION_EXTRACT_PHYSICAL,
+            type=config.EVIDENCE_TYPE_EXTRACTED, artefact_category=category,
+        )]
 
     monkeypatch.setattr(p3, "extract_tsk_image", fake_extract_tsk_image)
 
     result = p3.run_phase_3(state)
     artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]
-    stored_names = {Path(item["stored_path"]).name for item in artefacts}
-    assert "djiFMDB.db" in stored_names
-    assert "other.db" in stored_names
-    assert "config.xml" not in stored_names
-    assert "LOG.DAT" in stored_names
-    assert "LOG.bin" not in stored_names
+    assert any(Path(a["stored_path"]).name == "dji.db" for a in artefacts)
+
+    # Verify that only the DJI-scoped entry was passed to extract_tsk_image
+    db_calls = [c for c in captured if any(e[2].endswith(".db") for e in c)]
+    assert len(db_calls) == 1
+    passed_paths = {e[2] for e in db_calls[0]}
+    assert "data/data/com.dji.go/databases/dji.db" in passed_paths
+    assert "data/data/com.other.app/databases/other.db" not in passed_paths
+
+
+# ---------------------------------------------------------------------------
+# Unit tests — _scope_filter_entries
+# ---------------------------------------------------------------------------
+
+def test_scope_filter_entries_keeps_matching() -> None:
+    """Entries inside DJI scope root with correct extension are kept."""
+    entries = [
+        ("r/r", 1, "data/data/com.dji.go/flightrecord/fly001.txt"),
+        ("r/r", 2, "data/data/com.dji.go/flightrecord/fly002.txt"),
+    ]
+    result = p3._scope_filter_entries(
+        entries,
+        scope_roots=["data/data/com.dji.go/"],
+        path_tokens={"flightrecord/"},
+        ext_set=frozenset({".txt"}),
+    )
+    assert len(result) == 2
+
+
+def test_scope_filter_entries_rejects_outside_scope() -> None:
+    """Entries from non-DJI app directory are excluded."""
+    entries = [
+        ("r/r", 1, "data/data/com.dji.go/flightrecord/fly001.txt"),
+        ("r/r", 2, "data/data/com.other.app/flightrecord/other.txt"),
+    ]
+    result = p3._scope_filter_entries(
+        entries,
+        scope_roots=["data/data/com.dji.go/"],
+        path_tokens={"flightrecord/"},
+        ext_set=frozenset({".txt"}),
+    )
+    assert len(result) == 1
+    assert result[0][1] == 1
+
+
+def test_scope_filter_entries_rejects_wrong_extension() -> None:
+    """Entries with wrong extension are excluded even if in scope."""
+    entries = [
+        ("r/r", 1, "data/data/com.dji.go/databases/dji.db"),
+        ("r/r", 2, "data/data/com.dji.go/databases/config.xml"),
+    ]
+    result = p3._scope_filter_entries(
+        entries,
+        scope_roots=["data/data/com.dji.go/"],
+        path_tokens={"databases/"},
+        ext_set=frozenset({".db"}),
+    )
+    assert len(result) == 1
+    assert result[0][2].endswith(".db")
+
+
+def test_scope_filter_entries_deduplicates() -> None:
+    """Duplicate normalised paths produce only one entry."""
+    entry = ("r/r", 1, "data/data/com.dji.go/databases/dji.db")
+    result = p3._scope_filter_entries(
+        [entry, entry],
+        scope_roots=["data/data/com.dji.go/"],
+        path_tokens={"databases/"},
+        ext_set=frozenset({".db"}),
+    )
+    assert len(result) == 1
+
+
+def test_scope_filter_entries_multiple_scope_roots() -> None:
+    """Entries under any of the discovered scope roots are included."""
+    entries = [
+        ("r/r", 1, "data/data/com.dji.go/flightrecord/f1.txt"),
+        ("r/r", 2, "sdcard/dji/dji.go.v4/flightrecord/f2.txt"),
+    ]
+    result = p3._scope_filter_entries(
+        entries,
+        scope_roots=["data/data/com.dji.go/", "sdcard/dji/dji.go.v4/"],
+        path_tokens={"flightrecord/"},
+        ext_set=frozenset({".txt"}),
+    )
+    assert len(result) == 2
 
 
 # ---------------------------------------------------------------------------

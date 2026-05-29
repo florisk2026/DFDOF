@@ -105,6 +105,33 @@ def _android_discover_scope_roots(
     return sorted(roots)
 
 
+def _scope_filter_entries(
+    entries: list[tuple[str, int, str]],
+    scope_roots: list[str],
+    path_tokens: set[str],
+    ext_set: frozenset[str],
+) -> list[tuple[str, int, str]]:
+    """Filter image fls entries to those inside a DJI app scope root for a category.
+
+    Constructs category roots as scope_root+token (same as logical branch) and
+    keeps only entries whose normalised path starts with one of those roots and
+    whose extension matches ext_set.
+    """
+    category_roots = [scope + token for scope in scope_roots for token in path_tokens]
+    result: list[tuple[str, int, str]] = []
+    seen: set[str] = set()
+    for entry in entries:
+        path = entry[2]  # already normalised (lower, forward slash) from _get_cached_entries
+        if not any(path.startswith(cat_root) for cat_root in category_roots):
+            continue
+        if Path(path).suffix.lower() not in ext_set:
+            continue
+        if path not in seen:
+            seen.add(path)
+            result.append(entry)
+    return result
+
+
 def _ios_discover_app_roots(parsed_root: Path) -> list[Path]:
     """Find DJI app directories in the parsed iOS backup domain tree.
 
@@ -509,44 +536,76 @@ def _extract_android_sources(
     else:
         precomputed_entries = _get_cached_entries(state, android_archive)
         offset_sectors = _get_cached_offset(state, android_archive)
+        installed_apps = _android_installed_apps(state)
+        if not installed_apps:
+            state.raise_anomaly(
+                3, IDENTIFICATION_CONTROLLER_ANDROID,
+                "installed DJI apps not found in P2 output, extraction aborted",
+            )
+            _remove_empty_dir(controller_android_dir)
+            return extracted
+
+        if not precomputed_entries:
+            state.raise_anomaly(
+                3, IDENTIFICATION_CONTROLLER_ANDROID,
+                "no cached image entries from P1, extraction aborted",
+            )
+            _remove_empty_dir(controller_android_dir)
+            return extracted
+
+        entry_paths = [e[2] for e in precomputed_entries]
+        scope_roots = _android_discover_scope_roots(entry_paths, installed_apps)
+        if not scope_roots:
+            state.raise_anomaly(
+                3, IDENTIFICATION_CONTROLLER_ANDROID,
+                "no DJI app directories found in image for installed apps, extraction aborted",
+            )
+            _remove_empty_dir(controller_android_dir)
+            return extracted
+
         for category in categories:
             try:
+                if category == ACCOUNT_DATA:
+                    account_paths = set(_collect_account_members(
+                        entry_paths, "android", scope_prefixes=scope_roots
+                    ))
+                    scoped_entries = [e for e in precomputed_entries if e[2] in account_paths]
+                else:
+                    path_tokens = {
+                        p.replace("\\", "/").lower()
+                        for p in ANDROID_ARTEFACT_PATHS.get(category, set())
+                    }
+                    ext_set = _ARTEFACT_EXTENSIONS_LOWER.get(category, frozenset())
+                    scoped_entries = _scope_filter_entries(
+                        precomputed_entries, scope_roots, path_tokens, ext_set
+                    )
+
+                if not scoped_entries:
+                    state.raise_anomaly(
+                        3, IDENTIFICATION_CONTROLLER_ANDROID, "no artefacts found", category=category
+                    )
+                    continue
+
                 output_dir_cat = controller_android_dir / safe_segment(category)
                 output_dir_cat.mkdir(parents=True, exist_ok=True)
-                if category == ACCOUNT_DATA:
-                    include_paths = list(_account_targets("android"))
-                else:
-                    include_paths = sorted(ANDROID_ARTEFACT_PATHS.get(category, set()))
-                evidence_list = extract_tsk_image(
-                    android_archive,
-                    output_dir_cat,
-                    include_paths=include_paths,
-                    parent=android_source,
-                    artefact_category=category,
-                    precomputed_entries=precomputed_entries,
-                    offset_sectors=offset_sectors,
-                    state=state,
+                evidence_list = _filter_empty(
+                    extract_tsk_image(
+                        android_archive,
+                        output_dir_cat,
+                        include_paths=None,
+                        parent=android_source,
+                        artefact_category=category,
+                        precomputed_entries=scoped_entries,
+                        offset_sectors=offset_sectors,
+                        state=state,
+                    ),
+                    state,
+                    IDENTIFICATION_CONTROLLER_ANDROID,
+                    category,
                 )
-                filtered: list[Evidence] = []
-                ext_set = _ARTEFACT_EXTENSIONS_LOWER.get(category, frozenset())
-                account_targets = _account_targets("android")
-                for item in evidence_list:
-                    stored_path = Path(str(item.stored_path))
-                    suffix = stored_path.suffix.lower()
-                    if category == ACCOUNT_DATA:
-                        if stored_path.name.lower() not in account_targets:
-                            stored_path.unlink(missing_ok=True)
-                            continue
-                        filtered.append(item)
-                        continue
-                    if suffix not in ext_set:
-                        stored_path.unlink(missing_ok=True)
-                        continue
-                    filtered.append(item)
-                filtered = _filter_empty(filtered, state, IDENTIFICATION_CONTROLLER_ANDROID, category)
                 _remove_empty_dir(output_dir_cat)
-                if filtered:
-                    extracted.extend(filtered)
+                if evidence_list:
+                    extracted.extend(evidence_list)
                 else:
                     state.raise_anomaly(
                         3, IDENTIFICATION_CONTROLLER_ANDROID, "no artefacts found", category=category
