@@ -20,10 +20,12 @@ from pathlib import Path
 from typing import Any
 
 from config import (
+    ACQUISITION_EXIFTOOL,
     ACQUISITION_NORMALISE,
     DRONE_LOGS,
     FLIGHT_LOGS,
     FLIGHT_RECORDS,
+    VIDEOS,
     clear_and_make,
     output_dir,
     utc_now_iso,
@@ -99,7 +101,9 @@ _FR_ALT_COL    = "OSD.altitude [m]"
 _FR_STATE_COL  = "OSD.flycState"
 _FR_HEIGHT_COL = "OSD.height [m]"
 _FR_MOTOR_COL  = "OSD.isMotorUp"
-_FR_DIST_COL      = "CALC.travelled [m]"
+_FR_DIST_COL          = "CALC.travelled [m]"
+_FR_HOMEPOINT_COL     = "CALC.distance [m]"
+_FR_GROUND_OR_SKY_COL = "OSD.groundOrSky"
 _FR_DETAILS_APP_TYPE    = "DETAILS.appType"
 _FR_DETAILS_APP_VER     = "DETAILS.appVersion"
 _FR_DETAILS_AC_NAME     = "DETAILS.droneType"
@@ -107,6 +111,8 @@ _FR_DETAILS_AC_SN       = "DETAILS.aircraftSnBytes"
 _FR_DETAILS_BATT_SN     = "DETAILS.batterySn"
 _FR_DETAILS_RC_SN       = "DETAILS.rcSn"
 _FR_DETAILS_CAM_SN      = "DETAILS.cameraSn"
+_FR_DETAILS_PHOTO_NUM   = "DETAILS.photoNum"
+_FR_DETAILS_VIDEO_TIME  = "DETAILS.videoTime [s]"
 _FR_WARN_COL      = "APP_WARN.warn"
 _FR_TIP_COL       = "APP_TIP.tip"
 _FR_REC_STATE_COL = "CAMERA_INFO.recordState"
@@ -224,6 +230,8 @@ def _build_candidate(
 
     duration_s = (end_dt - start_dt).total_seconds() if end_dt else 0.0
 
+    app_version: str | None = _fr_log_start_extras(rows).get("dji_app_version")
+
     return {
         "evidence_dict": evidence_dict,
         "rows": rows,
@@ -237,6 +245,7 @@ def _build_candidate(
         "gps_count": gps_count,
         "has_usable_gps": gps_count >= 10,
         "time_index": None,  # populated externally for drone candidates
+        "app_version": app_version,
     }
 
 
@@ -245,6 +254,35 @@ def _compute_overlap(cand_a: dict[str, Any], cand_b: dict[str, Any]) -> float:
     lo = max(cand_a["start_dt"], cand_b["start_dt"])
     hi = min(cand_a["end_dt"], cand_b["end_dt"])
     return max(0.0, (hi - lo).total_seconds())
+
+
+_FR_DEDUP_DURATION_DIFF_S = 5.0
+
+
+def _deduplicate_fr_candidates(
+    candidates: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Remove FR candidates representing the same physical flight (multi-app scenario).
+
+    Two FRs are considered the same flight when their temporal overlap meets the
+    primary correlation floor (_OVERLAP_MIN_S) AND their durations differ by less
+    than _FR_DEDUP_DURATION_DIFF_S. The candidate with more GPS points survives;
+    ties keep the first occurrence (stable).
+    """
+    if len(candidates) <= 1:
+        return candidates
+    kept: list[dict[str, Any]] = []
+    for cand in candidates:
+        for i, existing in enumerate(kept):
+            overlap = _compute_overlap(cand, existing)
+            dur_diff = abs(cand["duration_s"] - existing["duration_s"])
+            if overlap >= _OVERLAP_MIN_S and dur_diff < _FR_DEDUP_DURATION_DIFF_S:
+                if cand["gps_count"] > existing["gps_count"]:
+                    kept[i] = cand
+                break
+        else:
+            kept.append(cand)
+    return kept
 
 
 def _compute_spatial(
@@ -416,16 +454,39 @@ def _fr_log_start_extras(rows: list[dict[str, str]]) -> dict[str, Any]:
     }
 
 
+def _fr_log_end_extras(rows: list[dict[str, str]]) -> dict[str, Any]:
+    """Read photo count and video duration from the last DETAILS row."""
+    last = next(
+        (r for r in reversed(rows) if r.get(_FR_DETAILS_PHOTO_NUM, "") != ""),
+        None,
+    )
+    if last is None:
+        return {}
+    result: dict[str, Any] = {}
+    photo = _try_float(last.get(_FR_DETAILS_PHOTO_NUM, ""))
+    if photo is not None:
+        result["number_photos_taken"] = int(photo)
+    video = _try_float(last.get(_FR_DETAILS_VIDEO_TIME, ""))
+    if video is not None:
+        result["duration_recording"] = video
+    return result
+
+
 def _boundary_events(
     cand: dict[str, Any],
     data_fn: Any,
     ts_col: str,
     dist_col: str,
     start_extras_fn: Any = None,
+    end_extras_fn: Any = None,
 ) -> list[dict[str, Any]]:
     """Return [log_started, log_ended] events for a single flight candidate."""
     ev_dict = cand["evidence_dict"]
-    source = f"{ev_dict.get('source_identification', '')}:{ev_dict.get('artefact_category', '')}"
+    app_ver = cand.get("app_version")
+    source = (
+        f"{ev_dict.get('source_identification', '')}:{ev_dict.get('artefact_category', '')}"
+        + (f" (v{app_ver})" if app_ver else "")
+    )
     sha = ev_dict.get("sha256", "")
     rows = cand["rows"]
 
@@ -447,7 +508,16 @@ def _boundary_events(
         if label == "Log started":
             data = {**data, **extras}
         if label == "Log ended":
-            data = {**data, "distance_travelled": _try_float(row.get(dist_col, ""))}
+            end_extras = end_extras_fn(rows) if end_extras_fn is not None else {}
+            gos = row.get(_FR_GROUND_OR_SKY_COL, "").strip() or None
+            data = {
+                **data,
+                "distance_travelled": _try_float(row.get(dist_col, "")),
+                "ground_or_sky": gos,
+                "height": _try_float(row.get(_FR_HEIGHT_COL, "")),
+                "distance_to_homepoint": _try_float(row.get(_FR_HOMEPOINT_COL, "")),
+                **end_extras,
+            }
         events.append(_make_event(
             timestamp=ts_val,
             timezone=_ts_timezone(ts_val),
@@ -468,7 +538,11 @@ def _peak_height_event(
 ) -> dict[str, Any] | None:
     """Return a single 'Reached peak height' event for the highest row."""
     ev_dict = cand["evidence_dict"]
-    source = f"{ev_dict.get('source_identification', '')}:{ev_dict.get('artefact_category', '')}"
+    app_ver = cand.get("app_version")
+    source = (
+        f"{ev_dict.get('source_identification', '')}:{ev_dict.get('artefact_category', '')}"
+        + (f" (v{app_ver})" if app_ver else "")
+    )
     sha = ev_dict.get("sha256", "")
     rows = cand["rows"]
 
@@ -508,7 +582,11 @@ def _motor_events(
 ) -> list[dict[str, Any]]:
     """Return events for motor state: initial state + every transition."""
     ev_dict = cand["evidence_dict"]
-    source = f"{ev_dict.get('source_identification', '')}:{ev_dict.get('artefact_category', '')}"
+    app_ver = cand.get("app_version")
+    source = (
+        f"{ev_dict.get('source_identification', '')}:{ev_dict.get('artefact_category', '')}"
+        + (f" (v{app_ver})" if app_ver else "")
+    )
     sha = ev_dict.get("sha256", "")
     rows = cand["rows"]
 
@@ -550,7 +628,11 @@ def _fly_mode_events(
 ) -> list[dict[str, Any]]:
     """Return an event for every fly-mode change (value transitions only)."""
     ev_dict = cand["evidence_dict"]
-    source = f"{ev_dict.get('source_identification', '')}:{ev_dict.get('artefact_category', '')}"
+    app_ver = cand.get("app_version")
+    source = (
+        f"{ev_dict.get('source_identification', '')}:{ev_dict.get('artefact_category', '')}"
+        + (f" (v{app_ver})" if app_ver else "")
+    )
     sha = ev_dict.get("sha256", "")
     rows = cand["rows"]
 
@@ -586,7 +668,11 @@ def _log_message_events(
 ) -> list[dict[str, Any]]:
     """Return a log-message event for every non-empty warn/log column value."""
     ev_dict = cand["evidence_dict"]
-    source = f"{ev_dict.get('source_identification', '')}:{ev_dict.get('artefact_category', '')}"
+    app_ver = cand.get("app_version")
+    source = (
+        f"{ev_dict.get('source_identification', '')}:{ev_dict.get('artefact_category', '')}"
+        + (f" (v{app_ver})" if app_ver else "")
+    )
     sha = ev_dict.get("sha256", "")
     rows = cand["rows"]
     events = []
@@ -618,7 +704,11 @@ def _state_change_events(
 ) -> list[dict[str, Any]]:
     """Emit an event on every value transition; optionally also on first occurrence."""
     ev_dict = cand["evidence_dict"]
-    source = f"{ev_dict.get('source_identification', '')}:{ev_dict.get('artefact_category', '')}"
+    app_ver = cand.get("app_version")
+    source = (
+        f"{ev_dict.get('source_identification', '')}:{ev_dict.get('artefact_category', '')}"
+        + (f" (v{app_ver})" if app_ver else "")
+    )
     sha = ev_dict.get("sha256", "")
     rows = cand["rows"]
     events = []
@@ -842,6 +932,62 @@ def _correlate_flight_log_observations(
                 })
 
 
+def _correlate_video_duration(
+    flights: list[dict[str, Any]],
+    p4_obs: list[dict[str, Any]],
+    sha_to_source: dict[str, str],
+) -> None:
+    """Match P4 video observations to flights by ExifTool Duration vs duration_recording."""
+    for obs_dict in p4_obs:
+        if obs_dict.get("evidence_category") != VIDEOS:
+            continue
+        if obs_dict.get("acquisition_method") != ACQUISITION_EXIFTOOL:
+            continue
+        obs_list = obs_dict.get("observations", [])
+        if not obs_list:
+            continue
+        duration_raw = obs_list[0].get("Duration")
+        if duration_raw is None:
+            continue
+        try:
+            video_duration = float(duration_raw)
+        except (ValueError, TypeError):
+            continue
+
+        sha = obs_dict.get("evidence_sha256", "")
+        source_id = sha_to_source.get(sha, "")
+        pointer = f"p4:{sha}"
+
+        for flight in flights:
+            log_ended_duration: float | None = None
+            for ev in flight.get("events", []):
+                if ev.get("event") == "Log ended":
+                    dr = ev.get("data", {}).get("duration_recording")
+                    if dr is not None:
+                        try:
+                            log_ended_duration = float(dr)
+                        except (ValueError, TypeError):
+                            pass
+                    break
+
+            if log_ended_duration is None:
+                continue
+            if abs(video_duration - log_ended_duration) >= 2.0:
+                continue
+
+            if pointer not in flight["plausibly_correlated"] and pointer not in [
+                pc.get("source_pointer") for pc in flight["possibly_correlated"]
+            ]:
+                flight["possibly_correlated"].append({
+                    "source": f"{source_id}:{VIDEOS}",
+                    "source_pointer": pointer,
+                    "data": {
+                        "video_duration_s": video_duration,
+                        "log_duration_s": log_ended_duration,
+                    },
+                })
+
+
 def _confidence_from_distance(median_m: float) -> str:
     if median_m < 10.0:
         return "high"
@@ -902,7 +1048,7 @@ def _build_flight_dict(
 
     events: list[dict[str, Any]] = []
     if fr_cand is not None:
-        events += _boundary_events(fr_cand, _event_data_fr, _FR_TS_COL, _FR_DIST_COL, _fr_log_start_extras)
+        events += _boundary_events(fr_cand, _event_data_fr, _FR_TS_COL, _FR_DIST_COL, _fr_log_start_extras, _fr_log_end_extras)
         ph = _peak_height_event(fr_cand, _event_data_fr, _FR_TS_COL, _FR_HEIGHT_COL)
         if ph:
             events.append(ph)
@@ -999,6 +1145,8 @@ def run_phase_6(state: State) -> State:
                 f"drone log load failed ({Path(stored).name}): {exc}",
                 category=DRONE_LOGS)
 
+    fr_candidates = _deduplicate_fr_candidates(fr_candidates)
+
     matched_fr: set[int] = set()
     matched_drone: set[int] = set()
     flights: list[dict[str, Any]] = []
@@ -1057,6 +1205,10 @@ def run_phase_6(state: State) -> State:
         state.phase_outputs.get("p4_decision_and_orchestration", {})
         .get("decision_and_orchestration_artefacts", [])
     )
+    p4_obs: list[dict[str, Any]] = (
+        state.phase_outputs.get("p4_decision_and_orchestration", {})
+        .get("derived_observations", [])
+    )
     p3_artefacts: list[dict[str, Any]] = (
         state.phase_outputs.get("p3_artefact_extraction", {})
         .get("extracted_artefacts", [])
@@ -1068,6 +1220,7 @@ def run_phase_6(state: State) -> State:
     p5_anomalies: list[dict[str, Any]] = p5.get("derived_anomalies", [])
     _correlate_exif_observations(flights, p5_anomalies, sha_to_source)
     _correlate_flight_log_observations(flights, p5_anomalies, sha_to_source)
+    _correlate_video_duration(flights, p4_obs, sha_to_source)
 
     _INTERNAL_KEYS = {"_bbox"}
     for flight in flights:

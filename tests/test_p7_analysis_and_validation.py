@@ -394,6 +394,60 @@ def test_analyse_flight_distance_travelled(tmp_path):
     assert p7._analyse_flight(flight, [])["distance_travelled"] == 2013.46
 
 
+def test_analyse_flight_number_photos_taken(tmp_path):
+    events = [{"event": "Log ended", "confidence": "high",
+               "data": {"distance_travelled": 100.0, "number_photos_taken": 5}}]
+    flight = _write_timeline(tmp_path, "f01", events)
+    result = p7._analyse_flight(flight, [])
+    assert result["number_photos_taken"] == 5
+    assert isinstance(result["number_photos_taken"], int)
+
+
+def test_analyse_flight_duration_recording(tmp_path):
+    events = [{"event": "Log ended", "confidence": "high",
+               "data": {"distance_travelled": 100.0, "duration_recording": 113.0}}]
+    flight = _write_timeline(tmp_path, "f01", events)
+    result = p7._analyse_flight(flight, [])
+    assert result["duration_recording"] == 113.0
+
+
+def test_analyse_flight_photo_video_absent(tmp_path):
+    events = [{"event": "Log ended", "confidence": "high",
+               "data": {"distance_travelled": 100.0}}]
+    flight = _write_timeline(tmp_path, "f01", events)
+    result = p7._analyse_flight(flight, [])
+    assert result["number_photos_taken"] is None
+    assert result["duration_recording"] is None
+
+
+def test_analyse_flight_record_complete_true(tmp_path):
+    events = [{"event": "Log ended", "confidence": "high",
+               "data": {"distance_to_homepoint": 1.5, "height": 0.8}}]
+    flight = _write_timeline(tmp_path, "f01", events)
+    assert p7._analyse_flight(flight, [])["flight_record_complete"] is True
+
+
+def test_analyse_flight_record_complete_false_distance(tmp_path):
+    events = [{"event": "Log ended", "confidence": "high",
+               "data": {"distance_to_homepoint": 5.0, "height": 0.5}}]
+    flight = _write_timeline(tmp_path, "f01", events)
+    assert p7._analyse_flight(flight, [])["flight_record_complete"] is False
+
+
+def test_analyse_flight_record_complete_false_height(tmp_path):
+    events = [{"event": "Log ended", "confidence": "high",
+               "data": {"distance_to_homepoint": 1.0, "height": 3.0}}]
+    flight = _write_timeline(tmp_path, "f01", events)
+    assert p7._analyse_flight(flight, [])["flight_record_complete"] is False
+
+
+def test_analyse_flight_record_complete_none_when_missing(tmp_path):
+    events = [{"event": "Log ended", "confidence": "high",
+               "data": {"distance_travelled": 100.0}}]
+    flight = _write_timeline(tmp_path, "f01", events)
+    assert p7._analyse_flight(flight, [])["flight_record_complete"] is None
+
+
 def test_analyse_flight_video_taken(tmp_path):
     events = [{"event": "Record mode changed", "confidence": "high",
                "data": {"record_mode": "Starting"}}]
@@ -484,6 +538,20 @@ def test_uncorrelated_artefacts_only_evidence_sha256_field(tmp_path):
     assert set(result[0].keys()) == {"evidence_sha256"}
 
 
+def test_uncorrelated_artefacts_p4_possibly_correlated_removes_from_uncorrelated():
+    """Video referenced via p4: source_pointer in possibly_correlated is not uncorrelated."""
+    sha = "aa" * 32
+    p3 = [{"sha256": sha, "parent_sha256": None, "artefact_category": config.VIDEOS,
+            "stored_path": "/tmp/clip.mp4"}]
+    flight = {
+        "flights_identified": [],
+        "plausibly_correlated": [],
+        "possibly_correlated": [{"source_pointer": f"p4:{sha}", "data": {}}],
+    }
+    result = p7._uncorrelated_artefacts(p3, [], [], [flight], {})
+    assert result == []
+
+
 # ---------------------------------------------------------------------------
 # Section 6 — Coverage score
 # ---------------------------------------------------------------------------
@@ -542,6 +610,21 @@ def test_forensic_unmatched_in_further():
         source_cov, [_fa("f01", True, "high"), _fa("f02", False)], {}, [], []
     )
     assert any("f02" in s for s in investigate)
+
+
+def test_forensic_incomplete_flight_record_in_further():
+    source_cov = [{"source": "controller_ios", "detected": True}]
+    fa = {**_fa("f01", True, "high"), "flight_record_complete": False}
+    _, investigate = p7._forensic_conclusions(source_cov, [fa], {}, [], [])
+    assert any("corruption" in s for s in investigate)
+    assert any("f01" in s for s in investigate)
+
+
+def test_forensic_complete_flight_record_not_in_further():
+    source_cov = [{"source": "controller_ios", "detected": True}]
+    fa = {**_fa("f01", True, "high"), "flight_record_complete": True}
+    _, investigate = p7._forensic_conclusions(source_cov, [fa], {}, [], [])
+    assert not any("corruption" in s for s in investigate)
 
 
 def test_forensic_inconsistent_serial_in_further():
@@ -616,10 +699,20 @@ def test_forensic_video_taken_with_info_file():
 
 
 def test_forensic_photo_taken():
+    """photo_taken=True but number_photos_taken unknown → suspects message."""
     source_cov = [{"source": "controller_android", "detected": True}]
-    fa = {**_fa("f01", True, "high"), "photo_taken": True}
+    fa = {**_fa("f01", True, "high"), "photo_taken": True, "number_photos_taken": None}
     _, investigate = p7._forensic_conclusions(source_cov, [fa], {}, [], [])
     assert any("photo was taken" in s for s in investigate)
+
+
+def test_forensic_photo_taken_with_count():
+    """photo_taken=True and number_photos_taken > 0 → controller+drone_sd message."""
+    source_cov = [{"source": "controller_android", "detected": True}]
+    fa = {**_fa("f01", True, "high"), "photo_taken": True, "number_photos_taken": 3}
+    _, investigate = p7._forensic_conclusions(source_cov, [fa], {}, [], [])
+    assert any("controller and drone_sd" in s for s in investigate)
+    assert not any("suspects a photo" in s for s in investigate)
 
 
 def test_forensic_no_media_no_items():

@@ -500,17 +500,53 @@ def _analyse_flight(
                 flight_modes.append(mode)
                 seen_modes.add(mode)
 
-    # Distance travelled — first Log ended event
+    # Distance travelled, photo count, video duration, homepoint fields — first Log ended event
     distance_travelled: float | None = None
+    number_photos_taken: int | None = None
+    duration_recording: float | None = None
+    distance_to_homepoint: float | None = None
+    log_ended_height: float | None = None
     for ev in events:
         if ev.get("event") == "Log ended":
-            d = ev.get("data", {}).get("distance_travelled")
+            ev_data = ev.get("data", {})
+            d = ev_data.get("distance_travelled")
             if d is not None:
                 try:
                     distance_travelled = float(d)
                 except (ValueError, TypeError):
                     pass
+            p = ev_data.get("number_photos_taken")
+            if p is not None:
+                try:
+                    number_photos_taken = int(p)
+                except (ValueError, TypeError):
+                    pass
+            vt = ev_data.get("duration_recording")
+            if vt is not None:
+                try:
+                    duration_recording = float(vt)
+                except (ValueError, TypeError):
+                    pass
+            dh = ev_data.get("distance_to_homepoint")
+            if dh is not None:
+                try:
+                    distance_to_homepoint = float(dh)
+                except (ValueError, TypeError):
+                    pass
+            ht = ev_data.get("height")
+            if ht is not None:
+                try:
+                    log_ended_height = float(ht)
+                except (ValueError, TypeError):
+                    pass
             break
+
+    if distance_to_homepoint is not None and log_ended_height is not None:
+        flight_record_complete: bool | None = (
+            distance_to_homepoint < 3.0 and log_ended_height < 2.0
+        )
+    else:
+        flight_record_complete = None
 
     # Photo taken — any Photo mode changed event with mode != "No"
     photo_taken = False
@@ -540,7 +576,10 @@ def _analyse_flight(
         "peak_height_m": peak_height,
         "distance_travelled": distance_travelled,
         "photo_taken": photo_taken,
+        "number_photos_taken": number_photos_taken,
         "video_taken": video_taken,
+        "duration_recording": duration_recording,
+        "flight_record_complete": flight_record_complete,
         "flight_modes_observed": flight_modes,
         "possibly_correlated_count": len(flight_compact.get("possibly_correlated", [])),
         "plausibly_correlated_count": len(flight_compact.get("plausibly_correlated", [])),
@@ -639,8 +678,10 @@ def _uncorrelated_artefacts(
                 referenced.add(pc.removeprefix("p5:"))
         for pc in flight.get("possibly_correlated", []):
             sp = pc.get("source_pointer", "")
+            for prefix in ("p5:", "p4:"):
+                sp = sp.removeprefix(prefix)
             if sp:
-                referenced.add(sp.removeprefix("p5:"))
+                referenced.add(sp)
 
     # Add shas from account_and_drone_analysis corroboration_sources
     for field_data in account_and_drone_analysis.values():
@@ -746,6 +787,13 @@ def _forensic_conclusions(
             f"({ids}) — independent corroboration is absent for these flight(s)."
         )
 
+    incomplete = [f for f in flight_analyses if f.get("flight_record_complete") is False]
+    if incomplete:
+        ids = ", ".join(f["flight_id"] for f in incomplete)
+        investigate.append(
+            f"Flight record shows signs of corruption, additional analysis needed ({ids})."
+        )
+
     total_plausible = sum(f.get("plausibly_correlated_count", 0) for f in flight_analyses)
     total_possible = sum(f.get("possibly_correlated_count", 0) for f in flight_analyses)
     if total_plausible > 0:
@@ -769,7 +817,16 @@ def _forensic_conclusions(
             msg += " — inspect .info file"
         investigate.append(msg + ".")
     if any(f.get("photo_taken") for f in flight_analyses):
-        investigate.append("Flight analysis suspects a photo was taken.")
+        if any(
+            f.get("photo_taken") and (f.get("number_photos_taken") or 0) > 0
+            for f in flight_analyses
+        ):
+            investigate.append(
+                "There were photo(s) taken that may reside both on controller and drone_sd"
+                " - additional analysis needed."
+            )
+        else:
+            investigate.append("Flight analysis suspects a photo was taken.")
 
     # Account / drone identity
     sn = account_and_drone.get("drone_serial")

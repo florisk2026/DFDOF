@@ -547,7 +547,7 @@ def test_fr_log_start_extras_populated() -> None:
     row = {
         "DETAILS.appType": "iOS",
         "DETAILS.appVersion": "4.2.12",
-        "DETAILS.aircraftName": "Mavic Air",
+        "DETAILS.droneType": "Mavic Air",
         "DETAILS.aircraftSnBytes": "0K1DECE2BC0633",
         "DETAILS.batterySn": "0K4AEBQA3400DT",
         "DETAILS.rcSn": "0RKCECL0061D5R",
@@ -571,6 +571,93 @@ def test_fr_log_start_extras_empty() -> None:
         "phone_os", "dji_app_version", "name_drone",
         "serial_drone", "serial_battery", "serial_controller", "serial_camera",
     }
+
+
+def test_fr_log_end_extras_present() -> None:
+    """Both DETAILS fields populated → int photo count and float video duration."""
+    rows = [{"DETAILS.photoNum": "3", "DETAILS.videoTime [s]": "45.5"}]
+    result = p6._fr_log_end_extras(rows)
+    assert result["number_photos_taken"] == 3
+    assert isinstance(result["number_photos_taken"], int)
+    assert result["duration_recording"] == 45.5
+
+
+def test_fr_log_end_extras_absent() -> None:
+    """No DETAILS.photoNum column → empty dict returned."""
+    assert p6._fr_log_end_extras([{}]) == {}
+    assert p6._fr_log_end_extras([]) == {}
+
+
+def test_boundary_events_fr_log_ended_includes_photo_video(tmp_path: Path, monkeypatch) -> None:
+    """Log ended event for a FlightRecord includes number_photos_taken and duration_recording."""
+    rows_data = _overlapping_rows(n=5, interval_s=3)
+    extended_header = _NORM_FR_HEADER + ["DETAILS.photoNum", "DETAILS.videoTime [s]"]
+    fr_csv = tmp_path / "fr.csv"
+    with fr_csv.open("w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh)
+        w.writerow(extended_header)
+        for i, r in enumerate(rows_data):
+            base = _fr_row(norm_id=r[0], ts=r[1])
+            photo = "2" if i == len(rows_data) - 1 else ""
+            video = "60" if i == len(rows_data) - 1 else ""
+            w.writerow(base + [photo, video])
+
+    state = _build_p6_state(tmp_path, monkeypatch, fr_path=fr_csv)
+    result = p6.run_phase_6(state)
+
+    tl_path = Path(result.phase_outputs[p6._PHASE_NAME]["flights"][0]["stored_path"])
+    events = json.loads(tl_path.read_text(encoding="utf-8"))["events"]
+    ended = next(e for e in events if e["event"] == "Log ended")
+    assert ended["data"]["number_photos_taken"] == 2
+    assert ended["data"]["duration_recording"] == 60.0
+
+
+def test_boundary_events_fr_log_ended_osd_fields(tmp_path: Path, monkeypatch) -> None:
+    """Log ended event includes ground_or_sky, height, and distance_to_homepoint."""
+    extended_header = _NORM_FR_HEADER + ["OSD.groundOrSky", "OSD.height [m]", "CALC.distance [m]"]
+    rows_data = _overlapping_rows(n=5, interval_s=3)
+    fr_csv = tmp_path / "fr.csv"
+    with fr_csv.open("w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh)
+        w.writerow(extended_header)
+        for i, r in enumerate(rows_data):
+            base = _fr_row(norm_id=r[0], ts=r[1])
+            last = i == len(rows_data) - 1
+            w.writerow(base + ["Ground" if last else "", "1.2" if last else "", "5.6" if last else ""])
+
+    state = _build_p6_state(tmp_path, monkeypatch, fr_path=fr_csv)
+    result = p6.run_phase_6(state)
+
+    tl_path = Path(result.phase_outputs[p6._PHASE_NAME]["flights"][0]["stored_path"])
+    events = json.loads(tl_path.read_text(encoding="utf-8"))["events"]
+    ended = next(e for e in events if e["event"] == "Log ended")
+    assert ended["data"]["ground_or_sky"] == "Ground"
+    assert ended["data"]["height"] == 1.2
+    assert ended["data"]["distance_to_homepoint"] == 5.6
+
+
+def test_boundary_events_fr_log_ended_osd_fields_null_when_empty(tmp_path: Path, monkeypatch) -> None:
+    """ground_or_sky and distance_to_homepoint are null when columns are absent from the CSV."""
+    # Standard _fr_row / _NORM_FR_HEADER does not include OSD.groundOrSky or CALC.distance [m],
+    # so those fields should come through as None; height is present but empty string → None.
+    extended_header = _NORM_FR_HEADER + ["OSD.groundOrSky", "CALC.distance [m]"]
+    rows_data = _overlapping_rows(n=3, interval_s=3)
+    fr_csv = tmp_path / "fr.csv"
+    with fr_csv.open("w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh)
+        w.writerow(extended_header)
+        for r in rows_data:
+            w.writerow(_fr_row(norm_id=r[0], ts=r[1], height="") + ["", ""])
+
+    state = _build_p6_state(tmp_path, monkeypatch, fr_path=fr_csv)
+    result = p6.run_phase_6(state)
+
+    tl_path = Path(result.phase_outputs[p6._PHASE_NAME]["flights"][0]["stored_path"])
+    events = json.loads(tl_path.read_text(encoding="utf-8"))["events"]
+    ended = next(e for e in events if e["event"] == "Log ended")
+    assert ended["data"]["ground_or_sky"] is None
+    assert ended["data"]["height"] is None
+    assert ended["data"]["distance_to_homepoint"] is None
 
 
 # ---------------------------------------------------------------------------
@@ -1201,3 +1288,240 @@ def test_flight_log_correlation_tip_log_message_capital(tmp_path: Path, monkeypa
     flight = result.phase_outputs[p6._PHASE_NAME]["flights"][0]
     pointers = [pc["source_pointer"] for pc in flight["possibly_correlated"]]
     assert f"p5:{fl_sha}" in pointers
+
+
+# ---------------------------------------------------------------------------
+# Unit tests — video duration correlation
+# ---------------------------------------------------------------------------
+
+def _make_flight_with_log_ended(duration_recording):
+    """Minimal flight dict with a Log ended event carrying duration_recording."""
+    ev_data = {}
+    if duration_recording is not None:
+        ev_data["duration_recording"] = duration_recording
+    return {
+        "events": [{"event": "Log ended", "data": ev_data}],
+        "plausibly_correlated": [],
+        "possibly_correlated": [],
+    }
+
+
+def _make_video_obs(sha, duration, source_id="controller_ios"):
+    obs = {}
+    if duration is not None:
+        obs["Duration"] = duration
+    return {
+        "evidence_category": config.VIDEOS,
+        "acquisition_method": config.ACQUISITION_EXIFTOOL,
+        "evidence_sha256": sha,
+        "observations": [obs],
+    }
+
+
+def test_video_duration_match() -> None:
+    flight = _make_flight_with_log_ended(59.5)
+    sha = "aa" * 32
+    obs = _make_video_obs(sha, 60.0)
+    p6._correlate_video_duration([flight], [obs], {sha: "controller_ios"})
+    pointers = [pc["source_pointer"] for pc in flight["possibly_correlated"]]
+    assert f"p4:{sha}" in pointers
+    entry = next(pc for pc in flight["possibly_correlated"] if pc["source_pointer"] == f"p4:{sha}")
+    assert entry["data"]["video_duration_s"] == 60.0
+    assert entry["data"]["log_duration_s"] == 59.5
+
+
+def test_video_duration_no_match() -> None:
+    flight = _make_flight_with_log_ended(50.0)
+    sha = "bb" * 32
+    obs = _make_video_obs(sha, 60.0)
+    p6._correlate_video_duration([flight], [obs], {sha: "controller_ios"})
+    assert flight["possibly_correlated"] == []
+
+
+def test_video_duration_missing_duration() -> None:
+    flight = _make_flight_with_log_ended(60.0)
+    sha = "cc" * 32
+    obs = _make_video_obs(sha, None)
+    p6._correlate_video_duration([flight], [obs], {sha: "controller_ios"})
+    assert flight["possibly_correlated"] == []
+
+
+def test_video_duration_missing_log_ended() -> None:
+    flight = {"events": [], "plausibly_correlated": [], "possibly_correlated": []}
+    sha = "dd" * 32
+    obs = _make_video_obs(sha, 60.0)
+    p6._correlate_video_duration([flight], [obs], {sha: "controller_ios"})
+    assert flight["possibly_correlated"] == []
+
+
+def test_video_duration_dedup() -> None:
+    flight = _make_flight_with_log_ended(60.0)
+    sha = "ee" * 32
+    obs = _make_video_obs(sha, 60.5)
+    p6._correlate_video_duration([flight], [obs], {sha: "controller_ios"})
+    p6._correlate_video_duration([flight], [obs], {sha: "controller_ios"})
+    assert len(flight["possibly_correlated"]) == 1
+
+
+# ---------------------------------------------------------------------------
+# Unit tests — _deduplicate_fr_candidates
+# ---------------------------------------------------------------------------
+
+def _make_fr_cand(
+    start: datetime,
+    end: datetime,
+    gps_count: int = 20,
+) -> dict:
+    """Minimal FR candidate dict for deduplication testing."""
+    return {
+        "evidence_dict": {"sha256": "x" * 64, "source_identification": "controller_ios"},
+        "rows": [],
+        "header": [],
+        "start_dt": start,
+        "end_dt": end,
+        "duration_s": (end - start).total_seconds(),
+        "gps_count": gps_count,
+        "has_usable_gps": gps_count >= 10,
+        "app_version": None,
+    }
+
+
+def test_deduplicate_single_candidate() -> None:
+    """Single candidate is returned unchanged."""
+    utc = timezone.utc
+    cand = _make_fr_cand(datetime(2018, 4, 19, 11, 0, tzinfo=utc),
+                         datetime(2018, 4, 19, 11, 10, tzinfo=utc))
+    result = p6._deduplicate_fr_candidates([cand])
+    assert result == [cand]
+
+
+def test_deduplicate_overlap_keeps_higher_gps() -> None:
+    """Two FRs with large overlap and near-equal duration: higher GPS count survives."""
+    utc = timezone.utc
+    low_gps = _make_fr_cand(datetime(2018, 4, 19, 11, 0, tzinfo=utc),
+                             datetime(2018, 4, 19, 11, 10, tzinfo=utc), gps_count=15)
+    high_gps = _make_fr_cand(datetime(2018, 4, 19, 11, 0, tzinfo=utc),
+                              datetime(2018, 4, 19, 11, 10, tzinfo=utc), gps_count=25)
+    result = p6._deduplicate_fr_candidates([low_gps, high_gps])
+    assert len(result) == 1
+    assert result[0]["gps_count"] == 25
+
+
+def test_deduplicate_overlap_tie_keeps_first() -> None:
+    """Equal GPS count: first candidate is kept."""
+    utc = timezone.utc
+    first = _make_fr_cand(datetime(2018, 4, 19, 11, 0, tzinfo=utc),
+                          datetime(2018, 4, 19, 11, 10, tzinfo=utc), gps_count=20)
+    second = _make_fr_cand(datetime(2018, 4, 19, 11, 0, tzinfo=utc),
+                           datetime(2018, 4, 19, 11, 10, tzinfo=utc), gps_count=20)
+    result = p6._deduplicate_fr_candidates([first, second])
+    assert len(result) == 1
+    assert result[0] is first
+
+
+def test_deduplicate_no_overlap_both_kept() -> None:
+    """Two FRs with no temporal overlap → both survive."""
+    utc = timezone.utc
+    a = _make_fr_cand(datetime(2018, 4, 19, 11, 0, tzinfo=utc),
+                      datetime(2018, 4, 19, 11, 10, tzinfo=utc))
+    b = _make_fr_cand(datetime(2018, 4, 19, 12, 0, tzinfo=utc),
+                      datetime(2018, 4, 19, 12, 10, tzinfo=utc))
+    result = p6._deduplicate_fr_candidates([a, b])
+    assert len(result) == 2
+
+
+def test_deduplicate_overlap_large_duration_diff_both_kept() -> None:
+    """Large overlap but duration difference >= 5 s → treated as distinct flights."""
+    utc = timezone.utc
+    # cand_a: 10 min; cand_b overlaps entirely but is 8 min (diff = 120s >> 5s)
+    a = _make_fr_cand(datetime(2018, 4, 19, 11, 0, tzinfo=utc),
+                      datetime(2018, 4, 19, 11, 10, tzinfo=utc))
+    b = _make_fr_cand(datetime(2018, 4, 19, 11, 0, tzinfo=utc),
+                      datetime(2018, 4, 19, 11, 8, tzinfo=utc))
+    result = p6._deduplicate_fr_candidates([a, b])
+    assert len(result) == 2
+
+
+# ---------------------------------------------------------------------------
+# Unit tests — app_version in source strings
+# ---------------------------------------------------------------------------
+
+def _fr_cand_with_version(version: str | None) -> dict:
+    """FR candidate with a specific app_version (no real rows needed)."""
+    utc = timezone.utc
+    return {
+        "evidence_dict": {
+            "sha256": "b" * 64,
+            "source_identification": "controller_ios",
+            "artefact_category": "flight_records",
+        },
+        "rows": [],
+        "header": [],
+        "start_dt": datetime(2018, 4, 19, 11, 0, tzinfo=utc),
+        "end_dt": datetime(2018, 4, 19, 11, 10, tzinfo=utc),
+        "duration_s": 600.0,
+        "gps_count": 0,
+        "has_usable_gps": False,
+        "app_version": version,
+    }
+
+
+def test_app_version_in_source_when_present() -> None:
+    """Candidate with app_version: source string includes '(v<version>)' suffix."""
+    cand = _fr_cand_with_version("4.2.12")
+    # Build a single-row boundary candidate to invoke _peak_height_event
+    utc = timezone.utc
+    base = datetime(2018, 4, 19, 11, 0, tzinfo=utc)
+    row_dicts = [dict(zip(_NORM_FR_HEADER,
+                         _fr_row(norm_id="0", ts=base.isoformat(), height="5.0")
+                         + [""] * max(0, len(_NORM_FR_HEADER) - len(_NORM_FR_HEADER))))]
+    cand["rows"] = row_dicts
+    ev = p6._peak_height_event(cand, p6._event_data_fr, p6._FR_TS_COL, p6._FR_HEIGHT_COL)
+    assert ev is not None
+    assert ev["source"] == "controller_ios:flight_records (v4.2.12)"
+
+
+def test_app_version_absent_source_unchanged() -> None:
+    """Candidate without app_version: source string has no suffix."""
+    cand = _fr_cand_with_version(None)
+    utc = timezone.utc
+    base = datetime(2018, 4, 19, 11, 0, tzinfo=utc)
+    row_dicts = [dict(zip(_NORM_FR_HEADER,
+                         _fr_row(norm_id="0", ts=base.isoformat(), height="5.0")
+                         + [""] * max(0, len(_NORM_FR_HEADER) - len(_NORM_FR_HEADER))))]
+    cand["rows"] = row_dicts
+    ev = p6._peak_height_event(cand, p6._event_data_fr, p6._FR_TS_COL, p6._FR_HEIGHT_COL)
+    assert ev is not None
+    assert ev["source"] == "controller_ios:flight_records"
+
+
+def test_build_candidate_reads_app_version_from_rows(tmp_path: Path) -> None:
+    """_build_candidate extracts dji_app_version from DETAILS rows into app_version."""
+    # Build a CSV with a DETAILS.appVersion column populated
+    details_header = _NORM_FR_HEADER + ["DETAILS.appVersion"]
+    csv_path = tmp_path / "fr_with_details.csv"
+    utc = timezone.utc
+    base = datetime(2018, 4, 19, 11, 0, tzinfo=utc)
+    with csv_path.open("w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh)
+        w.writerow(details_header)
+        row = _fr_row(norm_id="0", ts=base.isoformat()) + ["4.3.26"]
+        w.writerow(row)
+    header, rows = p6._load_csv_rows(csv_path)
+    ev_dict = {"sha256": "c" * 64, "source_identification": "controller_ios"}
+    cand = p6._build_candidate(ev_dict, rows, p6._FR_TS_COL, p6._FR_LAT_COL, p6._FR_LON_COL, header)
+    assert cand is not None
+    assert cand["app_version"] == "4.3.26"
+
+
+def test_build_candidate_no_details_app_version_is_none(tmp_path: Path) -> None:
+    """_build_candidate without DETAILS columns → app_version is None."""
+    csv_path = tmp_path / "fr_no_details.csv"
+    utc = timezone.utc
+    base = datetime(2018, 4, 19, 11, 0, tzinfo=utc)
+    _write_norm_fr_csv(csv_path, [_fr_row(norm_id="0", ts=base.isoformat())])
+    header, rows = p6._load_csv_rows(csv_path)
+    ev_dict = {"sha256": "d" * 64, "source_identification": "controller_ios"}
+    cand = p6._build_candidate(ev_dict, rows, p6._FR_TS_COL, p6._FR_LAT_COL, p6._FR_LON_COL, header)
+    assert cand is not None
+    assert cand["app_version"] is None
