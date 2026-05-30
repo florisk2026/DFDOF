@@ -751,7 +751,7 @@ def _coverage_score(
 
 
 # ---------------------------------------------------------------------------
-# Section 7 — Forensic statements
+# Section 7 — Forensic conclusions (structured sections)
 # ---------------------------------------------------------------------------
 
 def _forensic_conclusions(
@@ -760,141 +760,255 @@ def _forensic_conclusions(
     account_and_drone: dict[str, Any],
     artefact_coverage: list[dict[str, Any]],
     p4_artefacts: list[dict[str, Any]],
-) -> tuple[list[str], list[str]]:
-    """Return (safe_statements, further_investigation) as lists of hedged strings."""
-    safe: list[str] = []
+) -> dict[str, list[str]]:
+    """Return structured forensic conclusions grouped by analytical domain.
+
+    Each key is a section; each value is an ordered list of conservative,
+    hedged statements. Uncertainty language is preserved from the source data —
+    no confidence level is elevated by this function.
+
+    Sections:
+      case_overview        — evidence sources and flight count
+      device_identification — drone serial, name, app version, installed apps
+      flight_analysis      — per-flight correlation outcomes and record quality
+      media_analysis       — media capture indicators and EXIF quality
+      database_analysis    — database record availability
+      data_quality         — log format, readability, column anomalies
+      further_investigation — items requiring analyst follow-up
+    """
+    case_overview: list[str] = []
+    device_id: list[str] = []
+    flight_section: list[str] = []
+    media_section: list[str] = []
+    database_section: list[str] = []
+    data_quality: list[str] = []
     investigate: list[str] = []
 
-    # Sources
+    # ── Case overview ────────────────────────────────────────────────────────
     detected = [s["source"] for s in source_coverage if s["detected"]]
-    safe.append(f"{len(detected)} evidence source(s) detected: {', '.join(detected)}.")
+    case_overview.append(
+        f"{len(detected)} evidence source(s) detected: {', '.join(detected)}."
+    )
 
-    # Flights
     total_flights = len(flight_analyses)
     matched = [f for f in flight_analyses if f["matched"]]
     high_conf = [f for f in matched if f.get("correlation_confidence") == "high"]
-    safe.append(
+    med_conf  = [f for f in matched if f.get("correlation_confidence") == "medium"]
+    low_conf  = [f for f in matched if f.get("correlation_confidence") == "low"]
+    conf_parts = []
+    if high_conf:
+        conf_parts.append(f"{len(high_conf)} high")
+    if med_conf:
+        conf_parts.append(f"{len(med_conf)} medium")
+    if low_conf:
+        conf_parts.append(f"{len(low_conf)} low")
+    conf_str = f" ({', '.join(conf_parts)} confidence)" if conf_parts else ""
+    case_overview.append(
         f"{total_flights} flight(s) identified; "
-        f"{len(matched)} with primary GPS+temporal correlation "
-        f"({len(high_conf)} high confidence)."
+        f"{len(matched)} with primary GPS+temporal correlation{conf_str}."
     )
 
+    # ── Device identification ────────────────────────────────────────────────
+    sn = account_and_drone.get("drone_serial")
+    if sn:
+        if sn["confidence"] == "inconsistent":
+            investigate.append(
+                f"Drone serial number inconsistency detected — "
+                f"conflicting values observed: {', '.join(sn['value'])}. "
+                f"Manual verification required."
+            )
+        else:
+            device_id.append(
+                f"Drone serial number: {sn['value']} "
+                f"(confidence: {sn['confidence']})."
+            )
+
+    name = account_and_drone.get("drone_name")
+    if name:
+        if name["confidence"] == "inconsistent":
+            investigate.append(
+                f"Drone name inconsistency detected — "
+                f"conflicting values observed: {', '.join(str(v) for v in name['value'])}."
+            )
+        else:
+            device_id.append(
+                f"Drone model: {name['value']} "
+                f"(confidence: {name['confidence']})."
+            )
+
+    app_ver = account_and_drone.get("dji_app_version")
+    if app_ver:
+        if app_ver["confidence"] == "inconsistent":
+            investigate.append(
+                f"DJI application version inconsistency detected — "
+                f"conflicting values observed: {', '.join(str(v) for v in app_ver['value'])}."
+            )
+        else:
+            device_id.append(
+                f"DJI application version: {app_ver['value']} "
+                f"(confidence: {app_ver['confidence']})."
+            )
+
+    apps = account_and_drone.get("installed_dji_apps")
+    if apps:
+        val = apps["value"]
+        if isinstance(val, list) and val and not isinstance(val[0], list):
+            device_id.append(
+                f"Installed DJI application(s): {', '.join(str(v) for v in val)} "
+                f"(confidence: {apps['confidence']})."
+            )
+
+    email = account_and_drone.get("account_email")
+    if email:
+        if email["confidence"] == "inconsistent":
+            investigate.append(
+                f"Account email inconsistency detected — "
+                f"conflicting values observed across sources. "
+                f"Manual verification required."
+            )
+        else:
+            device_id.append(
+                f"Account email: {email['value']} "
+                f"(confidence: {email['confidence']})."
+            )
+
+    # ── Flight analysis ──────────────────────────────────────────────────────
     unmatched = [f for f in flight_analyses if not f["matched"]]
     if unmatched:
         ids = ", ".join(f["flight_id"] for f in unmatched)
         investigate.append(
             f"{len(unmatched)} flight record(s) could not be correlated to a drone log "
-            f"({ids}) — independent corroboration is absent for these flight(s)."
+            f"({ids}). Independent corroboration is absent for these flight(s)."
         )
 
     incomplete = [f for f in flight_analyses if f.get("flight_record_complete") is False]
     if incomplete:
         ids = ", ".join(f["flight_id"] for f in incomplete)
         investigate.append(
-            f"Flight record shows signs of corruption, additional analysis needed ({ids})."
+            f"Flight record(s) show signs of incomplete capture ({ids}). "
+            f"The drone may not have returned to the home point before logging stopped. "
+            f"Manual inspection recommended."
         )
 
     total_plausible = sum(f.get("plausibly_correlated_count", 0) for f in flight_analyses)
-    total_possible = sum(f.get("possibly_correlated_count", 0) for f in flight_analyses)
+    total_possible  = sum(f.get("possibly_correlated_count", 0) for f in flight_analyses)
     if total_plausible > 0:
-        investigate.append(
-            f"{total_plausible} file(s) plausibly correlated — needs additional analysis."
+        flight_section.append(
+            f"{total_plausible} media file(s) plausibly correlated to a flight "
+            f"by timestamp — manual verification recommended."
         )
     if total_possible > 0:
-        investigate.append(
-            f"{total_possible} file(s) possibly correlated — needs additional analysis."
+        flight_section.append(
+            f"{total_possible} artefact(s) possibly correlated to a flight "
+            f"by indirect indicators — manual verification recommended."
         )
 
-    # Media capture indicators from flight event analysis
+    # ── Media analysis ───────────────────────────────────────────────────────
     has_info_file = any(
         a.get("acquisition_method") == ACQUISITION_SELECT_ACCOUNT_DATA
         and a.get("artefact_category") == VIDEOS
         for a in p4_artefacts
     )
     if any(f.get("video_taken") for f in flight_analyses):
-        msg = "Flight analysis suspects a video was recorded"
+        msg = "Flight record indicates video recording was initiated"
         if has_info_file:
-            msg += " — inspect .info file"
-        investigate.append(msg + ".")
+            msg += " — a .info sidecar file is available for additional metadata"
+        media_section.append(msg + ".")
+
     if any(f.get("photo_taken") for f in flight_analyses):
         if any(
             f.get("photo_taken") and (f.get("number_photos_taken") or 0) > 0
             for f in flight_analyses
         ):
             investigate.append(
-                "There were photo(s) taken that may reside both on controller and drone_sd"
-                " - additional analysis needed."
+                "Photo(s) were recorded during the flight. "
+                "Copies may reside on both the controller and the drone SD card — "
+                "both sources should be examined."
             )
         else:
-            investigate.append("Flight analysis suspects a photo was taken.")
-
-    # Account / drone identity
-    sn = account_and_drone.get("drone_serial")
-    if sn:
-        if sn["confidence"] == "inconsistent":
-            investigate.append(
-                f"Drone serial number inconsistency detected: "
-                f"values observed: {', '.join(sn['value'])}."
-            )
-        else:
-            v = sn["value"]
-            safe.append(f"Drone serial number: {v} (confidence: {sn['confidence']}).")
-
-    name = account_and_drone.get("drone_name")
-    if name and name["confidence"] != "inconsistent":
-        safe.append(f"Drone name: {name['value']} (confidence: {name['confidence']}).")
-
-    app_ver = account_and_drone.get("dji_app_version")
-    if app_ver and app_ver["confidence"] != "inconsistent":
-        safe.append(
-            f"DJI app version: {app_ver['value']} (confidence: {app_ver['confidence']})."
-        )
-
-    apps = account_and_drone.get("installed_dji_apps")
-    if apps:
-        val = apps["value"]
-        if isinstance(val, list) and not isinstance(val[0], list):
-            safe.append(
-                f"Installed DJI apps: {', '.join(str(v) for v in val)} "
-                f"(confidence: {apps['confidence']})."
+            media_section.append(
+                "Flight record indicates a photo capture event was initiated."
             )
 
-    # Data quality from artefact_coverage notes
     for cov in artefact_coverage:
         cat = cov["category"]
+        if cat not in (IMAGES, VIDEOS):
+            continue
+        for note in cov["notes"]:
+            if "zeroed EXIF" in note:
+                media_section.append(
+                    f"{cat.capitalize()}: {note}. "
+                    f"Temporal correlation of these files is not possible without additional context."
+                )
+            elif "missing GPS" in note:
+                media_section.append(
+                    f"{cat.capitalize()}: {note}. "
+                    f"Spatial correlation of these files is not possible without additional context."
+                )
+
+    # ── Database analysis ────────────────────────────────────────────────────
+    for cov in artefact_coverage:
+        if cov["category"] != DATABASES:
+            continue
         total = cov.get("count", 0)
         total_empty = sum(
             int(note.split()[0])
             for note in cov["notes"]
             if "database(s) empty" in note and note.split()[0].isdigit()
         )
-        if cat == DATABASES and total > 0:
-            non_empty = total - total_empty
-            if non_empty > 0:
-                investigate.append(
-                    f"{non_empty} database file(s) contain records and should be inspected for relevant artefacts."
-                )
-            if total_empty > 0:
-                pass  # covered by safe statement below
+        non_empty = total - total_empty
         for note in cov["notes"]:
-            if "empty" in note and cat == DATABASES:
-                safe.append(
-                    f"{note} — no database records available for further analysis."
+            if "empty" in note:
+                database_section.append(
+                    f"{note} — no records available for analysis."
                 )
-            elif "zeroed EXIF" in note:
-                investigate.append(
-                    f"{cat}: {note} — correlation of media needs additional analysis."
+        if non_empty > 0:
+            investigate.append(
+                f"{non_empty} database file(s) contain records and should be "
+                f"examined for relevant artefacts."
+            )
+
+    # ── Data quality ─────────────────────────────────────────────────────────
+    for cov in artefact_coverage:
+        cat = cov["category"]
+        if cat in (IMAGES, VIDEOS, DATABASES):
+            continue
+        for note in cov["notes"]:
+            if "row anomal" in note:
+                data_quality.append(
+                    f"{cat.capitalize()}: {note} detected in telemetry data."
+                )
+            elif "empty column" in note:
+                data_quality.append(
+                    f"{cat.capitalize()}: {note} — some telemetry channels contain no data."
+                )
+            elif "constant-value" in note:
+                data_quality.append(
+                    f"{cat.capitalize()}: {note} — some telemetry channels may be unreliable."
                 )
             elif "unreadable" in note:
-                investigate.append(
-                    f"{cat}: {note} — content could not be parsed."
+                data_quality.append(
+                    f"{cat.capitalize()}: {note} — file content could not be parsed."
                 )
             elif "crash dump" in note:
-                investigate.append(
-                    f"{cat}: {note} — application instability was recorded."
+                data_quality.append(
+                    f"{cat.capitalize()}: {note} — application instability recorded."
+                )
+            elif "formats:" in note:
+                data_quality.append(
+                    f"{cat.capitalize()}: log files present in the following format(s): "
+                    f"{note.replace('formats: ', '')}."
                 )
 
-    return safe, investigate
+    return {
+        "case_overview":         case_overview,
+        "device_identification": device_id,
+        "flight_analysis":       flight_section,
+        "media_analysis":        media_section,
+        "database_analysis":     database_section,
+        "data_quality":          data_quality,
+        "further_investigation": investigate,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -937,7 +1051,7 @@ def run_phase_7(state: State) -> State:
     )
 
     cov_score = _coverage_score(source_cov, artefact_cov, tool_stat, p6_flights)
-    safe_stmts, further = _forensic_conclusions(
+    conclusions = _forensic_conclusions(
         source_cov, flight_analyses, account_and_drone, artefact_cov, p4_artefacts
     )
 
@@ -952,8 +1066,7 @@ def run_phase_7(state: State) -> State:
         "flight_analyses": flight_analyses,
         "uncorrelated_artefacts": uncorrelated,
         "coverage_score": cov_score,
-        "safe_statements": safe_stmts,
-        "further_investigation": further,
+        "conclusions": conclusions,
     }
     state.completed_phases.append(_PHASE_NAME)
     print(f"  Analysis complete: {len(flight_analyses)} flight(s) analysed.")

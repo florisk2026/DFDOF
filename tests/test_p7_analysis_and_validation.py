@@ -596,35 +596,67 @@ def _fa(flight_id: str, matched: bool, confidence=None) -> dict:
     }
 
 
+def _all_statements(conclusions: dict) -> list[str]:
+    """Flatten all section lists for cross-section assertions."""
+    return [s for section in conclusions.values() for s in section]
+
+
+def test_forensic_returns_dict_with_expected_sections():
+    source_cov = [{"source": "controller_android", "detected": True}]
+    c = p7._forensic_conclusions(source_cov, [], {}, [], [])
+    assert isinstance(c, dict)
+    for key in ("case_overview", "device_identification", "flight_analysis",
+                "media_analysis", "database_analysis", "data_quality",
+                "further_investigation"):
+        assert key in c
+
+
+def test_forensic_section_values_are_lists():
+    source_cov = [{"source": "controller_android", "detected": True}]
+    c = p7._forensic_conclusions(source_cov, [], {}, [], [])
+    for v in c.values():
+        assert isinstance(v, list)
+
+
 def test_forensic_flight_count_statement():
     source_cov = [{"source": "controller_android", "detected": True}]
-    safe, _ = p7._forensic_conclusions(
+    c = p7._forensic_conclusions(
         source_cov, [_fa("f01", True, "high"), _fa("f02", True, "medium")], {}, [], []
     )
-    assert any("2" in s and "flight" in s for s in safe)
+    assert any("2" in s and "flight" in s for s in c["case_overview"])
+
+
+def test_forensic_confidence_breakdown_in_case_overview():
+    """High + medium confidence counts appear in case_overview."""
+    source_cov = [{"source": "controller_android", "detected": True}]
+    c = p7._forensic_conclusions(
+        source_cov, [_fa("f01", True, "high"), _fa("f02", True, "medium")], {}, [], []
+    )
+    overview_text = " ".join(c["case_overview"])
+    assert "high" in overview_text
+    assert "medium" in overview_text
 
 
 def test_forensic_unmatched_in_further():
     source_cov = [{"source": "controller_android", "detected": True}]
-    _, investigate = p7._forensic_conclusions(
+    c = p7._forensic_conclusions(
         source_cov, [_fa("f01", True, "high"), _fa("f02", False)], {}, [], []
     )
-    assert any("f02" in s for s in investigate)
+    assert any("f02" in s for s in c["further_investigation"])
 
 
 def test_forensic_incomplete_flight_record_in_further():
     source_cov = [{"source": "controller_ios", "detected": True}]
     fa = {**_fa("f01", True, "high"), "flight_record_complete": False}
-    _, investigate = p7._forensic_conclusions(source_cov, [fa], {}, [], [])
-    assert any("corruption" in s for s in investigate)
-    assert any("f01" in s for s in investigate)
+    c = p7._forensic_conclusions(source_cov, [fa], {}, [], [])
+    assert any("incomplete" in s.lower() and "f01" in s for s in c["further_investigation"])
 
 
 def test_forensic_complete_flight_record_not_in_further():
     source_cov = [{"source": "controller_ios", "detected": True}]
     fa = {**_fa("f01", True, "high"), "flight_record_complete": True}
-    _, investigate = p7._forensic_conclusions(source_cov, [fa], {}, [], [])
-    assert not any("corruption" in s for s in investigate)
+    c = p7._forensic_conclusions(source_cov, [fa], {}, [], [])
+    assert not any("incomplete" in s.lower() for s in c["further_investigation"])
 
 
 def test_forensic_inconsistent_serial_in_further():
@@ -634,38 +666,51 @@ def test_forensic_inconsistent_serial_in_further():
         "corroboration_sources": ["p4:abc", "sha:0"],
         "confidence": "inconsistent",
     }}
-    _, investigate = p7._forensic_conclusions(source_cov, [], account, [], [])
-    assert any("inconsistency" in s for s in investigate)
+    c = p7._forensic_conclusions(source_cov, [], account, [], [])
+    assert any("inconsistency" in s for s in c["further_investigation"])
 
 
-def test_forensic_multi_source_serial_in_safe():
+def test_forensic_consistent_serial_in_device_id():
     source_cov = [{"source": "controller_ios", "detected": True}]
     account = {"drone_serial": {
         "value": "SN001",
         "corroboration_sources": ["p4:abc", "sha004:4"],
         "confidence": "multi-source",
     }}
-    safe, _ = p7._forensic_conclusions(source_cov, [], account, [], [])
-    assert any("SN001" in s for s in safe)
+    c = p7._forensic_conclusions(source_cov, [], account, [], [])
+    assert any("SN001" in s for s in c["device_identification"])
+    # Must NOT appear in further_investigation
+    assert not any("SN001" in s for s in c["further_investigation"])
 
 
-def test_forensic_db_empty_in_safe():
+def test_forensic_db_empty_in_database_analysis():
     source_cov = [{"source": "controller_ios", "detected": True}]
     artefact_cov = [{"category": config.DATABASES, "count": 4,
                      "notes": ["4 database(s) empty (controller_ios)"]}]
-    safe, _ = p7._forensic_conclusions(source_cov, [], {}, artefact_cov, [])
-    assert any("database" in s and "empty" in s for s in safe)
+    c = p7._forensic_conclusions(source_cov, [], {}, artefact_cov, [])
+    assert any("database" in s and "empty" in s for s in c["database_analysis"])
+    # Must NOT appear in further_investigation (empty db is a finding, not an action)
+    assert not any("empty" in s and "database" in s for s in c["further_investigation"])
 
 
-def test_forensic_installed_dji_apps_in_safe():
+def test_forensic_non_empty_db_in_further():
+    source_cov = [{"source": "controller_ios", "detected": True}]
+    artefact_cov = [{"category": config.DATABASES, "count": 6,
+                     "notes": ["4 database(s) empty (controller_ios)"]}]
+    c = p7._forensic_conclusions(source_cov, [], {}, artefact_cov, [])
+    # 6 total - 4 empty = 2 non-empty → further_investigation
+    assert any("2" in s and "database" in s for s in c["further_investigation"])
+
+
+def test_forensic_installed_dji_apps_in_device_id():
     source_cov = [{"source": "controller_android", "detected": True}]
     account = {"installed_dji_apps": {
         "value": ["DJI Go 4", "DJI Fly"],
         "corroboration_sources": ["p2:abc"],
         "confidence": "single-source",
     }}
-    safe, _ = p7._forensic_conclusions(source_cov, [], account, [], [])
-    assert any("DJI Go 4" in s and "DJI Fly" in s for s in safe)
+    c = p7._forensic_conclusions(source_cov, [], account, [], [])
+    assert any("DJI Go 4" in s and "DJI Fly" in s for s in c["device_identification"])
 
 
 def test_forensic_installed_dji_apps_inconsistent_omitted():
@@ -675,16 +720,16 @@ def test_forensic_installed_dji_apps_inconsistent_omitted():
         "corroboration_sources": ["p2:abc", "p2:def"],
         "confidence": "inconsistent",
     }}
-    safe, _ = p7._forensic_conclusions(source_cov, [], account, [], [])
-    assert not any("Installed DJI" in s for s in safe)
+    c = p7._forensic_conclusions(source_cov, [], account, [], [])
+    assert not any("DJI Go 4" in s or "DJI Fly" in s for s in c["device_identification"])
 
 
 def test_forensic_video_taken_no_info_file():
     source_cov = [{"source": "controller_android", "detected": True}]
     fa = {**_fa("f01", True, "high"), "video_taken": True}
-    _, investigate = p7._forensic_conclusions(source_cov, [fa], {}, [], [])
-    assert any("video was recorded" in s for s in investigate)
-    assert not any(".info" in s for s in investigate)
+    c = p7._forensic_conclusions(source_cov, [fa], {}, [], [])
+    assert any("video recording was initiated" in s for s in c["media_analysis"])
+    assert not any(".info" in s for s in c["media_analysis"])
 
 
 def test_forensic_video_taken_with_info_file():
@@ -694,32 +739,60 @@ def test_forensic_video_taken_with_info_file():
         "acquisition_method": config.ACQUISITION_SELECT_ACCOUNT_DATA,
         "artefact_category": config.VIDEOS,
     }
-    _, investigate = p7._forensic_conclusions(source_cov, [fa], {}, [], [info_artefact])
-    assert any("video was recorded" in s and ".info" in s for s in investigate)
+    c = p7._forensic_conclusions(source_cov, [fa], {}, [], [info_artefact])
+    assert any("video recording was initiated" in s and ".info" in s
+               for s in c["media_analysis"])
 
 
-def test_forensic_photo_taken():
-    """photo_taken=True but number_photos_taken unknown → suspects message."""
+def test_forensic_photo_taken_no_count_in_media():
+    """photo_taken=True but number_photos_taken unknown → note in media_analysis."""
     source_cov = [{"source": "controller_android", "detected": True}]
     fa = {**_fa("f01", True, "high"), "photo_taken": True, "number_photos_taken": None}
-    _, investigate = p7._forensic_conclusions(source_cov, [fa], {}, [], [])
-    assert any("photo was taken" in s for s in investigate)
+    c = p7._forensic_conclusions(source_cov, [fa], {}, [], [])
+    assert any("photo capture" in s for s in c["media_analysis"])
+    assert not any("controller and drone_sd" in s for s in c["further_investigation"])
 
 
 def test_forensic_photo_taken_with_count():
-    """photo_taken=True and number_photos_taken > 0 → controller+drone_sd message."""
+    """photo_taken=True and number_photos_taken > 0 → further_investigation."""
     source_cov = [{"source": "controller_android", "detected": True}]
     fa = {**_fa("f01", True, "high"), "photo_taken": True, "number_photos_taken": 3}
-    _, investigate = p7._forensic_conclusions(source_cov, [fa], {}, [], [])
-    assert any("controller and drone_sd" in s for s in investigate)
-    assert not any("suspects a photo" in s for s in investigate)
+    c = p7._forensic_conclusions(source_cov, [fa], {}, [], [])
+    assert any("drone SD card" in s or "drone_sd" in s for s in c["further_investigation"])
 
 
 def test_forensic_no_media_no_items():
     source_cov = [{"source": "controller_android", "detected": True}]
     fa = _fa("f01", True, "high")  # photo_taken=False, video_taken=False
-    _, investigate = p7._forensic_conclusions(source_cov, [fa], {}, [], [])
-    assert not any("video" in s or "photo" in s for s in investigate)
+    c = p7._forensic_conclusions(source_cov, [fa], {}, [], [])
+    assert not any("video" in s or "photo" in s
+                   for s in c["media_analysis"] + c["further_investigation"])
+
+
+def test_forensic_exif_zero_date_in_media_analysis():
+    source_cov = [{"source": "controller_ios", "detected": True}]
+    artefact_cov = [{"category": config.IMAGES, "count": 6,
+                     "notes": ["6 file(s) with zeroed EXIF timestamp"]}]
+    c = p7._forensic_conclusions(source_cov, [], {}, artefact_cov, [])
+    assert any("zeroed EXIF" in s for s in c["media_analysis"])
+    # Must NOT be in further_investigation (it's a finding, not an action item there)
+    assert not any("zeroed EXIF" in s for s in c["further_investigation"])
+
+
+def test_forensic_row_anomaly_in_data_quality():
+    source_cov = [{"source": "controller_ios", "detected": True}]
+    artefact_cov = [{"category": config.FLIGHT_RECORDS, "count": 1,
+                     "notes": ["1 file(s) with row anomalies"]}]
+    c = p7._forensic_conclusions(source_cov, [], {}, artefact_cov, [])
+    assert any("row anomal" in s for s in c["data_quality"])
+
+
+def test_forensic_deterministic_section_order():
+    """Same input always produces the same section key order."""
+    source_cov = [{"source": "controller_ios", "detected": True}]
+    c1 = p7._forensic_conclusions(source_cov, [], {}, [], [])
+    c2 = p7._forensic_conclusions(source_cov, [], {}, [], [])
+    assert list(c1.keys()) == list(c2.keys())
 
 
 # ---------------------------------------------------------------------------
@@ -813,11 +886,14 @@ def test_run_phase_7_integration(tmp_path, monkeypatch):
     assert "stored_path" not in p7_out
 
     assert "account_and_drone_analysis" in p7_out
-    assert "data_quality" not in p7_out
     assert "serial_cross_check" not in p7_out
     assert "account_analysis" not in p7_out
-    assert "safe_statements" in p7_out
-    assert "further_investigation" in p7_out
+    assert "safe_statements" not in p7_out
+    assert "further_investigation" not in p7_out
+    assert "conclusions" in p7_out
+    assert isinstance(p7_out["conclusions"], dict)
+    assert "case_overview" in p7_out["conclusions"]
+    assert "further_investigation" in p7_out["conclusions"]
     assert len(p7_out["flight_analyses"]) == 1
 
     # Chain-walking: P3 sha → P4 sha → P5 sha (referenced in P6) → NOT uncorrelated
