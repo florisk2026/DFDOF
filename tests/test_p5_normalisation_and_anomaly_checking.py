@@ -17,9 +17,7 @@ from phases.utils_phase import (
 from state import State
 
 
-# ---------------------------------------------------------------------------
 # Helpers
-# ---------------------------------------------------------------------------
 
 def _build_state(
     tmp_path: Path,
@@ -104,9 +102,7 @@ def _write_flight_record_csv(path: Path, rows: list[list[str]]) -> None:
         w.writerows(rows)
 
 
-# ---------------------------------------------------------------------------
 # Helper unit tests
-# ---------------------------------------------------------------------------
 
 def test_parse_datcon_date_valid() -> None:
     assert parse_datcon_date("20180419") == "2018-04-19"
@@ -163,9 +159,7 @@ def test_parse_flightrecord_timestamp_invalid() -> None:
     assert parse_flightrecord_timestamp("not-a-date") is None
 
 
-# ---------------------------------------------------------------------------
 # Phase 5 integration tests — DatCon
-# ---------------------------------------------------------------------------
 
 def _datcon_row(
     tick: str = "0",
@@ -327,9 +321,7 @@ def test_datcon_altitude_negative(tmp_path: Path, monkeypatch) -> None:
     assert 0 in obs["altitude_negative"]
 
 
-# ---------------------------------------------------------------------------
 # Phase 5 integration tests — FlightRecord
-# ---------------------------------------------------------------------------
 
 def _fr_row(
     time: str = "2018/04/19 17:25:11.078",
@@ -435,9 +427,7 @@ def test_flight_record_battery_cell_voltage_out_of_range(tmp_path: Path, monkeyp
     assert 1 not in obs.get("battery_cell_voltage_out_of_range", [])
 
 
-# ---------------------------------------------------------------------------
 # Phase 5 integration tests — EXIF
-# ---------------------------------------------------------------------------
 
 def test_exif_anomaly_observation(tmp_path: Path, monkeypatch) -> None:
     """EXIF JSON with zero date and no GPS → Observation with exif_zero_date and exif_missing_gps.
@@ -516,9 +506,7 @@ def test_exif_valid_date_normalised(tmp_path: Path, monkeypatch) -> None:
     assert anomaly["evidence_sha256"] == parent_sha
 
 
-# ---------------------------------------------------------------------------
 # Phase 5 infrastructure tests
-# ---------------------------------------------------------------------------
 
 def test_missing_p4_artefact(tmp_path: Path, monkeypatch) -> None:
     """P4 artefact listed in state but file missing → anomaly flagged, phase still completes."""
@@ -569,9 +557,7 @@ def test_no_empty_output_dirs(tmp_path: Path, monkeypatch) -> None:
     assert subdirs == []
 
 
-# ---------------------------------------------------------------------------
 # Database empty-row anomaly check
-# ---------------------------------------------------------------------------
 
 import sqlite3 as _sqlite3
 
@@ -667,9 +653,7 @@ def test_p5_database_missing_file_raises_anomaly_flag(tmp_path: Path, monkeypatc
     assert result.phase_outputs[p5._PHASE_NAME]["derived_anomalies"] == []
 
 
-# ---------------------------------------------------------------------------
 # Flight log parsing — unit tests
-# ---------------------------------------------------------------------------
 
 def test_is_non_readable_binary() -> None:
     """File with high non-printable byte ratio → True."""
@@ -793,9 +777,7 @@ def test_classify_flight_log_bracketed_not_affected_by_json_array() -> None:
     assert entries[0]["message"] == "signal lost"
 
 
-# ---------------------------------------------------------------------------
 # Flight log parsing — integration tests (run_phase_5)
-# ---------------------------------------------------------------------------
 
 def _build_state_fl(tmp_path: Path, identification: str, log_path: Path) -> State:
     """Build a minimal State with a P1→P3 chain for one flight_log artefact (no P4)."""

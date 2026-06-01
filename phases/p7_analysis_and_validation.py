@@ -1,13 +1,9 @@
 """DFDOF Phase 7: Analysis and Validation.
 
-Consumes outputs from P2–P6 to produce a single analysis.json per case containing:
-- Source and artefact coverage (with per-category data-quality notes)
-- Tool execution status
-- Account and drone identity analysis (cross-source corroboration)
-- Per-flight analysis (event counts, anomalies, peak height, flight modes, media)
-- Uncorrelated artefacts (chain-aware: P3→P4→P5)
-- Processing coverage score
-- Forensic safe statements and further investigation items
+This phase:
+- uses outputs from P2 - P6 to produce an analaysis on the extracted data,
+- including tool execution, account and drone identity, flight analyses, 
+- processing coverage and forensic safe statements.
 """
 
 from __future__ import annotations
@@ -58,14 +54,11 @@ _ROW_ANOMALY_KEYS = frozenset({
 })
 
 # Maximum haversine distance (m) for "last known location" vs flight start to be "consistent"
-
 # Drone-side source identification strings (for confidence determination)
 _DRONE_SOURCE_IDS = frozenset({IDENTIFICATION_DRONE_SD, IDENTIFICATION_DRONE_FLIGHT_STORAGE})
 
 
-# ---------------------------------------------------------------------------
-# Section 1 — Source and artefact coverage (with data-quality notes)
-# ---------------------------------------------------------------------------
+# Section 1  -  Source and artefact coverage (with data-quality notes)
 
 def _source_coverage(state: State) -> list[dict[str, Any]]:
     """Return detection status for each expected evidence source type."""
@@ -245,9 +238,7 @@ def _artefact_coverage_per_source(
     ]
 
 
-# ---------------------------------------------------------------------------
-# Section 2 — Tool execution status
-# ---------------------------------------------------------------------------
+# Section 2  -  Tool execution status
 
 def _tool_status(state: State) -> list[dict[str, Any]]:
     """Summarise per-tool execution results from the tool invocation log."""
@@ -281,9 +272,7 @@ def _tool_status(state: State) -> list[dict[str, Any]]:
     return result
 
 
-# ---------------------------------------------------------------------------
-# Section 3 — Account and drone identity analysis
-# ---------------------------------------------------------------------------
+# Section 3  -  Account and drone identity analysis
 
 def _norm_drone_name(name: str) -> str:
     """Normalise a drone name for fuzzy comparison: strip prefix up to '-', lowercase, remove spaces."""
@@ -424,7 +413,7 @@ def _build_account_and_drone_analysis(
                 value = sorted(set(str(e["value"]) for e in entries))
                 confidence = "inconsistent"
         elif field == "installed_dji_apps":
-            # Value is a list — collect all unique lists (compare as sorted tuples)
+            # Value is a list  -  collect all unique lists (compare as sorted tuples)
             seen: list[list] = []
             for e in entries:
                 v = e["value"] if isinstance(e["value"], list) else [e["value"]]
@@ -449,9 +438,7 @@ def _build_account_and_drone_analysis(
     return result
 
 
-# ---------------------------------------------------------------------------
-# Section 4 — Per-flight analysis
-# ---------------------------------------------------------------------------
+# Section 4  -  Per-flight analysis
 
 def _analyse_flight(
     flight_compact: dict[str, Any],
@@ -500,7 +487,7 @@ def _analyse_flight(
                 flight_modes.append(mode)
                 seen_modes.add(mode)
 
-    # Distance travelled, photo count, video duration, homepoint fields — first Log ended event
+    # Distance travelled, photo count, video duration, homepoint fields  -  first Log ended event
     distance_travelled: float | None = None
     number_photos_taken: int | None = None
     duration_recording: float | None = None
@@ -548,7 +535,7 @@ def _analyse_flight(
     else:
         flight_record_complete = None
 
-    # Photo taken — any Photo mode changed event with mode != "No"
+    # Photo taken  -  any Photo mode changed event with mode != "No"
     photo_taken = False
     for ev in events:
         if ev.get("event") == "Photo mode changed":
@@ -557,7 +544,7 @@ def _analyse_flight(
                 photo_taken = True
                 break
 
-    # Video taken — any Record mode changed event with mode not in {"No", ""}
+    # Video taken  -  any Record mode changed event with mode not in {"No", ""}
     video_taken = False
     for ev in events:
         if ev.get("event") == "Record mode changed":
@@ -587,9 +574,7 @@ def _analyse_flight(
     }
 
 
-# ---------------------------------------------------------------------------
-# Section 5 — Uncorrelated artefacts (chain-aware)
-# ---------------------------------------------------------------------------
+# Section 5  -  Uncorrelated artefacts (chain-aware)
 
 def _build_lineage_map(
     p3_artefacts: list[dict[str, Any]],
@@ -712,9 +697,7 @@ def _uncorrelated_artefacts(
     return uncorrelated
 
 
-# ---------------------------------------------------------------------------
-# Section 6 — Processing coverage score
-# ---------------------------------------------------------------------------
+# Section 6  -  Processing coverage score
 
 def _coverage_score(
     source_coverage: list[dict[str, Any]],
@@ -722,7 +705,7 @@ def _coverage_score(
     tool_status: list[dict[str, Any]],
     p6_flights: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    """Return raw coverage ratios — no percentages, no synthetic scores."""
+    """Return raw coverage ratios  -  no percentages, no synthetic scores."""
     sources_detected = sum(1 for s in source_coverage if s["detected"])
     cats_with_data = sum(1 for c in artefact_coverage if c["count"] > 0)
     flights_matched = sum(
@@ -750,9 +733,7 @@ def _coverage_score(
     }
 
 
-# ---------------------------------------------------------------------------
-# Section 7 — Forensic conclusions (structured sections)
-# ---------------------------------------------------------------------------
+# Section 7  -  Forensic conclusions (structured sections)
 
 def _forensic_conclusions(
     source_coverage: list[dict[str, Any]],
@@ -764,17 +745,17 @@ def _forensic_conclusions(
     """Return structured forensic conclusions grouped by analytical domain.
 
     Each key is a section; each value is an ordered list of conservative,
-    hedged statements. Uncertainty language is preserved from the source data —
+    hedged statements. Uncertainty language is preserved from the source data  - 
     no confidence level is elevated by this function.
 
     Sections:
-      case_overview        — evidence sources and flight count
-      device_identification — drone serial, name, app version, installed apps
-      flight_analysis      — per-flight correlation outcomes and record quality
-      media_analysis       — media capture indicators and EXIF quality
-      database_analysis    — database record availability
-      data_quality         — log format, readability, column anomalies
-      further_investigation — items requiring analyst follow-up
+      case_overview         -  evidence sources and flight count
+      device_identification  -  drone serial, name, app version, installed apps
+      flight_analysis       -  per-flight correlation outcomes and record quality
+      media_analysis        -  media capture indicators and EXIF quality
+      database_analysis     -  database record availability
+      data_quality          -  log format, readability, column anomalies
+      further_investigation  -  items requiring analyst follow-up
     """
     case_overview: list[str] = []
     device_id: list[str] = []
@@ -813,7 +794,7 @@ def _forensic_conclusions(
     if sn:
         if sn["confidence"] == "inconsistent":
             investigate.append(
-                f"Drone serial number inconsistency detected — "
+                f"Drone serial number inconsistency detected  -  "
                 f"conflicting values observed: {', '.join(sn['value'])}. "
                 f"Manual verification required."
             )
@@ -827,7 +808,7 @@ def _forensic_conclusions(
     if name:
         if name["confidence"] == "inconsistent":
             investigate.append(
-                f"Drone name inconsistency detected — "
+                f"Drone name inconsistency detected  -  "
                 f"conflicting values observed: {', '.join(str(v) for v in name['value'])}."
             )
         else:
@@ -840,7 +821,7 @@ def _forensic_conclusions(
     if app_ver:
         if app_ver["confidence"] == "inconsistent":
             investigate.append(
-                f"DJI application version inconsistency detected — "
+                f"DJI application version inconsistency detected  -  "
                 f"conflicting values observed: {', '.join(str(v) for v in app_ver['value'])}."
             )
         else:
@@ -862,7 +843,7 @@ def _forensic_conclusions(
     if email:
         if email["confidence"] == "inconsistent":
             investigate.append(
-                f"Account email inconsistency detected — "
+                f"Account email inconsistency detected  -  "
                 f"conflicting values observed across sources. "
                 f"Manual verification required."
             )
@@ -895,12 +876,12 @@ def _forensic_conclusions(
     if total_plausible > 0:
         flight_section.append(
             f"{total_plausible} media file(s) plausibly correlated to a flight "
-            f"by timestamp — manual verification recommended."
+            f"by timestamp  -  manual verification recommended."
         )
     if total_possible > 0:
         flight_section.append(
             f"{total_possible} artefact(s) possibly correlated to a flight "
-            f"by indirect indicators — manual verification recommended."
+            f"by indirect indicators  -  manual verification recommended."
         )
 
     # ── Media analysis ───────────────────────────────────────────────────────
@@ -912,7 +893,7 @@ def _forensic_conclusions(
     if any(f.get("video_taken") for f in flight_analyses):
         msg = "Flight record indicates video recording was initiated"
         if has_info_file:
-            msg += " — a .info sidecar file is available for additional metadata"
+            msg += "  -  a .info sidecar file is available for additional metadata"
         media_section.append(msg + ".")
 
     if any(f.get("photo_taken") for f in flight_analyses):
@@ -922,7 +903,7 @@ def _forensic_conclusions(
         ):
             investigate.append(
                 "Photo(s) were recorded during the flight. "
-                "Copies may reside on both the controller and the drone SD card — "
+                "Copies may reside on both the controller and the drone SD card  -  "
                 "both sources should be examined."
             )
         else:
@@ -960,7 +941,7 @@ def _forensic_conclusions(
         for note in cov["notes"]:
             if "empty" in note:
                 database_section.append(
-                    f"{note} — no records available for analysis."
+                    f"{note}  -  no records available for analysis."
                 )
         if non_empty > 0:
             investigate.append(
@@ -980,19 +961,19 @@ def _forensic_conclusions(
                 )
             elif "empty column" in note:
                 data_quality.append(
-                    f"{cat.capitalize()}: {note} — some telemetry channels contain no data."
+                    f"{cat.capitalize()}: {note}  -  some telemetry channels contain no data."
                 )
             elif "constant-value" in note:
                 data_quality.append(
-                    f"{cat.capitalize()}: {note} — some telemetry channels may be unreliable."
+                    f"{cat.capitalize()}: {note}  -  some telemetry channels may be unreliable."
                 )
             elif "unreadable" in note:
                 data_quality.append(
-                    f"{cat.capitalize()}: {note} — file content could not be parsed."
+                    f"{cat.capitalize()}: {note}  -  file content could not be parsed."
                 )
             elif "crash dump" in note:
                 data_quality.append(
-                    f"{cat.capitalize()}: {note} — application instability recorded."
+                    f"{cat.capitalize()}: {note}  -  application instability recorded."
                 )
             elif "formats:" in note:
                 data_quality.append(
@@ -1011,9 +992,7 @@ def _forensic_conclusions(
     }
 
 
-# ---------------------------------------------------------------------------
 # Entry point
-# ---------------------------------------------------------------------------
 
 def run_phase_7(state: State) -> State:
     """Phase 7: Analysis and Validation."""

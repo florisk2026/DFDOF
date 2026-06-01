@@ -50,9 +50,7 @@ _PHASE_NAME = Path(__file__).stem
 # 3. GNSS Engineering     : Multi-lateral satellite positioning constraints
 # ===========================================================================
 
-# ---------------------------------------------------------------------------
 # Category 1: Correlation Geometry (Conservative Plausibility Bounds)
-# ---------------------------------------------------------------------------
 
 # Primary GPS-assisted temporal overlap floor (seconds) and minimum fraction.
 # DatCon at 30 Hz, FlightRecord at 10 Hz — 60 s yields ≥600 rows at the slower rate,
@@ -77,9 +75,7 @@ _SPATIAL_MAX_MEDIAN_M = 100.0
 # the flight pair is left unmatched below this count.
 _SPATIAL_MIN_PAIRS = 5
 
-# ---------------------------------------------------------------------------
 # Column name constants (mirrors P5)
-# ---------------------------------------------------------------------------
 
 # DatCon
 _DRONE_TS_COL     = "[NORM]:GPS:dateTimeStamp"

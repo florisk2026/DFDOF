@@ -42,9 +42,7 @@ def _write_backup_info(tmp_path: Path, case_id: str, installed_apps: list) -> No
     )
 
 
-# ---------------------------------------------------------------------------
 # Android logical extraction
-# ---------------------------------------------------------------------------
 
 def test_run_phase_3_android_logical(tmp_path: Path, monkeypatch) -> None:
     """Android ZIP with all artefact categories under a discovered DJI scope root."""
@@ -317,9 +315,7 @@ def test_run_phase_3_empty_file_leaves_no_empty_dir(tmp_path: Path, monkeypatch)
     assert any("empty file moved to _rejected" in flag for flag in state.anomaly_flags)
 
 
-# ---------------------------------------------------------------------------
 # Android physical extraction
-# ---------------------------------------------------------------------------
 
 def _make_android_physical_state(
     tmp_path: Path,
@@ -464,9 +460,7 @@ def test_android_physical_scope_filters_to_dji_app_only(
     assert "data/data/com.other.app/databases/other.db" not in passed_paths
 
 
-# ---------------------------------------------------------------------------
 # Unit tests — _scope_filter_entries
-# ---------------------------------------------------------------------------
 
 def test_scope_filter_entries_keeps_matching() -> None:
     """Entries inside DJI scope root with correct extension are kept."""
@@ -542,9 +536,7 @@ def test_scope_filter_entries_multiple_scope_roots() -> None:
     assert len(result) == 2
 
 
-# ---------------------------------------------------------------------------
 # Android scope root discovery
-# ---------------------------------------------------------------------------
 
 def test_android_discover_scope_roots() -> None:
     members = [
@@ -558,9 +550,7 @@ def test_android_discover_scope_roots() -> None:
     assert len(roots) == 2
 
 
-# ---------------------------------------------------------------------------
 # iOS extraction — root discovery and category collection
-# ---------------------------------------------------------------------------
 
 def test_ios_discover_app_roots(tmp_path: Path) -> None:
     """AppDomain-com.dji.go is discovered; non-DJI and non-domain dirs are ignored."""
@@ -722,9 +712,7 @@ def test_run_phase_3_ios_no_dji_roots_raises_anomaly(tmp_path: Path, monkeypatch
     assert any("no DJI app directories found" in flag for flag in result.anomaly_flags)
 
 
-# ---------------------------------------------------------------------------
 # Drone SD
-# ---------------------------------------------------------------------------
 
 def test_run_phase_3_drone_sd_physical_single_pass(tmp_path: Path, monkeypatch) -> None:
     project_root = tmp_path
@@ -775,9 +763,7 @@ def test_run_phase_3_drone_sd_physical_single_pass(tmp_path: Path, monkeypatch) 
     assert call_inodes.count(11) == 1
 
 
-# ---------------------------------------------------------------------------
 # Drone flight storage
-# ---------------------------------------------------------------------------
 
 def test_run_phase_3_drone_flight_storage_flat_dat(tmp_path: Path, monkeypatch) -> None:
     project_root = tmp_path
@@ -844,9 +830,7 @@ def test_run_phase_3_drone_flight_storage_export_dat(tmp_path: Path, monkeypatch
     assert not any("drone flight storage" in flag for flag in result.anomaly_flags)
 
 
-# ---------------------------------------------------------------------------
 # Integration
-# ---------------------------------------------------------------------------
 
 def test_p1_p2_p3_android_integration(tmp_path: Path, monkeypatch) -> None:
     project_root = tmp_path

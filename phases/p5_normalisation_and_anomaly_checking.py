@@ -74,9 +74,7 @@ _PHASE_NAME = Path(__file__).stem
 # 3. Operational Heuristics       : Conservative UAV flight profile envelopes
 # ===========================================================================
 
-# ---------------------------------------------------------------------------
 # Category 1: Physics & Manufacturer-Backed Thresholds (Highly Defensible)
-# ---------------------------------------------------------------------------
 
 # LiPo/LiHV absolute deep-discharge danger zone.
 # Cells degrade severely below ~2.8V-3.0V. Values below 2.8V signify abnormal 
@@ -104,9 +102,7 @@ _BATTERY_TEMP_MAX_C = 80.0
 _QUATERNION_NORM_EPS = 0.01  
 
 
-# ---------------------------------------------------------------------------
 # Category 2: GNSS Engineering Thresholds (Standard Standards)
-# ---------------------------------------------------------------------------
 
 # GNSS Engineering Convention: Horizontal Dilution of Precision (HDOP).
 # Values between 1-2 denote ideal/excellent geometric precision; values > 5.0 
@@ -119,9 +115,7 @@ _GPS_HDOP_THRESHOLD = 5.0
 _GPS_POOR_FIX_SATS = 4  
 
 
-# ---------------------------------------------------------------------------
 # Category 3: Heuristic Screening Thresholds (Conservative Plausibility Bounds)
-# ---------------------------------------------------------------------------
 
 # Conservative horizontal velocity plausibility threshold (~288 km/h).
 # Exceeds the mechanical capability of standard consumer DJI platforms. Spikes beyond 80.0 m/s 

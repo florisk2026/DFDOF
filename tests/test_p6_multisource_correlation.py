@@ -12,9 +12,7 @@ from phases import p6_multisource_correlation as p6
 from state import State
 
 
-# ---------------------------------------------------------------------------
 # CSV writers
-# ---------------------------------------------------------------------------
 
 _NORM_DRONE_HEADER = [
     "[NORM]:ID",
@@ -91,9 +89,7 @@ def _fr_row(
     return [norm_id, ts, lat, lon, height, motor, numsv, batt, mode, warn, tip, rec, photo, sd]
 
 
-# ---------------------------------------------------------------------------
 # State builder
-# ---------------------------------------------------------------------------
 
 def _build_p6_state(
     tmp_path: Path,
@@ -202,9 +198,7 @@ def _overlapping_rows(
     return result
 
 
-# ---------------------------------------------------------------------------
 # Unit tests — helpers
-# ---------------------------------------------------------------------------
 
 def test_load_csv_rows_missing_file(tmp_path: Path) -> None:
     header, rows = p6._load_csv_rows(tmp_path / "nonexistent.csv")
@@ -272,9 +266,7 @@ def test_build_candidate_no_timestamps(tmp_path: Path) -> None:
                                 p6._FR_LAT_COL, p6._FR_LON_COL, header) is None
 
 
-# ---------------------------------------------------------------------------
 # Integration tests — run_phase_6
-# ---------------------------------------------------------------------------
 
 def test_no_p5_data(tmp_path: Path, monkeypatch) -> None:
     """Phase runs cleanly with empty P5 outputs and produces 0 flights."""
@@ -468,9 +460,7 @@ def test_empty_csv_raises_anomaly(tmp_path: Path, monkeypatch) -> None:
     assert any("empty flight record" in flag for flag in result.anomaly_flags)
 
 
-# ---------------------------------------------------------------------------
 # Unit tests — new helpers
-# ---------------------------------------------------------------------------
 
 def test_ts_timezone_utc_offset() -> None:
     assert p6._ts_timezone("2018-04-19T11:25:00+00:00") == "UTC"
@@ -520,9 +510,7 @@ def test_event_data_fr_extracts_columns() -> None:
     assert c == {"latitude": 39.9612, "longitude": -106.2165, "altitude": 8.1}
 
 
-# ---------------------------------------------------------------------------
 # Unit tests — log-start extras helpers
-# ---------------------------------------------------------------------------
 
 def test_drone_log_start_extras_found() -> None:
     """ACType row is found and drone name extracted."""
@@ -660,9 +648,7 @@ def test_boundary_events_fr_log_ended_osd_fields_null_when_empty(tmp_path: Path,
     assert ended["data"]["distance_to_homepoint"] is None
 
 
-# ---------------------------------------------------------------------------
 # Integration tests — boundary events
-# ---------------------------------------------------------------------------
 
 def test_boundary_events_present(tmp_path: Path, monkeypatch) -> None:
     """Single FR candidate produces exactly 2 events: Log started + Log ended."""
@@ -701,9 +687,7 @@ def test_events_chronological(tmp_path: Path, monkeypatch) -> None:
     assert timestamps == sorted(timestamps)
 
 
-# ---------------------------------------------------------------------------
 # Unit tests — peak height, motor, fly-mode event generators
-# ---------------------------------------------------------------------------
 
 def _make_cand(rows: list[list[str]], header: list[str], ts_col: str,
                lat_col: str, lon_col: str) -> dict:
@@ -882,9 +866,7 @@ def test_tip_log_message_events(tmp_path: Path) -> None:
     assert evs[1]["data"]["log_message"] == "obstacle detected"
 
 
-# ---------------------------------------------------------------------------
 # Unit tests — exif observation correlation helpers
-# ---------------------------------------------------------------------------
 
 def test_exif_obs_datetime_valid() -> None:
     obs = {"norm_date": "2018-04-19", "norm_time": "11:25:10"}
@@ -916,9 +898,7 @@ def test_flight_covers_dt_outside() -> None:
     assert p6._flight_covers_dt(flight, dt) is False
 
 
-# ---------------------------------------------------------------------------
 # Integration tests — exif observation correlation in run_phase_6
-# ---------------------------------------------------------------------------
 
 def _build_p6_state_with_exif(
     tmp_path: Path,
@@ -1088,9 +1068,7 @@ def test_exif_correlation_gps_only_outside_bbox(tmp_path: Path, monkeypatch) -> 
     assert flight["possibly_correlated"] == []
 
 
-# ---------------------------------------------------------------------------
 # Unit tests — _norm_msg
-# ---------------------------------------------------------------------------
 
 def test_norm_msg_strips_level_prefix() -> None:
     """[Warning] prefix and Warning: prefix normalise to the same string."""
@@ -1102,9 +1080,7 @@ def test_norm_msg_nbsp_and_replacement() -> None:
     assert p6._norm_msg("RTH Altitude:\xa0 30m") == p6._norm_msg("RTH Altitude:� 30m")
 
 
-# ---------------------------------------------------------------------------
 # Integration tests — flight_log observation correlation in run_phase_6
-# ---------------------------------------------------------------------------
 
 def _build_p6_state_with_flight_log_obs(
     tmp_path: Path,
@@ -1290,9 +1266,7 @@ def test_flight_log_correlation_tip_log_message_capital(tmp_path: Path, monkeypa
     assert f"p5:{fl_sha}" in pointers
 
 
-# ---------------------------------------------------------------------------
 # Unit tests — video duration correlation
-# ---------------------------------------------------------------------------
 
 def _make_flight_with_log_ended(duration_recording):
     """Minimal flight dict with a Log ended event carrying duration_recording."""
@@ -1363,9 +1337,7 @@ def test_video_duration_dedup() -> None:
     assert len(flight["possibly_correlated"]) == 1
 
 
-# ---------------------------------------------------------------------------
 # Unit tests — _deduplicate_fr_candidates
-# ---------------------------------------------------------------------------
 
 def _make_fr_cand(
     start: datetime,
@@ -1442,9 +1414,7 @@ def test_deduplicate_overlap_large_duration_diff_both_kept() -> None:
     assert len(result) == 2
 
 
-# ---------------------------------------------------------------------------
 # Unit tests — app_version in source strings
-# ---------------------------------------------------------------------------
 
 def _fr_cand_with_version(version: str | None) -> dict:
     """FR candidate with a specific app_version (no real rows needed)."""

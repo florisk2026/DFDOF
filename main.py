@@ -26,13 +26,14 @@ from phases.p4_decision_and_orchestration import run_phase_4
 from phases.p5_normalisation_and_anomaly_checking import run_phase_5
 from phases.p6_multisource_correlation import run_phase_6
 from phases.p7_analysis_and_validation import run_phase_7
+from phases.p8_automated_reporting import run_phase_8
 from config import output_dir
 from state import State
 
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="DFDOF: Drone Forensics Decision and Orchestration Framework"
+        description="DFDOF: Drone Forensic Decision and Orchestration Framework (Proof of Concept)"
     )
     parser.add_argument("--operator", help="Operator name")
     parser.add_argument("--case-id", help="Case identifier")
@@ -131,6 +132,12 @@ def run_phases(
     # Phase 7: Analysis and validation.
     print("[Phase 7] Analysis and Validation:")
     state = run_phase_7(state)
+    state.save(state_path)
+    print()
+
+    # Phase 8: Automated reporting.
+    print("[Phase 8] Automated Reporting:")
+    state = run_phase_8(state)
     state.save(state_path)
     print()
 

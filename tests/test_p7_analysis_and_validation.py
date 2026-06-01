@@ -10,9 +10,7 @@ from phases import p7_analysis_and_validation as p7
 from state import State
 
 
-# ---------------------------------------------------------------------------
 # Helpers
-# ---------------------------------------------------------------------------
 
 def _make_state(tmp_path: Path, monkeypatch, input_identifications=None) -> State:
     (tmp_path / "Documents").mkdir(parents=True, exist_ok=True)
@@ -70,9 +68,7 @@ def _log_started_ev(source: str, sp: str, stype: str = "controller",
             "source": source, "source_pointer": sp, "data": data}
 
 
-# ---------------------------------------------------------------------------
 # Section 1 — Source coverage
-# ---------------------------------------------------------------------------
 
 def test_source_coverage_all_detected(tmp_path, monkeypatch):
     state = _make_state(tmp_path, monkeypatch, [
@@ -94,9 +90,7 @@ def test_source_coverage_partial(tmp_path, monkeypatch):
     assert detected[0]["source"] == config.IDENTIFICATION_CONTROLLER_ANDROID
 
 
-# ---------------------------------------------------------------------------
 # Section 1 — Artefact coverage + data quality notes
-# ---------------------------------------------------------------------------
 
 def _p3a(cat: str, sha: str = "aabb", src: str = "controller_ios",
          stored: str = "/tmp/x.csv") -> dict:
@@ -172,9 +166,7 @@ def test_artefact_coverage_no_duplicate_categories():
     assert len(cats) == len(set(cats))
 
 
-# ---------------------------------------------------------------------------
 # Section 1 — Artefact coverage per source
-# ---------------------------------------------------------------------------
 
 def test_artefact_coverage_per_source_basic():
     p3 = [
@@ -204,9 +196,7 @@ def test_artefact_coverage_per_source_empty():
     assert p7._artefact_coverage_per_source([]) == []
 
 
-# ---------------------------------------------------------------------------
 # Section 2 — Tool status
-# ---------------------------------------------------------------------------
 
 def test_tool_status_all_ok(tmp_path, monkeypatch):
     state = _make_state(tmp_path, monkeypatch)
@@ -229,9 +219,7 @@ def test_tool_status_partial(tmp_path, monkeypatch):
     assert ts[0]["status"] == "partial"
 
 
-# ---------------------------------------------------------------------------
 # Section 3 — Account and drone identity analysis
-# ---------------------------------------------------------------------------
 
 def test_collect_identity_p4_account_email(tmp_path):
     p4_obs = [{
@@ -363,9 +351,7 @@ def test_build_analysis_two_controllers_still_single_source():
     assert result["drone_serial"]["confidence"] == "single-source"
 
 
-# ---------------------------------------------------------------------------
 # Section 4 — Flight analysis
-# ---------------------------------------------------------------------------
 
 def test_analyse_flight_event_counts(tmp_path):
     events = [
@@ -480,9 +466,7 @@ def test_analyse_flight_no_anomaly_fields(tmp_path):
     assert "anomaly_types_observed" not in result
 
 
-# ---------------------------------------------------------------------------
 # Section 5 — Lineage map + uncorrelated artefacts
-# ---------------------------------------------------------------------------
 
 def test_build_lineage_map_simple():
     p3 = [{"sha256": "p3sha", "parent_sha256": None}]
@@ -552,9 +536,7 @@ def test_uncorrelated_artefacts_p4_possibly_correlated_removes_from_uncorrelated
     assert result == []
 
 
-# ---------------------------------------------------------------------------
 # Section 6 — Coverage score
-# ---------------------------------------------------------------------------
 
 def test_coverage_score_values(tmp_path):
     source_cov = [
@@ -580,9 +562,7 @@ def test_coverage_score_values(tmp_path):
     assert score["tools_succeeded"] == {"value": 1, "total": 2}
 
 
-# ---------------------------------------------------------------------------
 # Section 7 — Forensic conclusions
-# ---------------------------------------------------------------------------
 
 def _fa(flight_id: str, matched: bool, confidence=None) -> dict:
     return {
@@ -795,9 +775,7 @@ def test_forensic_deterministic_section_order():
     assert list(c1.keys()) == list(c2.keys())
 
 
-# ---------------------------------------------------------------------------
 # Integration test
-# ---------------------------------------------------------------------------
 
 def test_run_phase_7_integration(tmp_path, monkeypatch):
     """Minimal end-to-end: stubbed phase outputs → analysis.json written, state updated."""
