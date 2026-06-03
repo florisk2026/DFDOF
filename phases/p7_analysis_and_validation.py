@@ -304,11 +304,12 @@ def _collect_all_identity_sources(
         "account_email": [],
         "drone_serial": [],
         "drone_name": [],
+        "device_name": [],
         "installed_dji_apps": [],
         "dji_app_version": [],
     }
 
-    # P2: installed_dji_apps from device_and_backup_info
+    # P2: installed_dji_apps and product_name from device_and_backup_info
     for obs_dict in p2_obs:
         if obs_dict.get("evidence_category") != DEVICE_AND_BACKUP_INFO:
             continue
@@ -318,6 +319,13 @@ def _collect_all_identity_sources(
             if val is not None:
                 fields["installed_dji_apps"].append({
                     "value": val,
+                    "source_pointer": f"p2:{sha}",
+                    "source_type": "controller",
+                })
+            dn = obs.get("product_name")
+            if dn is not None:
+                fields["device_name"].append({
+                    "value": dn,
                     "source_pointer": f"p2:{sha}",
                     "source_type": "controller",
                 })
@@ -333,6 +341,7 @@ def _collect_all_identity_sources(
                 ("account_email", "account_email"),
                 ("aircraft_sn", "drone_serial"),
                 ("cached_product_name", "drone_name"),
+                ("device_platform", "device_name"),
                 ("app_version", "dji_app_version"),
             ):
                 val = obs.get(p4_key)
@@ -830,6 +839,20 @@ def _forensic_conclusions(
                 f"(confidence: {app_ver['confidence']})."
             )
 
+    device_n = account_and_drone.get("device_name")
+    if device_n:
+        if device_n["confidence"] == "inconsistent":
+            investigate.append(
+                f"Controller device name inconsistency detected  -  "
+                f"conflicting values observed: {', '.join(str(v) for v in device_n['value'])}. "
+                f"Manual verification required."
+            )
+        else:
+            device_id.append(
+                f"Controller device: {device_n['value']} "
+                f"(confidence: {device_n['confidence']})."
+            )
+
     apps = account_and_drone.get("installed_dji_apps")
     if apps:
         val = apps["value"]
@@ -851,6 +874,20 @@ def _forensic_conclusions(
             device_id.append(
                 f"Account email: {email['value']} "
                 f"(confidence: {email['confidence']})."
+            )
+
+    _IDENTITY_FIELD_LABELS = (
+        ("drone_serial",       "drone serial number"),
+        ("drone_name",         "drone model"),
+        ("device_name",        "controller device name"),
+        ("dji_app_version",    "DJI application version"),
+        ("installed_dji_apps", "installed DJI applications"),
+        ("account_email",      "account e-mail"),
+    )
+    for _field, _label in _IDENTITY_FIELD_LABELS:
+        if not account_and_drone.get(_field):
+            investigate.append(
+                f"Note: no {_label} found - Device and account information."
             )
 
     # ── Flight analysis ──────────────────────────────────────────────────────

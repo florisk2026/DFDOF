@@ -8,7 +8,7 @@ import pytest
 import config
 from config import DEVICE_AND_BACKUP_INFO
 from evidence import make_evidence
-from parsing.extract_logical import extract_logical_files, find_acquisition_pdf_member
+from parsing.extract_logical import extract_logical_files
 
 
 def _create_logical_zip(zip_path: Path) -> None:
@@ -71,17 +71,3 @@ def test_extract_logical_files_hash_mismatch_raises(
         extract_logical_files(source, tmp_path / "out", ["file.txt"])
 
 
-def test_find_acquisition_pdf_member_prefers_depth_folder_with_txt(
-    tmp_path: Path,
-) -> None:
-    archive_path = tmp_path / "logical.zip"
-    with zipfile.ZipFile(
-        archive_path, "w", compression=zipfile.ZIP_DEFLATED
-    ) as archive:
-        archive.writestr("depth1/report.pdf", b"report")
-        archive.writestr("depth1/notes.txt", b"notes")
-        archive.writestr("depth2/nested/report.pdf", b"nested report")
-
-    member = find_acquisition_pdf_member(archive_path)
-
-    assert member == "depth1/report.pdf"

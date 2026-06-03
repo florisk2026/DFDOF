@@ -31,9 +31,6 @@ def test_parse_android_source_logical_builds_backup_info(tmp_path: Path, monkeyp
     )
     case_state = State(case_id="CASE-AND-1", operator="Floris")
 
-    def fake_find_acquisition_pdf_member(_archive_path: Path) -> str | None:
-        return "backup/report.pdf"
-
     def fake_extract_logical_files(
         _source_evidence,
         dest_root: Path,
@@ -67,12 +64,6 @@ def test_parse_android_source_logical_builds_backup_info(tmp_path: Path, monkeyp
             elif name == "packages.list":
                 out_path.write_text("com.dji.go 1000 0\ndji.go.v4 1001 0\n", encoding="utf-8")
                 source_path = "property\\packages.list"
-            elif name == "report.pdf":
-                out_path.write_text(
-                    "Phone model: DJI RC 2\nAcquisition date: 2026-05-05\n",
-                    encoding="utf-8",
-                )
-                source_path = "backup\\report.pdf"
             else:
                 out_path.write_text("", encoding="utf-8")
                 source_path = name
@@ -95,11 +86,6 @@ def test_parse_android_source_logical_builds_backup_info(tmp_path: Path, monkeyp
 
     monkeypatch.setattr(
         parser_android,
-        "find_acquisition_pdf_member",
-        fake_find_acquisition_pdf_member,
-    )
-    monkeypatch.setattr(
-        parser_android,
         "extract_logical_files",
         fake_extract_logical_files,
     )
@@ -113,18 +99,10 @@ def test_parse_android_source_logical_builds_backup_info(tmp_path: Path, monkeyp
     assert backup_info["Product Version"] == "1.2.3"
     assert backup_info["Build Version"] == "FW-9.9.9"
     assert backup_info["Serial Number"] == "SERIAL-ANDROID-1"
-    assert backup_info["Last Backup Date"] == "2026-05-05"
+    assert backup_info["Last Backup Date"] is None
     assert backup_info["Installed Applications"] == ["com.dji.go", "dji.go.v4"]
 
-    assert any(Path(str(item.stored_path)).name == "report.pdf" for item in result.parsed_evidence)
-
-    report_observation = next(
-        obs
-        for obs in result.observations
-        if obs.content.observations[0].get("phone_model") == "DJI RC 2"
-    )
-    assert report_observation.content.observations[0]["phone_model"] == "DJI RC 2"
-    assert report_observation.content.observations[0]["acquisition_date"] == "2026-05-05"
+    assert not any(Path(str(item.stored_path)).name == "report.pdf" for item in result.parsed_evidence)
 
     assert case_state.tool_invocation_log
     assert case_state.tool_invocation_log[-1]["tool_name"] == "parser_android"
@@ -169,7 +147,6 @@ def test_parse_android_source_flags_missing_key_files(tmp_path: Path, monkeypatc
             )
         ]
 
-    monkeypatch.setattr(parser_android, "find_acquisition_pdf_member", lambda _p: None)
     monkeypatch.setattr(parser_android, "extract_logical_files", fake_extract_only_packages)
 
     parser_android.parse_android_source(source_evidence, tmp_path / "out_missing", case_state)

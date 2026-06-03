@@ -2,7 +2,6 @@
 fpdf2>=2.8
 matplotlib>=3.10
 pandas>=2.0
-pypdf>=4.0
 
 # Test dependencies
 pytest>=8.0

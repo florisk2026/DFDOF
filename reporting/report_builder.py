@@ -271,6 +271,7 @@ def _device_identification(pdf: _PDF, p7: dict) -> None:
     field_labels = {
         "drone_serial":       "Drone Serial Number",
         "drone_name":         "Drone Model",
+        "device_name":        "Controller Device",
         "dji_app_version":    "DJI Application Version",
         "installed_dji_apps": "Installed DJI App(s)",
         "account_email":      "Account E-Mail",
@@ -284,7 +285,7 @@ def _device_identification(pdf: _PDF, p7: dict) -> None:
             continue
         val = entry.get("value", "-")
         if isinstance(val, list):
-            val = ", ".join(str(v) for v in val)
+            val = "\n".join(str(v) for v in val)
         rows.append([
             label,
             str(val),
@@ -475,6 +476,19 @@ def _flight_section(
         pdf.add_page()
         _subsection_title(pdf, "Flight Record - Sensor Telemetry")
         _embed_image(pdf, fr_png, w=175)
+        pdf.ln(2)
+        pdf.set_font(_FONT, "I", 7)
+        pdf.set_text_color(120, 120, 120)
+        pdf.multi_cell(_USABLE_W, _LINE_H, _safe(
+            "GPS coordinates are derived from the drone's onboard receiver and represent "
+            "sensor-recorded positions, not independently verified measurements. "
+            "A satellite count of 10 or more is associated with good horizontal precision "
+            "(approximately 1.5-3 m); counts below 4 indicate a poor fix with significantly "
+            "reduced positional reliability, and those rows are flagged in this report. "
+            "Low satellite counts may affect the accuracy of the flight path, ground track, "
+            "and any location-based conclusions drawn from this record."
+        ))
+        pdf.set_text_color(0, 0, 0)
     elif not fr_csv:
         pass  # no flight record available — silent
     else:
@@ -484,6 +498,21 @@ def _flight_section(
         pdf.add_page()
         _subsection_title(pdf, "Drone Log - Sensor Telemetry")
         _embed_image(pdf, dl_png, w=175)
+        pdf.ln(2)
+        pdf.set_font(_FONT, "I", 7)
+        pdf.set_text_color(120, 120, 120)
+        pdf.multi_cell(_USABLE_W, _LINE_H, _safe(
+            "GPS coordinates are derived from the drone's onboard receiver; horizontal accuracy "
+            "is subject to satellite geometry (hDOP) and signal environment, with DJI manufacturer "
+            "specification of +/-1.5 m horizontal in GPS mode. "
+            "An hDOP below 1.5 is considered very precise, while values above 5.0 indicate "
+            "degraded positional accuracy - those records are flagged and should be treated with "
+            "reduced confidence in derived locations and ground track. "
+            "Bayesian likelihood ratio analysis for a specific location hypothesis is possible "
+            "using a Gaussian error model parameterised by hDOP, but requires case-specific "
+            "inputs and is outside the scope of this baseline report."
+        ))
+        pdf.set_text_color(0, 0, 0)
 
     # ── Flight track ──────────────────────────────────────────────────────────
     kml       = _find_kml_path(state)
@@ -1196,12 +1225,34 @@ def _table(
     pdf.set_text_color(0, 0, 0)
 
     # Data rows
+    base_h = 5
     pdf.set_font(_FONT, "", 8)
     for i, row in enumerate(rows):
-        pdf.set_fill_color(245, 247, 252) if i % 2 == 0 else pdf.set_fill_color(255, 255, 255)
-        for cell, w in zip(row, col_widths):
-            pdf.cell(w, row_h, _safe(str(cell)[:72]), border=1, fill=True)
-        pdf.ln()
+        fill_color = (245, 247, 252) if i % 2 == 0 else (255, 255, 255)
+
+        cells = [_safe(str(c)) for c in row]
+        max_lines = max(c.count("\n") + 1 for c in cells)
+        row_h = max_lines * base_h
+        y0 = pdf.get_y()
+
+        # Draw fill and border rectangles at the exact row height for every cell.
+        # This guarantees uniform cell borders regardless of how many lines each
+        # cell's text occupies, avoiding gaps when cells in the same row differ.
+        pdf.set_fill_color(*fill_color)
+        x = _MARGIN_L
+        for w in col_widths:
+            pdf.rect(x, y0, w, row_h, style="DF")
+            x += w
+
+        # Overlay text without fill or border.
+        x = _MARGIN_L
+        for cell_text, w in zip(cells, col_widths):
+            pdf.set_xy(x, y0)
+            pdf.multi_cell(w, base_h, cell_text, border=0, fill=False,
+                           new_x="RIGHT", new_y="TOP")
+            x += w
+
+        pdf.set_xy(_MARGIN_L, y0 + row_h)
     pdf.set_fill_color(255, 255, 255)
 
 

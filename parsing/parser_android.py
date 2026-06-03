@@ -29,7 +29,6 @@ from observation import Observation, make_observation
 from parsing.extract_logical import (
     ensure_unique_path,
     extract_logical_files,
-    find_acquisition_pdf_member,
 )
 from parsing import extract_physical
 from state import State
@@ -39,14 +38,6 @@ from parsing.utils_parse import (
     normalise_acquisition_method,
 )
 
-try:
-    from pypdf import PdfReader
-except Exception:  # pragma: no cover - optional dependency fallback.
-    PdfReader = None
-
-_DATE_RE = re.compile(
-    r"\b\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:?\d{2})?)?\b"
-)
 _RE_NON_ALNUM = re.compile(r"[^a-z0-9]+")
 
 TARGET_FILES = { 
@@ -146,20 +137,6 @@ def _read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="replace")
 
 
-def _extract_pdf_text(path: Path) -> str:
-    """Extract text from a PDF file, returning it as a single string. Falls back to raw text if PDF parsing fails."""
-    if PdfReader is not None:
-        try:
-            reader = PdfReader(str(path))
-            chunks = [(page.extract_text() or "") for page in reader.pages]
-            text = "\n".join(chunks).strip()
-            if text:
-                return text
-        except Exception:
-            pass
-    return _read_text(path)
-
-
 def _extract_metadata_dict(
     data: Any,
     mapping: dict[str, tuple[str, ...]],
@@ -176,20 +153,6 @@ def _extract_metadata_dict(
     if extra:
         out.update(extra)
     return out
-
-
-def _extract_android_acquisition_metadata(pdf_path: Path) -> dict[str, Any]:
-    """Extract relevant metadata from an Android acquisition PDF, returning a dictionary of normalized values."""
-    text = _extract_pdf_text(pdf_path)
-    mapping = {
-        "phone_model": ("Phone model", "Device model", "Model"),
-        "acquisition_date": ("Acquisition date", "Acquired on", "Date"),
-    }
-    result = _extract_metadata_dict(text, mapping)
-    if result.get("acquisition_date") is None:
-        match = _DATE_RE.search(text)
-        result["acquisition_date"] = normalise_scalar(match.group(0)) if match else None
-    return result
 
 
 def _extract_android_device_metadata(
@@ -463,51 +426,11 @@ def parse_android_source(
                     )
                 )
 
-    # Layer 3: acquisition PDF.
-    acquisition_member = None
-    acquisition_evidence: Evidence | None = None
-    if is_logical:
-        acquisition_member = find_acquisition_pdf_member(stored_path)
-        if acquisition_member is not None:
-            extracted = extract_logical_files(
-                source_evidence,
-                output_root,
-                [acquisition_member],
-                artefact_category=DEVICE_AND_BACKUP_INFO,
-                missing_ok=False,
-            )
-            acquisition_evidence = extracted[0]
-            acquisition_values = _extract_android_acquisition_metadata(
-                cast(Path, acquisition_evidence.stored_path)
-            )
-            _merge_if_empty(
-                backup_info, "Product Name", acquisition_values.get("phone_model")
-            )
-            _merge_if_empty(
-                backup_info,
-                "Last Backup Date",
-                acquisition_values.get("acquisition_date"),
-            )
-            if acquisition_values:
-                observations.append(
-                    make_observation(
-                        stored_path=str(acquisition_evidence.stored_path),
-                        evidence_sha256=acquisition_evidence.sha256,
-                        evidence_category=acquisition_evidence.artefact_category,
-                        acquisition_method=acquisition_evidence.acquisition_method,
-                        observations=[acquisition_values],
-                    )
-                )
-
     backup_info_path = output_root / "backup_info.json"
     backup_info_path.write_text(json.dumps(backup_info, indent=2), encoding="utf-8")
 
-    all_evidence: list[Evidence] = list(extracted_files)
-    if acquisition_evidence is not None:
-        all_evidence.append(acquisition_evidence)
-
     return AndroidParserResult(
         output_root=output_root,
-        parsed_evidence=all_evidence,
+        parsed_evidence=extracted_files,
         observations=observations,
     )

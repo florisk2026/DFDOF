@@ -31,7 +31,6 @@ DFDOF is an automated forensic pipeline for DJI drone evidence. It ingests iOS a
 fpdf2>=2.8
 matplotlib>=3.10
 pandas>=2.0
-pypdf>=4.0
 pytest>=8.0        # test suite only
 ```
 

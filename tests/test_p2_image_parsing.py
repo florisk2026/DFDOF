@@ -191,11 +191,6 @@ def test_run_phase_2_convert_controller_ios_evidence(
 
 def _create_android_logical_zip(zip_path: Path) -> None:
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        archive.writestr("backup/notes.txt", "Acquisition notes")
-        archive.writestr(
-            "backup/report.pdf",
-            "Phone model: DJI RC 2\nAcquisition date: 2026-05-05\n",
-        )
         archive.writestr(
             "property/DeviceInfo.xml",
             "Device Name: RC Controller\nModel Name: RC 2\nVersion: 1.2.3\nFirmware Version: FW-9.9.9\n",
@@ -254,23 +249,6 @@ def test_run_phase_2_processes_android_logical_source(
 
     assert converted_root.exists()
     assert "Parsing controller Android" in output
-
-    # Check that acquisition PDF was extracted
-    acquisition_pdf = next(
-        (
-            item
-            for item in phase_output["parsed_evidence"]
-            if Path(item["stored_path"]).name == "report.pdf"
-        ),
-        None,
-    )
-    assert acquisition_pdf is not None
-    assert acquisition_pdf["source_path"] == "backup\\report.pdf"
-    acquisition_pdf_observation = _observation_for_evidence(
-        phase_output, acquisition_pdf
-    )
-    assert acquisition_pdf_observation["observations"][0]["phone_model"] == "DJI RC 2"
-    assert acquisition_pdf_observation["observations"][0]["acquisition_date"] == "2026-05-05"
 
     assert not any(
         Path(item["stored_path"]).name == "backup_info.json"
@@ -336,7 +314,7 @@ def test_run_phase_2_processes_android_logical_source(
     assert hostname is not None
     hostname_observation = _observation_for_evidence(phase_output, hostname)
     assert hostname_observation["observations"][0]["device_hostname"] == "hostname-android"
-    assert len(phase_output["derived_observations"]) >= 5
+    assert len(phase_output["derived_observations"]) >= 4
 
 
 def test_run_phase_2_processes_android_physical_source(

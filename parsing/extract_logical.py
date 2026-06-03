@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import zipfile
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Iterable
 
 from config import (
@@ -17,7 +17,7 @@ from config import (
     EXTENSION_ZIP,
 )
 from evidence import Evidence, hash_file, make_evidence
-from parsing.utils_parse import normalise_path, to_windows_path, normalise_path_to_posix
+from parsing.utils_parse import normalise_path, to_windows_path
 
 
 def ensure_unique_path(target: Path) -> Path:
@@ -76,41 +76,6 @@ def _resolve_member_name(archive_names: list[str], requested: str) -> str:
 
     raise FileNotFoundError(f"Archive member not found: {requested}")
 
-
-def find_acquisition_pdf_member(archive_path: Path | str) -> str | None:
-    """Return the best acquisition PDF member from a ZIP archive."""
-
-    archive_path = Path(archive_path)
-    with zipfile.ZipFile(archive_path) as archive:
-        member_paths = [
-            normalise_path_to_posix(name)
-            for name in archive.namelist()
-            if not name.endswith("/")
-        ]
-        folder_candidates: dict[PurePosixPath, list[PurePosixPath]] = {}
-        for member_path in member_paths:
-            depth = len(member_path.parts) - 1
-            if depth not in {1, 2}:
-                continue
-            if member_path.suffix.lower() not in {".pdf", ".txt"}:
-                continue
-            folder_candidates.setdefault(member_path.parent, []).append(member_path)
-
-        best_score: tuple[int, int, str] | None = None
-        best_member: str | None = None
-        for folder, members in folder_candidates.items():
-            pdf_members = [
-                member for member in members if member.suffix.lower() == ".pdf"
-            ]
-            if not pdf_members:
-                continue
-            has_txt = any(member.suffix.lower() == ".txt" for member in members)
-            score = (0 if has_txt else 1, len(folder.parts), str(folder))
-            if best_score is None or score < best_score:
-                best_score = score
-                best_member = pdf_members[0].as_posix()
-
-        return best_member
 
 
 def enumerate_zip_listing(zip_path: Path) -> list[str]:

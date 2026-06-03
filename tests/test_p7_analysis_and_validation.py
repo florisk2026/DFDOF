@@ -274,6 +274,48 @@ def test_collect_identity_drone_source_type(tmp_path):
     assert entry["source_type"] == "drone"
 
 
+def test_collect_identity_p2_product_name():
+    p2_obs = [{
+        "evidence_category": config.DEVICE_AND_BACKUP_INFO,
+        "evidence_sha256": "sha010",
+        "stored_path": "/tmp/backup_info.json",
+        "observations": [{"product_name": "iPad"}],
+    }]
+    sources = p7._collect_all_identity_sources(p2_obs, [], [])
+    assert len(sources["device_name"]) == 1
+    assert sources["device_name"][0]["value"] == "iPad"
+    assert sources["device_name"][0]["source_pointer"] == "p2:sha010"
+    assert sources["device_name"][0]["source_type"] == "controller"
+
+
+def test_collect_identity_p4_device_platform():
+    p4_obs = [{
+        "evidence_category": config.ACCOUNT_DATA,
+        "evidence_sha256": "sha011",
+        "stored_path": "/tmp/account.plist",
+        "observations": [{"device_platform": "iOS"}],
+    }]
+    sources = p7._collect_all_identity_sources([], p4_obs, [])
+    assert len(sources["device_name"]) == 1
+    assert sources["device_name"][0]["value"] == "iOS"
+    assert sources["device_name"][0]["source_pointer"] == "p4:sha011"
+    assert sources["device_name"][0]["source_type"] == "controller"
+
+
+def test_build_analysis_device_name_inconsistent():
+    sources = {
+        "device_name": [
+            {"value": "iPad", "source_pointer": "p2:sha010", "source_type": "controller"},
+            {"value": "iOS", "source_pointer": "p4:sha011", "source_type": "controller"},
+        ],
+    }
+    result = p7._build_account_and_drone_analysis(sources, [], [])
+    assert result["device_name"]["confidence"] == "inconsistent"
+    assert isinstance(result["device_name"]["value"], list)
+    assert "iPad" in result["device_name"]["value"]
+    assert "iOS" in result["device_name"]["value"]
+
+
 def test_build_analysis_single_source_no_drone():
     sources = {
         "drone_serial": [{"value": "SN001", "source_pointer": "p4:abc", "source_type": "controller"}],
