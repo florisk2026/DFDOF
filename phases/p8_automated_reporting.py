@@ -29,6 +29,9 @@ def run_phase_8(state: State) -> State:
 
     pdf_path = case_dir / f"{state.case_id}_forensic_baseline.pdf"
 
+    if _PHASE_NAME not in state.completed_phases:
+        state.completed_phases.append(_PHASE_NAME)
+
     print(f"  Generating report: {pdf_path.name}")
     build_report(state, pdf_path, plots_dir)
 
@@ -37,8 +40,6 @@ def run_phase_8(state: State) -> State:
         "report_path": str(pdf_path),
         "plots_dir":   str(plots_dir),
     }
-    if _PHASE_NAME not in state.completed_phases:
-        state.completed_phases.append(_PHASE_NAME)
 
     print(f"  Report written: {pdf_path}")
     return state

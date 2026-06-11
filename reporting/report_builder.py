@@ -335,7 +335,12 @@ def _flight_section(
         _kv(pdf, "Confidence",          str(corr.get("confidence", "-")))
         _kv(pdf, "GPS Overlap",         f"{corr.get('overlap_s', '-')} s")
         _kv(pdf, "Median GPS Distance", f"{corr.get('median_distance_m', '-')} m")
-        _kv(pdf, "Match Rate",          str(corr.get("match_rate", "-")))
+        _raw = corr.get("overlap_fraction")
+        _overlap_pct = f"{int(_raw * 100)}%" if isinstance(_raw, (int, float)) else "-"
+        _kv(pdf, "Overlap",             _overlap_pct)
+        _mr = corr.get("match_rate")
+        _mr_pct = f"{int(_mr * 100)}%" if isinstance(_mr, (int, float)) else "-"
+        _kv(pdf, "GPS Match Rate",      _mr_pct)
 
     # Build sha → category lookup from P5 normalised artefacts
     _p5_artefacts = (
@@ -344,6 +349,7 @@ def _flight_section(
         .get("normalised_artefacts", [])
     )
     _sha_to_cat = {a.get("sha256", ""): a.get("artefact_category", "") for a in _p5_artefacts}
+    _sha_to_source = {a.get("sha256", ""): a.get("source_identification", "-") for a in _p5_artefacts}
 
     _cat_labels = {
         FLIGHT_RECORDS: "Flight Record",
@@ -378,7 +384,6 @@ def _flight_section(
         pdf.ln(3)
 
     # Key events table
-    _subsection_title(pdf, "Key Events")
     tl_path = flight.get("stored_path", "")
     events  = _load_timeline_events(tl_path)
 
@@ -409,6 +414,7 @@ def _flight_section(
         pdf.ln(3)
 
     if key_events:
+        _subsection_title(pdf, "Key Events")
         headers = ["Timestamp (UTC)", "Source", "Event", "Details"]
         col_w   = [40, 35, 35, 60]
         rows = []
@@ -449,21 +455,22 @@ def _flight_section(
         _subsection_title(pdf, "Correlated Artefacts")
         if plausible:
             _body_text(pdf, "Plausibly correlated (timestamp within flight window):")
-            for i, p in enumerate(plausible, 1):
-                _numbered(pdf, i, str(p)[:120])
+            rows = []
+            for ptr in plausible:
+                sha = ptr.removeprefix("p5:").removeprefix("p4:")
+                source = _sha_to_source.get(sha, "-")
+                rows.append([_safe(source), _safe(ptr)])
+            _table(pdf, ["Source", "Pointer"], rows, [60, 120])
         if possible:
             _body_text(pdf, "Possibly correlated (indirect indicators):")
-            headers = ["Source", "Pointer (Truncated)", "Basis"]
-            col_w   = [48, 52, 70]
-            rows = [
-                [
-                    str(pc.get("source", ""))[:44],
-                    str(pc.get("source_pointer", ""))[:44],
-                    json.dumps(pc.get("data", {}))[:60],
-                ]
-                for pc in possible
-            ]
-            _table(pdf, headers, rows, col_w)
+            for pc in possible:
+                source  = _safe(str(pc.get("source", "-")))
+                basis   = _safe(_format_basis(pc.get("data", {})))
+                pointer = _safe(str(pc.get("source_pointer", "-")))
+                _corr_row(pdf, [source, basis], [60, 120], (50, 80, 130),
+                          text_rgb=(255, 255, 255), bold=True)
+                _corr_row(pdf, [pointer],       [180],     (255, 255, 255))
+                pdf.ln(2)
         pdf.ln(3)
 
     # ── Sensor plots — each on its own page ──────────────────────────────────
@@ -934,14 +941,10 @@ def _appendix_tool_overview(pdf: _PDF) -> None:
 
     _body_text(pdf,
         "The Drone Forensic Decision and Orchestration Framework (DFDOF) is an automated "
-        "8-phase forensic pipeline for DJI drone evidence. It ingests iOS/Android controller "
-        "backups, physical drone images, and DCIM SD cards, then processes them into a "
-        "structured forensic baseline. SHA-256 and SHA-1 integrity hashes are computed at "
-        "intake and maintained across all derived artefacts."
+        "8-phase forensic pipeline for DJI drone evidence. It ingests images of the controller, "
+        "drone flight storage and SD cards, then processes them into a structured analysis and report. "
     )
     pdf.ln(3)
-
-    _subsection_title(pdf, "Pipeline Phases")
 
     phases = [
         (
@@ -988,11 +991,15 @@ def _appendix_tool_overview(pdf: _PDF) -> None:
         ),
         (
             "P6  Multi-Source Correlation",
-            "Correlates flight records (controller) with drone logs (onboard) using temporal "
-            "overlap (>=60 s) and GPS spatial proximity (median distance <=100 m). Deduplicates "
-            "FR candidates when multiple apps recorded the same flight. Builds a unified "
-            "per-flight event timeline with events from all matched sources. Also correlates "
-            "media files by EXIF timestamp, GPS bounding box, and video duration.",
+            "Correlates flight records with drone logs using two criteria: "
+            "(1) temporal overlap >= 60 s AND >= 90% of the shorter flight's duration; "
+            "(2) median haversine distance of nearest-neighbour GPS pairs <= 25 m with >= 5 matched pairs. "
+            "Deduplicates FR candidates when multiple apps recorded the same flight. Builds a unified "
+            "per-flight event timeline from all matched sources. Also correlates media files by EXIF "
+            "timestamp, GPS bounding box, and video duration. "
+            "In the correlation summary: Overlap is the temporal overlap as a percentage of the shorter "
+            "flight's duration; GPS Match Rate is the fraction of flight-record GPS rows that found a "
+            "spatially matched drone-log row within a +-2 s window.",
             "Input: normalised CSVs.  Output: timeline_flightXX.json per flight.",
         ),
         (
@@ -1040,8 +1047,8 @@ def _appendix_tool_overview(pdf: _PDF) -> None:
     pdf.multi_cell(_USABLE_W, _LINE_H, _safe(
         "DFDOF was developed by Floris Krijger, MSc Security and Network Engineering, "
         "University of Amsterdam, as a Master's thesis project (1 April 2026 - 30 June 2026). "
-        "This proof of concept has been developed and tested on a limited set of "
-        "DJI Mavic Air evidence and is not a finished, production-ready system. Before use in "
+        "This proof of concept has been developed and tested on a targeted subset of the NIST VTO "
+        " forensic drone dataset and is not a finished, production-ready system. Before use in "
         "any operational or legal context, further testing, validation across additional drone "
         "models and evidence types, and robustness improvements are required. The authors "
         "accept no liability for conclusions drawn from automated pipeline output without "
@@ -1207,32 +1214,93 @@ def _kv_hash(pdf: _PDF, key: str, value: str) -> None:
     pdf.multi_cell(val_w, _LINE_H, _safe(str(value)))
 
 
+def _format_basis(data: dict) -> str:
+    if "video_duration_s" in data:
+        return (
+            f"Video duration {data['video_duration_s']} s matches "
+            f"log recording {data['log_duration_s']} s"
+        )
+    if "entry_count" in data:
+        return (
+            f"Log messages match ({data['entry_count']} entries, "
+            f"format: {data.get('format', '?')})"
+        )
+    if "latitude" in data:
+        return (
+            f"GPS within flight bounding box "
+            f"(lat {float(data['latitude']):.4f}, "
+            f"lon {float(data['longitude']):.4f})"
+        )
+    return str(data)
+
+
+def _corr_row(
+    pdf: _PDF,
+    cells: list[str],
+    col_widths: list[int],
+    fill_rgb: tuple[int, int, int],
+    *,
+    text_rgb: tuple[int, int, int] = (0, 0, 0),
+    bold: bool = False,
+) -> None:
+    base_h = 5
+    line_counts = [c.count("\n") + 1 for c in cells]
+    row_h = max(line_counts) * base_h
+    padded = [c + "\n" * (max(line_counts) - c.count("\n") - 1) for c in cells]
+    y0 = pdf.get_y()
+    pdf.set_fill_color(*fill_rgb)
+    pdf.set_xy(_MARGIN_L, y0)
+    for w in col_widths:
+        pdf.cell(w, row_h, "", border=1, fill=True)
+    pdf.set_font(_FONT, "B" if bold else "", 8)
+    pdf.set_text_color(*text_rgb)
+    x = _MARGIN_L
+    for text, w in zip(padded, col_widths):
+        pdf.set_xy(x, y0)
+        pdf.multi_cell(w, base_h, text, border=0, fill=False, new_x="RIGHT", new_y="TOP")
+        x += w
+    pdf.set_xy(_MARGIN_L, y0 + row_h)
+    pdf.set_text_color(0, 0, 0)
+
+
 def _table(
     pdf: _PDF,
     headers: list[str],
     rows: list[list[str]],
     col_widths: list[int],
 ) -> None:
-    row_h = 5
+    base_h   = 5
+    header_h = base_h + 1
+    page_bottom = pdf.h - pdf.b_margin  # usable bottom y
 
-    # Header row
-    pdf.set_font(_FONT, "B", 8)
-    pdf.set_fill_color(50, 80, 130)
-    pdf.set_text_color(255, 255, 255)
-    for header, w in zip(headers, col_widths):
-        pdf.cell(w, row_h + 1, _safe(header), border=1, fill=True)
-    pdf.ln()
-    pdf.set_text_color(0, 0, 0)
+    def _draw_header() -> None:
+        pdf.set_font(_FONT, "B", 8)
+        pdf.set_fill_color(50, 80, 130)
+        pdf.set_text_color(255, 255, 255)
+        for header, w in zip(headers, col_widths):
+            pdf.cell(w, header_h, _safe(header), border=1, fill=True)
+        pdf.ln()
+        pdf.set_text_color(0, 0, 0)
 
-    # Data rows
-    base_h = 5
+    _draw_header()
+
     pdf.set_font(_FONT, "", 8)
     for i, row in enumerate(rows):
         fill_color = (245, 247, 252) if i % 2 == 0 else (255, 255, 255)
 
-        cells = [_safe(str(c)) for c in row]
-        max_lines = max(c.count("\n") + 1 for c in cells)
+        cells     = [_safe(str(c)) for c in row]
+        max_lines = max(
+            len(list(pdf.multi_cell(w, base_h, c, dry_run=True, output="LINES")))  # type: ignore[arg-type]
+            for c, w in zip(cells, col_widths)
+        )
         row_h = max_lines * base_h
+
+        # If this row would overflow, start a new page and repeat the header.
+        if pdf.get_y() + row_h > page_bottom:
+            pdf.add_page()
+            _draw_header()
+            pdf.set_font(_FONT, "", 8)
+
         y0 = pdf.get_y()
 
         # Draw fill and border rectangles at the exact row height for every cell.
@@ -1244,7 +1312,7 @@ def _table(
             pdf.rect(x, y0, w, row_h, style="DF")
             x += w
 
-        # Overlay text without fill or border.
+        # Overlay text without fill or border (auto page-break disabled for rect rows).
         x = _MARGIN_L
         for cell_text, w in zip(cells, col_widths):
             pdf.set_xy(x, y0)
