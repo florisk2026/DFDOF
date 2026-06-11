@@ -19,6 +19,8 @@ import shutil
 from pathlib import Path
 from typing import cast
 
+from testing.measure_time import PipelineTimer
+
 from phases.p1_provenance import prompt_phase_1_summary_and_confirm, run_phase_1
 from phases.p2_image_parsing import run_phase_2
 from phases.p3_artefact_extraction import run_phase_3
@@ -90,59 +92,79 @@ def run_phases(
     print(f"  Case: {state.case_id} | Operator: {state.operator}")
     print(f"  Evidence: {state.evidence_directory}\n")
 
+    timer = PipelineTimer(case_id=case_value, operator=operator_value)
+
     # Phase 1: Provenance and integrity.
     print("[Phase 1] Provenance and integrity:")
+    timer.start_phase("p1_provenance")
     state = run_phase_1(state, confirm_all=False)
     _compute_evidence_hashes(state)
     if not prompt_phase_1_summary_and_confirm(state):
         raise SystemExit("Phase 1 aborted by operator.")
+    timer.end_phase("p1_provenance")
     state.save(state_path)
     print()
 
     # Phase 2: Image parsing.
     print("[Phase 2] Image parsing:")
+    timer.start_phase("p2_image_parsing")
     state = run_phase_2(state)
+    timer.end_phase("p2_image_parsing")
     state.save(state_path)
     print()
 
     # Phase 3: Artefact extraction.
     print("[Phase 3] Artefact extraction:")
+    timer.start_phase("p3_artefact_extraction")
     state = run_phase_3(state)
+    timer.end_phase("p3_artefact_extraction")
     state.save(state_path)
     print()
 
     # Phase 4: Decision and orchestration.
     print("[Phase 4] Decision and Orchestration:")
+    timer.start_phase("p4_decision_and_orchestration")
     state = run_phase_4(state)
+    timer.end_phase("p4_decision_and_orchestration")
     state.save(state_path)
     print()
 
     # Phase 5: Normalisation and anomaly checking.
     print("[Phase 5] Normalisation and Anomaly Checking:")
+    timer.start_phase("p5_normalisation_and_anomaly_checking")
     state = run_phase_5(state)
+    timer.end_phase("p5_normalisation_and_anomaly_checking")
     state.save(state_path)
     print()
 
     # Phase 6: Multi-source correlation.
     print("[Phase 6] Multi-Source Correlation:")
+    timer.start_phase("p6_multisource_correlation")
     state = run_phase_6(state)
+    timer.end_phase("p6_multisource_correlation")
     state.save(state_path)
     print()
 
     # Phase 7: Analysis and validation.
     print("[Phase 7] Analysis and Validation:")
+    timer.start_phase("p7_analysis_and_validation")
     state = run_phase_7(state)
+    timer.end_phase("p7_analysis_and_validation")
     state.save(state_path)
     print()
 
     # Phase 8: Automated reporting.
     print("[Phase 8] Automated Reporting:")
+    timer.start_phase("p8_automated_reporting")
     state = run_phase_8(state)
+    timer.end_phase("p8_automated_reporting")
     state.save(state_path)
     print()
 
+    timer.finish()
     case_dir = output_dir() / state.case_id
     case_dir.mkdir(parents=True, exist_ok=True)
+    timer.save(case_dir / f"timing_{state.case_id}.json")
     shutil.copy2(state_path, case_dir / Path(state_path).name)
 
     print(f"Workflow complete. State written to {state_path}")
