@@ -54,10 +54,12 @@ _PHASE_NAME = Path(__file__).stem
 
 # Primary GPS-assisted temporal overlap floor (seconds) and minimum fraction.
 # DatCon at 30 Hz, FlightRecord at 10 Hz — 60 s yields ≥600 rows at the slower rate,
-# sufficient for meaningful spatial comparison. The 10 % fraction prevents
-# edge-matching of long flights that briefly overlap (Clark et al., 2017).
+# sufficient for meaningful spatial comparison. The 90 % fraction requirement reflects
+# the expected recording pattern: drone logs begin at power-on while flight records
+# start at tap-to-fly, so the FR is almost entirely contained within the drone log
+# window. A near-complete overlap is therefore a forensically defensible criterion.
 _OVERLAP_MIN_S = 60.0
-_OVERLAP_MIN_FRACTION = 0.10
+_OVERLAP_MIN_FRACTION = 0.90
 
 # Half-width of the bisect window for nearest-neighbour GPS point matching (seconds).
 # A ±2 s association gate absorbs independent-clock offsets between log sources
@@ -65,10 +67,10 @@ _OVERLAP_MIN_FRACTION = 0.10
 _SPATIAL_WINDOW_S = 2.0
 
 # Maximum median haversine distance for two candidates to represent the same flight.
-# Consumer DJI GPS achieves 1.5–3 m CEP; ICAO Annex 10 SPS accuracy is 13 m (95 %).
-# 100 m is a coarse plausibility filter — generous enough to tolerate multi-path
-# errors and clock offset, strict enough to reject genuinely distinct flights.
-_SPATIAL_MAX_MEDIAN_M = 100.0
+# Consumer DJI GPS achieves ±1.5–3 m CEP; ICAO Annex 10 SPS horizontal accuracy is
+# 13 m at 95 %. 25 m accommodates multipath and poor-fix conditions while firmly
+# excluding flights from distinct aircraft (typical separation far exceeds 25 m).
+_SPATIAL_MAX_MEDIAN_M = 25.0
 
 # Minimum GPS point pairs required to compute a valid median distance.
 # Fewer than 5 matched pairs do not characterise the spatial relationship reliably;
@@ -985,11 +987,11 @@ def _correlate_video_duration(
 
 
 def _confidence_from_distance(median_m: float) -> str:
-    if median_m < 10.0:
-        return "high"
-    if median_m < 50.0:
-        return "medium"
-    return "low"
+    if median_m < 5.0:
+        return "high"    # within DJI ±3 m horizontal spec
+    if median_m < 15.0:
+        return "medium"  # within ICAO SPS 13 m (95 %)
+    return "low"         # approaching 25 m acceptance ceiling
 
 
 def _correlate_primary(
@@ -1016,6 +1018,7 @@ def _correlate_primary(
         "rule": "primary",
         "confidence": _confidence_from_distance(median_dist),
         "overlap_s": round(overlap, 1),
+        "overlap_fraction": round(overlap / min_dur, 4),
         "median_distance_m": round(median_dist, 2),
         "match_rate": round(match_rate, 4),
     }
