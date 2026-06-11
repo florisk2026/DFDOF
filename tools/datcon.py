@@ -90,6 +90,20 @@ def run_datcon(
 			"If the export was successful, close DatCon and type 'done': "
 		).strip().lower()
 		if response == "error":
+			state.log_tool_invocation(
+				tool_name=ACQUISITION_DATCON,
+				version=VERSION_DATCON,
+				args=[str(DATCON), str(dat_path)],
+				return_code=1,
+				stdout=None,
+				stderr="Operator reported tool error",
+				output_paths=None,
+			)
+			state.raise_anomaly(
+				4, parent_evidence.source_identification or "",
+				f"DatCon reported an error processing: {dat_path.name}",
+				category=DRONE_LOGS, index=index,
+			)
 			return []
 		output_files = _datcon_output_files(output_dir, dat_stem)
 		if not _datcon_output_missing(output_files):

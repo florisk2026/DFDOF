@@ -76,7 +76,23 @@ def run_extractdji(
             "If ExtractDJI produced only GIMBAL files (not useful), type 'skip'.\n"
             "If the export was successful, close ExtractDJI and type 'done': "
         ).strip().lower()
-        if response in {"skip", "error"}:
+        if response == "skip":
+            return []
+        if response == "error":
+            state.log_tool_invocation(
+                tool_name=ACQUISITION_EXTRACT_DJI,
+                version=VERSION_EXTRACT_DJI,
+                args=[str(EXTRACT_DJI_EXE), str(dat_path), str(output_dir)],
+                return_code=1,
+                stdout=None,
+                stderr="Operator reported tool error",
+                output_paths=None,
+            )
+            state.raise_anomaly(
+                4, parent_evidence.source_identification or "",
+                f"ExtractDJI reported an error processing: {dat_path.name}",
+                category=DRONE_LOGS, index=index,
+            )
             return []
         output_files = _extractdji_output_files(output_dir)
         if not _extractdji_output_missing(output_files):

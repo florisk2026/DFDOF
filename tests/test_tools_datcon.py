@@ -66,7 +66,9 @@ def test_run_datcon_error_returns_empty(tmp_path: Path, monkeypatch) -> None:
     result = run_datcon(dat_path, output_dir, state, parent)
 
     assert result == []
-    assert not state.anomaly_flags
+    assert len(state.anomaly_flags) == 1
+    assert len(state.tool_invocation_log) == 1
+    assert state.tool_invocation_log[0]["return_code"] == 1
 
 
 def test_run_datcon_succeeds_first_try(tmp_path: Path, monkeypatch, capsys) -> None:
