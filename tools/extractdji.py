@@ -77,6 +77,20 @@ def run_extractdji(
             "If the export was successful, close ExtractDJI and type 'done': "
         ).strip().lower()
         if response == "skip":
+            state.log_tool_invocation(
+                tool_name=ACQUISITION_EXTRACT_DJI,
+                version=VERSION_EXTRACT_DJI,
+                args=[str(EXTRACT_DJI_EXE), str(dat_path), str(output_dir)],
+                return_code=1,
+                stdout=None,
+                stderr="Operator reported only GIMBAL files were produced: out of scope",
+                output_paths=None,
+            )
+            state.raise_anomaly(
+                4, parent_evidence.source_identification or "",
+                f"ExtractDJI only produced GIMBAL processing: {dat_path.name}",
+                category=DRONE_LOGS, index=index,
+            )
             return []
         if response == "error":
             state.log_tool_invocation(
