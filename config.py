@@ -115,7 +115,10 @@ ARTEFACT_EXTENSIONS = {
 }
 
 # Only used for drone SD
-ARTEFACT_EXTENSIONS_DRONE_SD = {".MP4", ".THM"}
+ARTEFACT_EXTENSIONS_DRONE_SD = {
+    IMAGES: {".JPG", ".JPEG", ".THM"},
+    VIDEOS: {".MP4", ".MOV"},
+}
 
 IOS_ARTEFACT_PATHS = {
     DATABASES: {"Documents/", "Library/"},

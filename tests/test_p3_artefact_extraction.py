@@ -740,6 +740,9 @@ def test_run_phase_3_drone_sd_physical_single_pass(tmp_path: Path, monkeypatch) 
                 {"kind": "r/r", "inode": 10, "path": "DCIM/100MEDIA/DJI_0001.MP4"},
                 {"kind": "r/r", "inode": 11, "path": "MISC/THM/100/DJI_0001.THM"},
                 {"kind": "r/r", "inode": 12, "path": "OTHER/skip.bin"},
+                {"kind": "r/r", "inode": 13, "path": "DCIM/100MEDIA/DJI_0002.JPG"},
+                {"kind": "r/r", "inode": 14, "path": "DCIM/100MEDIA/DJI_0003.JPEG"},
+                {"kind": "r/r", "inode": 15, "path": "DCIM/100MEDIA/DJI_0004.MOV"},
             ],
         }
     }
@@ -757,10 +760,22 @@ def test_run_phase_3_drone_sd_physical_single_pass(tmp_path: Path, monkeypatch) 
     result = p3.run_phase_3(state)
     artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]
     stored_names = {Path(item["stored_path"]).name for item in artefacts}
+    # Original formats
     assert "DJI_0001.MP4" in stored_names
     assert "DJI_0001.THM" in stored_names
+    # New formats (uppercase on SD card, normalised for comparison)
+    assert "DJI_0002.JPG" in stored_names
+    assert "DJI_0003.JPEG" in stored_names
+    assert "DJI_0004.MOV" in stored_names
+    # Non-matching file must be skipped
+    assert not any("skip.bin" in n for n in stored_names)
+    # Each matching inode extracted exactly once
     assert call_inodes.count(10) == 1
     assert call_inodes.count(11) == 1
+    assert call_inodes.count(13) == 1
+    assert call_inodes.count(14) == 1
+    assert call_inodes.count(15) == 1
+    assert 12 not in call_inodes
 
 
 # Drone flight storage

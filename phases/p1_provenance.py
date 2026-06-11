@@ -70,7 +70,9 @@ def _supported_input(path: Path) -> bool:
     return path.suffix.lower() in _SUPPORTED_INPUT_EXTS
 
 
-_DRONE_SD_EXTS_LOWER = frozenset(ext.lower() for ext in ARTEFACT_EXTENSIONS_DRONE_SD)
+_DRONE_SD_EXTS_LOWER = frozenset(
+    ext.lower() for exts in ARTEFACT_EXTENSIONS_DRONE_SD.values() for ext in exts
+)
 _DRONE_LOG_EXTS_UPPER = tuple(ext.upper() for ext in ARTEFACT_EXTENSIONS[DRONE_LOGS])
 
 
@@ -88,7 +90,7 @@ def _is_controller_android(norm: list[str]) -> bool:
 
 
 def _is_drone_sd(norm: list[str]) -> bool:
-    """Detect drone SD card: DCIM or MISC with media files (.MP4 and .THM only)."""
+    """Detect drone SD card: DCIM or MISC containing a configured media file extension."""
     return any(folder in p for folder in DRONE_SD_INCLUDES for p in norm) and any(
         p.lower().endswith(tuple(_DRONE_SD_EXTS_LOWER))
         and any(folder in p for folder in DRONE_SD_INCLUDES)

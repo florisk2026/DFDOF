@@ -38,6 +38,27 @@ def test_identify_source_ios_logical_nested_structure() -> None:
     assert identified_as == "controller_ios"
 
 
+def test_identify_source_drone_sd_jpg_only() -> None:
+    """DCIM with only JPG files should identify as drone_sd."""
+    listing = ["DCIM/100MEDIA/DJI_0001.JPG"]
+    identified_as = identify_source(listing)
+    assert identified_as == "drone_sd"
+
+
+def test_identify_source_drone_sd_jpeg_lowercase() -> None:
+    """DCIM with lowercase .jpeg extension should identify as drone_sd."""
+    listing = ["DCIM/100MEDIA/DJI_0001.jpeg"]
+    identified_as = identify_source(listing)
+    assert identified_as == "drone_sd"
+
+
+def test_identify_source_drone_sd_mov() -> None:
+    """DCIM with .MOV video should identify as drone_sd."""
+    listing = ["DCIM/100MEDIA/DJI_0001.MOV"]
+    identified_as = identify_source(listing)
+    assert identified_as == "drone_sd"
+
+
 def test_run_phase_1_only_supported_inputs(tmp_path: Path, monkeypatch) -> None:
     zip_path = tmp_path / "drone_logical.zip"
     with zipfile.ZipFile(zip_path, "w") as archive:

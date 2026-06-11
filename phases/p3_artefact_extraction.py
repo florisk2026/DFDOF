@@ -70,8 +70,13 @@ _ARTEFACT_EXTENSIONS_LOWER: dict[str, frozenset[str]] = {
     for category, exts in ARTEFACT_EXTENSIONS.items()
 }
 _ARTEFACT_EXTENSIONS_DRONE_SD_LOWER: frozenset[str] = frozenset(
-    ext.lower() for ext in ARTEFACT_EXTENSIONS_DRONE_SD
+    ext.lower() for exts in ARTEFACT_EXTENSIONS_DRONE_SD.values() for ext in exts
 )
+_DRONE_SD_EXT_TO_CATEGORY: dict[str, str] = {
+    ext.lower(): category
+    for category, exts in ARTEFACT_EXTENSIONS_DRONE_SD.items()
+    for ext in exts
+}
 
 _IOS_DOMAIN_PREFIXES: tuple[str, ...] = ("AppDomain-", "AppDomainGroup-")
 
@@ -273,16 +278,6 @@ def _collect_account_files(app_roots: list[Path], os_key: str) -> list[Path]:
     return result
 
 
-def _drone_sd_category_for_suffix(suffix: str) -> str | None:
-    """Return the drone SD category for a filename suffix."""
-    suffix = suffix.lower()
-    if suffix == ".thm":
-        return IMAGES
-    if suffix == ".mp4":
-        return VIDEOS
-    return None
-
-
 def _extract_drone_sd_physical(
     state: State,
     sd_source: Evidence,
@@ -305,7 +300,7 @@ def _extract_drone_sd_physical(
         suffix = Path(rel_path).suffix.lower()
         if suffix not in extensions:
             continue
-        category = _drone_sd_category_for_suffix(suffix)
+        category = _DRONE_SD_EXT_TO_CATEGORY.get(suffix)
         if category is None:
             continue
         out_dir = output_root / safe_segment(category)
