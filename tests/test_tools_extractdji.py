@@ -98,12 +98,13 @@ def test_run_extractdji_skip_returns_empty(tmp_path: Path, monkeypatch) -> None:
     result = run_extractdji(dat_path, output_dir, state, parent)
 
     assert result == []
-    assert not state.anomaly_flags
+    assert len(state.anomaly_flags) == 1
+    assert "gimbal processing" in state.anomaly_flags[0].lower()
     assert len(state.tool_invocation_log) == 1
     assert state.tool_invocation_log[0]["return_code"] == 1
     assert state.tool_invocation_log[0]["std_summary"] is not None
     assert "gimbal" in state.tool_invocation_log[0]["std_summary"].lower()
-    assert "not relevant" in state.tool_invocation_log[0]["std_summary"].lower()
+    assert "out of scope" in state.tool_invocation_log[0]["std_summary"].lower()
 
 
 def test_run_extractdji_retries_on_missing_output(tmp_path: Path, monkeypatch, capsys) -> None:
