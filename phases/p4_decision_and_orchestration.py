@@ -71,6 +71,7 @@ _IOS_DJI_FIELDS: dict[str, tuple] = {
 	"last_flight_date":    (["Last_Flight_Record_Date_Key"], None),
 	"last_country_code":   (["DJILastCountryCodeName", "supervisor_country_code_cache_key"], None),
 	"device_platform":     (["machinePlatForm"], None),
+	"product_type":        (["lastProduct"], None),
 }
 
 # Used for DJI GO and GO 4 (Android)
@@ -85,6 +86,8 @@ _ANDROID_DJI_GO4_FIELDS: dict[str, tuple] = {
 	"last_country_code":(["key_country_code_local"], None),
 	"last_latitude":    (["fmd_latitude"], None),
 	"last_longitude":   (["fmd_longitude"], None),
+	"product_type":     (["PRODUCT_TYPE_KEY"], None),
+	"aircraft_model_code": (["dji_up_device1_type_value"], None),
 }
 
 # Used for DJI Pilot (Android)
@@ -96,6 +99,7 @@ _ANDROID_DJI_PILOT_FIELDS: dict[str, tuple] = {
 	"device_uuid":      (["key_uuid_for_account_center"], None),
 	"last_latitude":    (["KEY_CC_LAST_FLYC_LAT"], ieee754_long_to_degrees),
 	"last_longitude":   (["KEY_CC_LAST_FLYC_LNG"], ieee754_long_to_degrees),
+	"product_type":     (["PRODUCT_TYPE_KEY"], None),
 }
 
 _INFO_KEYS_LOWER = {
