@@ -61,6 +61,7 @@ from tools.txtlogtocsv import run_txtlogtocsv
 
 _PHASE_NAME = Path(__file__).stem
 
+# Used for all DJI iOS apps (DJI GO, GO 4, Pilot)
 _IOS_DJI_FIELDS: dict[str, tuple] = {
 	"account_email":       (["DJIACCOUNTMANAGER_LASTUSEREMAIL"], None),
 	"aircraft_sn":         (["AIRCRAFT_FLIGHT_LOG_DEVICE_SN", "cached_sn_key"], None),
@@ -72,6 +73,7 @@ _IOS_DJI_FIELDS: dict[str, tuple] = {
 	"device_platform":     (["machinePlatForm"], None),
 }
 
+# Used for DJI GO and GO 4 (Android)
 _ANDROID_DJI_GO4_FIELDS: dict[str, tuple] = {
 	"account_email":    (["key_account_email"], decode_base64),
 	"account_uid":      (["key_account_uid"], decode_base64),
@@ -85,6 +87,7 @@ _ANDROID_DJI_GO4_FIELDS: dict[str, tuple] = {
 	"last_longitude":   (["fmd_longitude"], None),
 }
 
+# Used for DJI Pilot (Android)
 _ANDROID_DJI_PILOT_FIELDS: dict[str, tuple] = {
 	"account_uid":      (["key_account_uid"], decode_base64),
 	"account_token":    (["key_account_token"], decode_base64),
