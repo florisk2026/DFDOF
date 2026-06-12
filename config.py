@@ -163,7 +163,14 @@ def utc_now_iso() -> str:
 
 
 def output_dir() -> Path:
-    """Determine the output directory for extracted evidence and logs."""
+    """Determine the output directory for extracted evidence and logs.
+
+    Override by setting the DFDOF_OUTPUT_DIR environment variable, e.g.:
+        set DFDOF_OUTPUT_DIR=E:\\dfdof_output
+    """
+    env_override = os.environ.get("DFDOF_OUTPUT_DIR", "")
+    if env_override:
+        return Path(env_override)
     documents = Path.home() / "Documents"
     if documents.exists():
         return documents / "dfdof_output"

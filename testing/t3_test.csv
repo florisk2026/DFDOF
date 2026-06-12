@@ -1,0 +1,3 @@
+case_id,source_file,source_path,extension,identified,identified_as,acquisition_method,issues
+CASE-ZIP-ios,ios_logical.zip,C:\Users\Floris\Documents\dji_drones\train_mavic_air\df048\2018_april\ios\ios_logical.zip,.zip,True,controller_ios,logical,OK
+CASE-ZIP-ios,df048_internal.E01,C:\Users\Floris\Documents\dji_drones\train_mavic_air\df048\2018_april\ios\df048_internal.E01,.e01,True,drone_sd,physical,OK
