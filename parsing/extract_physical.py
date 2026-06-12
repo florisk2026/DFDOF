@@ -117,7 +117,7 @@ def enumerate_image_listing(
             anomalies.append(f"mmls offset parsing failed for {image_path.name}")
     else:
         anomalies.append(
-            f"mmls unavailable; falling back to fls for {image_path.name}"
+            f"mmls: no partition table found in {image_path.name}; treating as direct partition image"
         )
 
     # fls enumeration - with offset if available, without if not.
