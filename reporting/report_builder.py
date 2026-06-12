@@ -19,6 +19,7 @@ from config import (
     SOURCE_IDENTIFICATION_TYPES,
     CONTROLLER_ARTEFACT_CATEGORIES,
 )
+from phases.p7_analysis_and_validation import _P4_IDENTITY_FIELDS, _P4_KEY_TO_OUT_KEY
 from reporting.plots import plot_drone_log, plot_flight_record, plot_flight_track
 from state import State
 
@@ -268,18 +269,19 @@ def _device_identification(pdf: _PDF, p7: dict) -> None:
         _body_text(pdf, "No device or account information could be extracted.")
         return
 
-    field_labels = {
-        "drone_serial":       "Drone Serial Number",
-        "drone_name":         "Drone Model",
-        "device_name":        "Controller Device",
-        "dji_app_version":    "DJI Application Version",
-        "installed_dji_apps": "Installed DJI App(s)",
-        "account_email":      "Account E-Mail",
-    }
+    # Registry-driven: rows are built from _P4_IDENTITY_FIELDS plus the two P2-only keys.
+    # Adding a field to a P4 field-map dict automatically appears here.
+    _REPORT_FIELDS: tuple[tuple[str, str], ...] = (
+        ("installed_dji_apps", "Installed DJI App(s)"),
+        ("device_name",        "Controller Device"),
+    ) + tuple(
+        (_P4_KEY_TO_OUT_KEY.get(p4k, p4k), label)
+        for p4k, label in _P4_IDENTITY_FIELDS
+    )
     headers = ["Field", "Value", "Confidence", "Sources"]
     col_w   = [48, 62, 38, 22]  # sum = 170 < 180 OK
     rows = []
-    for key, label in field_labels.items():
+    for key, label in _REPORT_FIELDS:
         entry = ada.get(key)
         if not entry:
             continue

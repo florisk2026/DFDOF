@@ -57,6 +57,51 @@ _ROW_ANOMALY_KEYS = frozenset({
 # Drone-side source identification strings (for confidence determination)
 _DRONE_SOURCE_IDS = frozenset({IDENTIFICATION_DRONE_SD, IDENTIFICATION_DRONE_FLIGHT_STORAGE})
 
+# Registry of all P4 account-data fields: (p4_key, display_label).
+# Adding a key to a P4 field map dict automatically flows into P7 analysis and the P8 report.
+# out_key == p4_key for all entries EXCEPT the three that have established P6 timeline names.
+_P4_IDENTITY_FIELDS: tuple[tuple[str, str], ...] = (
+    ("aircraft_sn",         "Drone Serial Number"),
+    ("cached_product_name", "Drone Model"),
+    ("device_platform",     "Controller Device"),
+    ("app_version",         "DJI Application Version"),
+    ("account_email",       "Account E-Mail"),
+    ("product_type",        "Product Type"),
+    ("aircraft_model_code", "Aircraft Model Code"),
+    ("fly_controller_sn",   "Controller Serial Number"),
+    ("firmware_version",    "Firmware Version"),
+    ("last_country_code",   "Last Country Code"),
+    ("last_launch",         "Last App Launch"),
+    ("last_flight_date",    "Last Flight Date"),
+    ("last_latitude",       "Last Known Latitude"),
+    ("last_longitude",      "Last Known Longitude"),
+    ("account_uid",                  "Account UID"),
+    ("account_nickname",             "Account Nickname"),
+    ("device_uuid",                  "Device UUID"),
+    ("find_aircraft_last_latitude",  "Last Known Latitude (Find Aircraft)"),
+    ("find_aircraft_last_longitude", "Last Known Longitude (Find Aircraft)"),
+    ("find_aircraft_last_altitude",  "Last Known Altitude (Find Aircraft)"),
+    ("find_aircraft_last_heading",   "Last Known Heading (Find Aircraft)"),
+    ("find_aircraft_last_hacc",      "Last Known Horiz. Accuracy (Find Aircraft)"),
+)
+
+# Three P4 keys whose out_key differs because P6 timeline events use these canonical names.
+# These are the ONLY fields that receive corroboration from the drone-side source.
+_P4_KEY_TO_OUT_KEY: dict[str, str] = {
+    "aircraft_sn":         "drone_serial",
+    "cached_product_name": "drone_name",
+    "app_version":         "dji_app_version",
+}
+
+# P6 timeline event data-keys → out_key. Kept explicit: only these three fields
+# appear in drone-side Log started events. Making this generic would silently miss
+# the forensic significance of drone-side corroboration.
+_P6_TIMELINE_FIELDS: dict[str, str] = {
+    "serial_drone":    "drone_serial",
+    "name_drone":      "drone_name",
+    "dji_app_version": "dji_app_version",
+}
+
 
 # Section 1  -  Source and artefact coverage (with data-quality notes)
 
@@ -300,16 +345,14 @@ def _collect_all_identity_sources(
     Returns a dict keyed by output field name. Each value is a list of entries:
       {"value": ..., "source_pointer": "p2/p4:sha" or "sha:rowID", "source_type": "controller"|"drone"}
     """
-    fields: dict[str, list[dict[str, Any]]] = {
-        "account_email": [],
-        "drone_serial": [],
-        "drone_name": [],
-        "device_name": [],
-        "installed_dji_apps": [],
-        "dji_app_version": [],
-    }
+    # Build fields dict dynamically from registry + the two P2-only keys
+    all_out_keys = (
+        [_P4_KEY_TO_OUT_KEY.get(p4k, p4k) for p4k, _ in _P4_IDENTITY_FIELDS]
+        + ["device_name", "installed_dji_apps"]
+    )
+    fields: dict[str, list[dict[str, Any]]] = {k: [] for k in all_out_keys}
 
-    # P2: installed_dji_apps and product_name from device_and_backup_info
+    # P2: installed_dji_apps and product_name (device_name) from device_and_backup_info
     for obs_dict in p2_obs:
         if obs_dict.get("evidence_category") != DEVICE_AND_BACKUP_INFO:
             continue
@@ -330,29 +373,26 @@ def _collect_all_identity_sources(
                     "source_type": "controller",
                 })
 
-    # P4: account_data observations
+    # P4: all account_data fields from the registry
     for obs_dict in p4_obs:
         if obs_dict.get("evidence_category") != ACCOUNT_DATA:
             continue
         sha = obs_dict.get("evidence_sha256", "")
         sp = f"p4:{sha}"
         for obs in obs_dict.get("observations", []):
-            for p4_key, out_key in (
-                ("account_email", "account_email"),
-                ("aircraft_sn", "drone_serial"),
-                ("cached_product_name", "drone_name"),
-                ("device_platform", "device_name"),
-                ("app_version", "dji_app_version"),
-            ):
+            for p4_key, _ in _P4_IDENTITY_FIELDS:
                 val = obs.get(p4_key)
                 if val is not None:
+                    out_key = _P4_KEY_TO_OUT_KEY.get(p4_key, p4_key)
                     fields[out_key].append({
                         "value": val,
                         "source_pointer": sp,
                         "source_type": "controller",
                     })
 
-    # Timeline: Log started events
+    # P6 timeline: Log started events — EXPLICIT: only three fields have drone-side equivalents.
+    # These are the only fields corroborated by an independent on-drone source (DatCon DAT log),
+    # which can elevate confidence to "multi-source" or reveal controller/drone inconsistencies.
     for flight in p6_flights:
         tl_path = flight.get("stored_path", "")
         if not tl_path:
@@ -367,24 +407,13 @@ def _collect_all_identity_sources(
             data = ev.get("data", {})
             sp = ev.get("source_pointer", "")
             stype = _source_type_from_event(ev)
-            if data.get("serial_drone"):
-                fields["drone_serial"].append({
-                    "value": data["serial_drone"],
-                    "source_pointer": sp,
-                    "source_type": stype,
-                })
-            if data.get("name_drone"):
-                fields["drone_name"].append({
-                    "value": data["name_drone"],
-                    "source_pointer": sp,
-                    "source_type": stype,
-                })
-            if data.get("dji_app_version"):
-                fields["dji_app_version"].append({
-                    "value": data["dji_app_version"],
-                    "source_pointer": sp,
-                    "source_type": stype,
-                })
+            for data_key, out_key in _P6_TIMELINE_FIELDS.items():
+                if data.get(data_key):
+                    fields[out_key].append({
+                        "value": data[data_key],
+                        "source_pointer": sp,
+                        "source_type": stype,
+                    })
     return fields
 
 
@@ -799,46 +828,19 @@ def _forensic_conclusions(
     )
 
     # ── Device identification ────────────────────────────────────────────────
-    sn = account_and_drone.get("drone_serial")
-    if sn:
-        if sn["confidence"] == "inconsistent":
-            investigate.append(
-                f"Drone serial number inconsistency detected  -  "
-                f"conflicting values observed: {', '.join(sn['value'])}. "
-                f"Manual verification required."
-            )
-        else:
+    # installed_dji_apps is kept explicit: it has list-value semantics (not a plain string).
+    apps = account_and_drone.get("installed_dji_apps")
+    if apps:
+        val = apps["value"]
+        if isinstance(val, list) and val and not isinstance(val[0], list):
             device_id.append(
-                f"Drone serial number: {sn['value']} "
-                f"(confidence: {sn['confidence']})."
+                f"Installed DJI application(s): {', '.join(str(v) for v in val)} "
+                f"(confidence: {apps['confidence']})."
             )
+    else:
+        investigate.append("Note: no installed DJI applications found - Device and account information.")
 
-    name = account_and_drone.get("drone_name")
-    if name:
-        if name["confidence"] == "inconsistent":
-            investigate.append(
-                f"Drone name inconsistency detected  -  "
-                f"conflicting values observed: {', '.join(str(v) for v in name['value'])}."
-            )
-        else:
-            device_id.append(
-                f"Drone model: {name['value']} "
-                f"(confidence: {name['confidence']})."
-            )
-
-    app_ver = account_and_drone.get("dji_app_version")
-    if app_ver:
-        if app_ver["confidence"] == "inconsistent":
-            investigate.append(
-                f"DJI application version inconsistency detected  -  "
-                f"conflicting values observed: {', '.join(str(v) for v in app_ver['value'])}."
-            )
-        else:
-            device_id.append(
-                f"DJI application version: {app_ver['value']} "
-                f"(confidence: {app_ver['confidence']})."
-            )
-
+    # device_name is P2-sourced, not in _P4_IDENTITY_FIELDS — handle separately.
     device_n = account_and_drone.get("device_name")
     if device_n:
         if device_n["confidence"] == "inconsistent":
@@ -852,43 +854,24 @@ def _forensic_conclusions(
                 f"Controller device: {device_n['value']} "
                 f"(confidence: {device_n['confidence']})."
             )
+    else:
+        investigate.append("Note: no controller device name found - Device and account information.")
 
-    apps = account_and_drone.get("installed_dji_apps")
-    if apps:
-        val = apps["value"]
-        if isinstance(val, list) and val and not isinstance(val[0], list):
-            device_id.append(
-                f"Installed DJI application(s): {', '.join(str(v) for v in val)} "
-                f"(confidence: {apps['confidence']})."
-            )
-
-    email = account_and_drone.get("account_email")
-    if email:
-        if email["confidence"] == "inconsistent":
+    # All P4-registry fields: generic inconsistency / not-found handling.
+    for p4_key, label in _P4_IDENTITY_FIELDS:
+        out_key = _P4_KEY_TO_OUT_KEY.get(p4_key, p4_key)
+        entry = account_and_drone.get(out_key)
+        if not entry:
+            investigate.append(f"Note: no {label.lower()} found - Device and account information.")
+            continue
+        if entry["confidence"] == "inconsistent":
             investigate.append(
-                f"Account email inconsistency detected  -  "
-                f"conflicting values observed across sources. "
+                f"{label} inconsistency detected  -  "
+                f"conflicting values observed: {', '.join(str(v) for v in entry['value'])}. "
                 f"Manual verification required."
             )
         else:
-            device_id.append(
-                f"Account email: {email['value']} "
-                f"(confidence: {email['confidence']})."
-            )
-
-    _IDENTITY_FIELD_LABELS = (
-        ("drone_serial",       "drone serial number"),
-        ("drone_name",         "drone model"),
-        ("device_name",        "controller device name"),
-        ("dji_app_version",    "DJI application version"),
-        ("installed_dji_apps", "installed DJI applications"),
-        ("account_email",      "account e-mail"),
-    )
-    for _field, _label in _IDENTITY_FIELD_LABELS:
-        if not account_and_drone.get(_field):
-            investigate.append(
-                f"Note: no {_label} found - Device and account information."
-            )
+            device_id.append(f"{label}: {entry['value']} (confidence: {entry['confidence']}).")
 
     # ── Flight analysis ──────────────────────────────────────────────────────
     unmatched = [f for f in flight_analyses if not f["matched"]]

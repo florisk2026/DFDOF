@@ -296,10 +296,11 @@ def test_collect_identity_p4_device_platform():
         "observations": [{"device_platform": "iOS"}],
     }]
     sources = p7._collect_all_identity_sources([], p4_obs, [])
-    assert len(sources["device_name"]) == 1
-    assert sources["device_name"][0]["value"] == "iOS"
-    assert sources["device_name"][0]["source_pointer"] == "p4:sha011"
-    assert sources["device_name"][0]["source_type"] == "controller"
+    # device_platform maps to its own out_key (not device_name; that is P2-only)
+    assert len(sources["device_platform"]) == 1
+    assert sources["device_platform"][0]["value"] == "iOS"
+    assert sources["device_platform"][0]["source_pointer"] == "p4:sha011"
+    assert sources["device_platform"][0]["source_type"] == "controller"
 
 
 def test_build_analysis_device_name_inconsistent():
