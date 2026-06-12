@@ -187,6 +187,24 @@ def clear_and_make(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
+_NO_OUTPUT_FILENAME = "_no_output.txt"
+_NO_OUTPUT_CONTENT = "This phase has no output"
+
+
+def _write_no_output(path: Path) -> None:
+    """Create path and write the sentinel file indicating no real output was produced."""
+    path.mkdir(parents=True, exist_ok=True)
+    (path / _NO_OUTPUT_FILENAME).write_text(_NO_OUTPUT_CONTENT, encoding="utf-8")
+
+
+def _has_real_output(path: Path) -> bool:
+    """Return True if path contains any file other than the sentinel."""
+    return any(
+        f.is_file() and f.name != _NO_OUTPUT_FILENAME
+        for f in path.rglob("*")
+    )
+
+
 # Default tool locations.
 # ADJUST TO YOUR ENVIRONMENT.
 SLEUTH_KIT_BIN = _env_path(

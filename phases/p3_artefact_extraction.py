@@ -50,6 +50,8 @@ from config import (
     output_dir,
     clear_and_make,
     utc_now_iso,
+    _write_no_output,
+    _has_real_output,
 )
 from evidence import Evidence, make_evidence
 from parsing.extract_logical import ensure_unique_path, extract_logical_files
@@ -412,15 +414,6 @@ def _filter_empty(
     return kept
 
 
-def _remove_empty_dir(path: Path) -> None:
-    """Remove a directory if it exists and is empty."""
-    try:
-        if path.is_dir() and not any(path.iterdir()):
-            path.rmdir()
-    except OSError:
-        pass
-
-
 def _find_ios_parsed_root(state: State, ios_source: Evidence | None) -> Path | None:
     """Locate the P2-parsed iOS directory from state.phase_outputs."""
     if ios_source is None:
@@ -462,7 +455,7 @@ def _extract_android_sources(
                 3, IDENTIFICATION_CONTROLLER_ANDROID,
                 "installed DJI apps not found in P2 output, extraction aborted",
             )
-            _remove_empty_dir(controller_android_dir)
+            _write_no_output(controller_android_dir)
             return extracted
 
         scope_roots = _android_discover_scope_roots(member_names, installed_apps)
@@ -471,7 +464,7 @@ def _extract_android_sources(
                 3, IDENTIFICATION_CONTROLLER_ANDROID,
                 "no DJI app directories found in archive for installed apps, extraction aborted",
             )
-            _remove_empty_dir(controller_android_dir)
+            _write_no_output(controller_android_dir)
             return extracted
 
         for category in categories:
@@ -503,8 +496,8 @@ def _extract_android_sources(
                             seen.add(normalised)
                             members.append(name)
 
+                output_dir_cat = controller_android_dir / safe_segment(category)
                 if members:
-                    output_dir_cat = controller_android_dir / safe_segment(category)
                     evidence_list = _filter_empty(
                         extract_logical_files(
                             android_source,
@@ -517,17 +510,18 @@ def _extract_android_sources(
                         IDENTIFICATION_CONTROLLER_ANDROID,
                         category,
                     )
-                    _remove_empty_dir(output_dir_cat)
+                    if not _has_real_output(output_dir_cat):
+                        _write_no_output(output_dir_cat)
                     extracted.extend(evidence_list)
                 else:
                     state.raise_anomaly(
                         3, IDENTIFICATION_CONTROLLER_ANDROID, "no artefacts found", category=category
                     )
+                    _write_no_output(output_dir_cat)
             except Exception as exc:
                 state.raise_anomaly(
                     3, IDENTIFICATION_CONTROLLER_ANDROID, f"extraction failed: {exc}", category=category
                 )
-        _remove_empty_dir(controller_android_dir)
 
     else:
         precomputed_entries = _get_cached_entries(state, android_archive)
@@ -538,7 +532,7 @@ def _extract_android_sources(
                 3, IDENTIFICATION_CONTROLLER_ANDROID,
                 "installed DJI apps not found in P2 output, extraction aborted",
             )
-            _remove_empty_dir(controller_android_dir)
+            _write_no_output(controller_android_dir)
             return extracted
 
         if not precomputed_entries:
@@ -546,7 +540,7 @@ def _extract_android_sources(
                 3, IDENTIFICATION_CONTROLLER_ANDROID,
                 "no cached image entries from P1, extraction aborted",
             )
-            _remove_empty_dir(controller_android_dir)
+            _write_no_output(controller_android_dir)
             return extracted
 
         entry_paths = [e[2] for e in precomputed_entries]
@@ -556,7 +550,7 @@ def _extract_android_sources(
                 3, IDENTIFICATION_CONTROLLER_ANDROID,
                 "no DJI app directories found in image for installed apps, extraction aborted",
             )
-            _remove_empty_dir(controller_android_dir)
+            _write_no_output(controller_android_dir)
             return extracted
 
         for category in categories:
@@ -576,13 +570,14 @@ def _extract_android_sources(
                         precomputed_entries, scope_roots, path_tokens, ext_set
                     )
 
+                output_dir_cat = controller_android_dir / safe_segment(category)
                 if not scoped_entries:
                     state.raise_anomaly(
                         3, IDENTIFICATION_CONTROLLER_ANDROID, "no artefacts found", category=category
                     )
+                    _write_no_output(output_dir_cat)
                     continue
 
-                output_dir_cat = controller_android_dir / safe_segment(category)
                 output_dir_cat.mkdir(parents=True, exist_ok=True)
                 evidence_list = _filter_empty(
                     extract_tsk_image(
@@ -599,18 +594,17 @@ def _extract_android_sources(
                     IDENTIFICATION_CONTROLLER_ANDROID,
                     category,
                 )
-                _remove_empty_dir(output_dir_cat)
                 if evidence_list:
                     extracted.extend(evidence_list)
                 else:
                     state.raise_anomaly(
                         3, IDENTIFICATION_CONTROLLER_ANDROID, "no artefacts found", category=category
                     )
+                    _write_no_output(output_dir_cat)
             except Exception as exc:
                 state.raise_anomaly(
                     3, IDENTIFICATION_CONTROLLER_ANDROID, f"extraction failed: {exc}", category=category
                 )
-        _remove_empty_dir(controller_android_dir)
 
     return extracted
 
@@ -635,7 +629,7 @@ def _extract_ios_sources(
             3, IDENTIFICATION_CONTROLLER_IOS,
             "no DJI app directories found in parsed backup, extraction aborted",
         )
-        _remove_empty_dir(controller_ios_dir)
+        _write_no_output(controller_ios_dir)
         return extracted
 
     for category in CONTROLLER_ARTEFACT_CATEGORIES:
@@ -645,8 +639,8 @@ def _extract_ios_sources(
             else:
                 matched_files = _ios_collect_category_files(app_roots, category)
 
+            output_dir_cat = controller_ios_dir / safe_segment(category)
             if matched_files:
-                output_dir_cat = controller_ios_dir / safe_segment(category)
                 evidence_list = _filter_empty(
                     _copy_parsed_files(
                         ios_parsed_root,
@@ -660,17 +654,18 @@ def _extract_ios_sources(
                     IDENTIFICATION_CONTROLLER_IOS,
                     category,
                 )
-                _remove_empty_dir(output_dir_cat)
+                if not _has_real_output(output_dir_cat):
+                    _write_no_output(output_dir_cat)
                 extracted.extend(evidence_list)
             else:
                 state.raise_anomaly(
                     3, IDENTIFICATION_CONTROLLER_IOS, "no artefacts found", category=category
                 )
+                _write_no_output(output_dir_cat)
         except Exception as exc:
             state.raise_anomaly(
                 3, IDENTIFICATION_CONTROLLER_IOS, f"extraction failed: {exc}", category=category
             )
-    _remove_empty_dir(controller_ios_dir)
     return extracted
 
 
@@ -698,14 +693,15 @@ def _extract_drone_sd_sources(
                     IDENTIFICATION_DRONE_SD,
                     index=idx + 1,
                 )
-                for cat_dir in list(drone_sd_dir.iterdir()) if drone_sd_dir.exists() else []:
-                    _remove_empty_dir(cat_dir)
-                _remove_empty_dir(drone_sd_dir)
                 extracted.extend(evidence_list)
                 if not evidence_list:
                     state.raise_anomaly(3, IDENTIFICATION_DRONE_SD, "no artefacts found", index=idx + 1)
+                if not _has_real_output(drone_sd_dir):
+                    _write_no_output(drone_sd_dir)
             except Exception as exc:
                 state.raise_anomaly(3, IDENTIFICATION_DRONE_SD, f"extraction failed: {exc}", index=idx + 1)
+                if not _has_real_output(drone_sd_dir):
+                    _write_no_output(drone_sd_dir)
     return extracted
 
 
@@ -742,7 +738,6 @@ def _extract_flight_storage_sources(
                 IDENTIFICATION_DRONE_FLIGHT_STORAGE,
                 DRONE_LOGS,
             )
-            _remove_empty_dir(drone_flight_dir)
             extracted.extend(evidence_list)
             if not evidence_list:
                 state.raise_anomaly(
@@ -756,7 +751,8 @@ def _extract_flight_storage_sources(
             f"unsupported archive format for {flight_archive.name}",
             category=DRONE_LOGS,
         )
-    _remove_empty_dir(drone_flight_dir)
+    if not _has_real_output(drone_flight_dir):
+        _write_no_output(drone_flight_dir)
     return extracted
 
 

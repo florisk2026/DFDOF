@@ -270,11 +270,15 @@ def test_run_phase_3_android_no_empty_output_dirs(tmp_path: Path, monkeypatch) -
         tmp_path / "Documents" / "dfdof_output" / "CASE-EMPTY-DIR"
         / "p3_artefact_extraction" / "controller_android"
     )
-    assert not (output_root / "flight_records").exists()
-    assert not (output_root / "images").exists()
-    assert not (output_root / "videos").exists()
-    assert not (output_root / "databases").exists()
-    assert (output_root / "flight_logs").exists()
+    # All category dirs now always exist; empty ones contain the sentinel file.
+    for cat in ("flight_records", "images", "videos", "databases"):
+        cat_dir = output_root / cat
+        assert cat_dir.exists()
+        assert (cat_dir / "_no_output.txt").exists()
+        assert (cat_dir / "_no_output.txt").read_text() == "This phase has no output"
+    flight_logs_dir = output_root / "flight_logs"
+    assert flight_logs_dir.exists()
+    assert not (flight_logs_dir / "_no_output.txt").exists()
 
 
 def test_run_phase_3_empty_file_leaves_no_empty_dir(tmp_path: Path, monkeypatch) -> None:
@@ -311,7 +315,10 @@ def test_run_phase_3_empty_file_leaves_no_empty_dir(tmp_path: Path, monkeypatch)
         tmp_path / "Documents" / "dfdof_output" / "CASE-REJECTED-DIR"
         / "p3_artefact_extraction" / "controller_android"
     )
-    assert not (output_root / "flight_logs").exists()
+    # Category dir now always exists; all files were rejected so it contains only the sentinel.
+    flight_logs_dir = output_root / "flight_logs"
+    assert flight_logs_dir.exists()
+    assert (flight_logs_dir / "_no_output.txt").exists()
     assert any("empty file moved to _rejected" in flag for flag in state.anomaly_flags)
 
 

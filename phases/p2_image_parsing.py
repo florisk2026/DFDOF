@@ -23,6 +23,8 @@ from config import (
 	output_dir,
 	clear_and_make,
 	utc_now_iso,
+    _write_no_output,
+    _has_real_output,
 )
 from evidence import Evidence, make_evidence
 from observation import make_observation
@@ -220,6 +222,9 @@ def run_phase_2(state: State) -> State:
             )
         except Exception as exc:
             state.raise_anomaly(2, IDENTIFICATION_CONTROLLER_IOS, f"failed to convert {cast(Path, ios_source.stored_path).name}: {exc}")
+
+    if not _has_real_output(phase_dir):
+        _write_no_output(phase_dir)
 
     now = utc_now_iso()
     state.phase_outputs[_PHASE_NAME] = {

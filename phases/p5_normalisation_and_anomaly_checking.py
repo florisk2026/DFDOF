@@ -41,6 +41,8 @@ from config import (
     clear_and_make,
     output_dir,
     utc_now_iso,
+    _write_no_output,
+    _has_real_output,
 )
 from evidence import Evidence, make_evidence
 from observation import Observation, make_observation
@@ -1140,6 +1142,9 @@ def run_phase_5(state: State) -> State:
         return (rank, obs.content.evidence_category or "", obs.content.stored_path or "")
 
     anomalies.sort(key=_anomaly_sort_key)
+
+    if not _has_real_output(phase_dir):
+        _write_no_output(phase_dir)
 
     state.phase_outputs[_PHASE_NAME] = {
         "completed_at": utc_now_iso(),

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from config import output_dir, utc_now_iso
+from config import output_dir, utc_now_iso, _write_no_output, _has_real_output
 from reporting.report_builder import build_report
 from state import State
 
@@ -34,6 +34,9 @@ def run_phase_8(state: State) -> State:
 
     print(f"  Generating report: {pdf_path.name}")
     build_report(state, pdf_path, plots_dir)
+
+    if not _has_real_output(plots_dir):
+        _write_no_output(plots_dir)
 
     state.phase_outputs[_PHASE_NAME] = {
         "completed_at": utc_now_iso(),

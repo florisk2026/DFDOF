@@ -33,6 +33,8 @@ from config import (
 	output_dir,
 	clear_and_make,
 	utc_now_iso,
+    _write_no_output,
+    _has_real_output,
 )
 from evidence import Evidence, make_evidence
 from observation import Observation, make_observation
@@ -366,6 +368,9 @@ def run_phase_4(state: State) -> State:
 
 				if category_key in {DATABASES, FLIGHT_LOGS}:
 					continue
+
+	if not _has_real_output(phase_dir):
+		_write_no_output(phase_dir)
 
 	state.phase_outputs[_PHASE_NAME] = {
 		"completed_at": utc_now_iso(),

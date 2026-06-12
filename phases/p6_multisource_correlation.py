@@ -29,6 +29,8 @@ from config import (
     clear_and_make,
     output_dir,
     utc_now_iso,
+    _write_no_output,
+    _has_real_output,
 )
 from phases.utils_phase import haversine_m, write_json
 from state import State
@@ -1245,6 +1247,9 @@ def run_phase_6(state: State) -> State:
         }
         for f in flights
     ]
+
+    if not _has_real_output(phase_dir):
+        _write_no_output(phase_dir)
 
     state.phase_outputs[_PHASE_NAME] = {
         "completed_at": utc_now_iso(),
