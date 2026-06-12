@@ -57,32 +57,36 @@ _ROW_ANOMALY_KEYS = frozenset({
 # Drone-side source identification strings (for confidence determination)
 _DRONE_SOURCE_IDS = frozenset({IDENTIFICATION_DRONE_SD, IDENTIFICATION_DRONE_FLIGHT_STORAGE})
 
-# Registry of all P4 account-data fields: (p4_key, display_label).
+# Registry of all P4 account-data fields: (p4_key, display_label, platforms | None).
+# platforms is a frozenset of source_identification strings that carry this field, or None for all.
 # Adding a key to a P4 field map dict automatically flows into P7 analysis and the P8 report.
 # out_key == p4_key for all entries EXCEPT the three that have established P6 timeline names.
-_P4_IDENTITY_FIELDS: tuple[tuple[str, str], ...] = (
-    ("aircraft_sn",         "Drone Serial Number"),
-    ("cached_product_name", "Drone Model"),
-    ("device_platform",     "Controller Device"),
-    ("app_version",         "DJI Application Version"),
-    ("account_email",       "Account E-Mail"),
-    ("product_type",        "Product Type"),
-    ("aircraft_model_code", "Aircraft Model Code"),
-    ("fly_controller_sn",   "Controller Serial Number"),
-    ("firmware_version",    "Firmware Version"),
-    ("last_country_code",   "Last Country Code"),
-    ("last_launch",         "Last App Launch"),
-    ("last_flight_date",    "Last Flight Date"),
-    ("last_latitude",       "Last Known Latitude"),
-    ("last_longitude",      "Last Known Longitude"),
-    ("account_uid",                  "Account UID"),
-    ("account_nickname",             "Account Nickname"),
-    ("device_uuid",                  "Device UUID"),
-    ("find_aircraft_last_latitude",  "Last Known Latitude (Find Aircraft)"),
-    ("find_aircraft_last_longitude", "Last Known Longitude (Find Aircraft)"),
-    ("find_aircraft_last_altitude",  "Last Known Altitude (Find Aircraft)"),
-    ("find_aircraft_last_heading",   "Last Known Heading (Find Aircraft)"),
-    ("find_aircraft_last_hacc",      "Last Known Horiz. Accuracy (Find Aircraft)"),
+_IOS   = frozenset({"controller_ios"})
+_ANDROID = frozenset({"controller_android"})
+
+_P4_IDENTITY_FIELDS: tuple[tuple[str, str, frozenset[str] | None], ...] = (
+    ("aircraft_sn",         "Drone Serial Number",          None),
+    ("cached_product_name", "Drone Model",                  None),
+    ("device_platform",     "Controller Device",            None),
+    ("app_version",         "DJI Application Version",      None),
+    ("account_email",       "Account E-Mail",               None),
+    ("product_type",        "Product Type",                 None),
+    ("firmware_version",    "Firmware Version",             None),
+    ("last_country_code",   "Last Country Code",            None),
+    ("aircraft_model_code", "Aircraft Model Code",          _ANDROID),
+    ("fly_controller_sn",   "Controller Serial Number",     _ANDROID),
+    ("last_latitude",       "Last Known Latitude",          _ANDROID),
+    ("last_longitude",      "Last Known Longitude",         _ANDROID),
+    ("account_uid",         "Account UID",                  _ANDROID),
+    ("account_nickname",    "Account Nickname",             _ANDROID),
+    ("device_uuid",         "Device UUID",                  _ANDROID),
+    ("last_launch",         "Last App Launch",              _IOS),
+    ("last_flight_date",    "Last Flight Date",             _IOS),
+    ("find_aircraft_last_latitude",  "Last Known Latitude (Find Aircraft)",         _IOS),
+    ("find_aircraft_last_longitude", "Last Known Longitude (Find Aircraft)",        _IOS),
+    ("find_aircraft_last_altitude",  "Last Known Altitude (Find Aircraft)",         _IOS),
+    ("find_aircraft_last_heading",   "Last Known Heading (Find Aircraft)",          _IOS),
+    ("find_aircraft_last_hacc",      "Last Known Horiz. Accuracy (Find Aircraft)",  _IOS),
 )
 
 # Three P4 keys whose out_key differs because P6 timeline events use these canonical names.
@@ -347,7 +351,7 @@ def _collect_all_identity_sources(
     """
     # Build fields dict dynamically from registry + the two P2-only keys
     all_out_keys = (
-        [_P4_KEY_TO_OUT_KEY.get(p4k, p4k) for p4k, _ in _P4_IDENTITY_FIELDS]
+        [_P4_KEY_TO_OUT_KEY.get(p4k, p4k) for p4k, *_ in _P4_IDENTITY_FIELDS]
         + ["device_name", "installed_dji_apps"]
     )
     fields: dict[str, list[dict[str, Any]]] = {k: [] for k in all_out_keys}
@@ -380,7 +384,7 @@ def _collect_all_identity_sources(
         sha = obs_dict.get("evidence_sha256", "")
         sp = f"p4:{sha}"
         for obs in obs_dict.get("observations", []):
-            for p4_key, _ in _P4_IDENTITY_FIELDS:
+            for p4_key, *_ in _P4_IDENTITY_FIELDS:
                 val = obs.get(p4_key)
                 if val is not None:
                     out_key = _P4_KEY_TO_OUT_KEY.get(p4_key, p4_key)
@@ -858,10 +862,13 @@ def _forensic_conclusions(
         investigate.append("Note: no controller device name found - Device and account information.")
 
     # All P4-registry fields: generic inconsistency / not-found handling.
-    for p4_key, label in _P4_IDENTITY_FIELDS:
+    detected_sources: set[str] = {s["source"] for s in source_coverage if s["detected"]}
+    for p4_key, label, platforms in _P4_IDENTITY_FIELDS:
         out_key = _P4_KEY_TO_OUT_KEY.get(p4_key, p4_key)
         entry = account_and_drone.get(out_key)
         if not entry:
+            if platforms and not (platforms & detected_sources):
+                continue
             investigate.append(f"Note: no {label.lower()} found - Device and account information.")
             continue
         if entry["confidence"] == "inconsistent":

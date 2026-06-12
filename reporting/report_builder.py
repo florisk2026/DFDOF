@@ -276,7 +276,7 @@ def _device_identification(pdf: _PDF, p7: dict) -> None:
         ("device_name",        "Controller Device"),
     ) + tuple(
         (_P4_KEY_TO_OUT_KEY.get(p4k, p4k), label)
-        for p4k, label in _P4_IDENTITY_FIELDS
+        for p4k, label, *_ in _P4_IDENTITY_FIELDS
     )
     headers = ["Field", "Value", "Confidence", "Sources"]
     col_w   = [48, 62, 38, 22]  # sum = 170 < 180 OK
