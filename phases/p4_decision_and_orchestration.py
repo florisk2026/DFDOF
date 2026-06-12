@@ -77,7 +77,7 @@ _ANDROID_DJI_GO4_FIELDS: dict[str, tuple] = {
 	"account_uid":      (["key_account_uid"], decode_base64),
 	"account_nickname": (["key_account_nickname"], decode_base64),
 	"account_token":    (["key_account_token"], decode_base64),
-	"aircraft_sn":      (["device_sn", "key_last_flyforbid_flyc_sn"], None),
+	"aircraft_sn":      (["key_last_flyforbid_flyc_sn", "device_sn"], None),
 	"firmware_version": (["cur_firmware_ver"], None),
 	"last_country_code":(["key_country_code_local"], None),
 	"last_latitude":    (["fmd_latitude"], None),
@@ -93,7 +93,6 @@ _ANDROID_DJI_PILOT_FIELDS: dict[str, tuple] = {
 	"last_latitude":    (["KEY_CC_LAST_FLYC_LAT"], ieee754_long_to_degrees),
 	"last_longitude":   (["KEY_CC_LAST_FLYC_LNG"], ieee754_long_to_degrees),
 }
-
 
 _INFO_KEYS_LOWER = {
 	"capturedate", "positionrelativealt", "positiongpslat",
