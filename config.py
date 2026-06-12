@@ -16,6 +16,8 @@ CONTROLLER_ANDROID_INCLUDES = {
     "data/data/dji",
     "data/data/com.dji",
     "sdcard/dji",
+    "data/dji",
+    "data/com.dji",
 }
 DRONE_FLIGHT_STORAGE_INCLUDES = {"FLY", "DJI_ASSISTANT_EXPORT_FILE"}
 DRONE_SD_INCLUDES = {"DCIM", "MISC"}

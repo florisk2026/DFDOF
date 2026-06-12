@@ -23,6 +23,17 @@ def test_identify_source_controller_android() -> None:
     assert identified_as == "controller_android"
 
 
+def test_identify_source_controller_android_physical() -> None:
+    """Physical Android image: data partition uses data/dji.* without the extra data/ prefix."""
+    listing = [
+        "data/dji.go.v4/shared_prefs/dji.go.v4.xml",
+        "data/dji.go.v4/databases/dji.db",
+        "media/0/Android/data/dji.go.v4/cache/list.json",
+    ]
+    identified_as = identify_source(listing)
+    assert identified_as == "controller_android"
+
+
 def test_identify_source_ios_logical_nested_structure() -> None:
     """Test iOS logical backup with nested root (e.g., MC 04 iOS/...)."""
     prefix = "MC 04 iOS/7f05ad1235cea98920b1112ef14ddd9fdded744a/"
