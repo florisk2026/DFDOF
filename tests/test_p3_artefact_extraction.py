@@ -536,6 +536,27 @@ def test_scope_filter_entries_multiple_scope_roots() -> None:
     assert len(result) == 2
 
 
+def test_scope_filter_entries_mixed_case_path() -> None:
+    """fls output preserves original filesystem casing; matching must be case-insensitive.
+
+    Physical Android images return paths like media/0/DJI/dji.go.v4/FlightRecord/...
+    while scope roots are lowercased by _android_discover_scope_roots. Without
+    case-insensitive comparison the FlightRecord directory would be missed.
+    """
+    entries = [
+        ("d/d", 4097, "media/0/DJI/dji.go.v4/FlightRecord"),
+        ("r/r", 162, "media/0/DJI/dji.go.v4/FlightRecord/DJIFlightRecord_2017-08-29_[12-05-27].txt"),
+    ]
+    result = p3._scope_filter_entries(
+        entries,
+        scope_roots=["media/0/dji/dji.go.v4/"],
+        path_tokens={"flightrecord/"},
+        ext_set=frozenset({".txt"}),
+    )
+    assert len(result) == 1
+    assert "FlightRecord" in result[0][2]
+
+
 # Android scope root discovery
 
 def test_android_discover_scope_roots() -> None:

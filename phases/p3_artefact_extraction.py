@@ -119,15 +119,16 @@ def _scope_filter_entries(
     """Filter image fls entries to those inside a DJI app scope root for a category.
 
     Constructs category roots as scope_root+token (same as logical branch) and
-    keeps only entries whose normalised path starts with one of those roots and
-    whose extension matches ext_set.
+    keeps only entries whose path (compared case-insensitively) starts with one
+    of those roots and whose extension matches ext_set.
     """
     category_roots = [scope + token for scope in scope_roots for token in path_tokens]
     result: list[tuple[str, int, str]] = []
     seen: set[str] = set()
     for entry in entries:
-        path = entry[2]  # already normalised (lower, forward slash) from _get_cached_entries
-        if not any(path.startswith(cat_root) for cat_root in category_roots):
+        path = entry[2]
+        path_lower = path.lower()
+        if not any(path_lower.startswith(cat_root) for cat_root in category_roots):
             continue
         if Path(path).suffix.lower() not in ext_set:
             continue
