@@ -57,6 +57,13 @@ _ROW_ANOMALY_KEYS = frozenset({
 # Drone-side source identification strings (for confidence determination)
 _DRONE_SOURCE_IDS = frozenset({IDENTIFICATION_DRONE_SD, IDENTIFICATION_DRONE_FLIGHT_STORAGE})
 
+# Sentinel substrings shared between _artefact_coverage note strings and
+# the substring matches in _forensic_conclusions — keeps both in sync.
+_NOTE_MISSING_NORM_TIME = "missing (normalisable) EXIF timestamp"
+_NOTE_MISSING_GPS       = "missing EXIF GPS coordinates"
+_NOTE_WITH_NORM_TIME    = "contain(s) normalised EXIF timestamp"
+_NOTE_WITH_GPS          = "contain(s) EXIF GPS coordinates"
+
 # Registry of all P4 account-data fields: (p4_key, display_label, platforms | None).
 # platforms is a frozenset of source_identification strings that carry this field, or None for all.
 # Adding a key to a P4 field map dict automatically flows into P7 analysis and the P8 report.
@@ -151,11 +158,15 @@ def _artefact_coverage(
     fl_non_readable = 0
     fl_crash_dump = 0
     fl_format_counts: dict[str, int] = {}
-    # images / videos: exif_contains_no_norm_time, exif_contains_no_gps
-    img_no_norm_time = 0
-    img_no_gps = 0
-    vid_no_norm_time = 0
-    vid_no_gps = 0
+    # images / videos: missing vs confirmed UTC timestamp and GPS coordinates
+    img_no_norm_time   = 0
+    img_with_norm_time = 0
+    img_no_gps         = 0
+    img_with_gps       = 0
+    vid_no_norm_time   = 0
+    vid_with_norm_time = 0
+    vid_no_gps         = 0
+    vid_with_gps       = 0
 
     for obs_dict in p5_anomalies:
         cat = obs_dict.get("evidence_category", "")
@@ -197,14 +208,22 @@ def _artefact_coverage(
             elif cat == IMAGES:
                 if obs.get("exif_contains_no_norm_time"):
                     img_no_norm_time += 1
+                elif obs.get("norm_date"):
+                    img_with_norm_time += 1
                 if obs.get("exif_contains_no_gps"):
                     img_no_gps += 1
+                elif obs.get("gps_latitude") is not None:
+                    img_with_gps += 1
 
             elif cat == VIDEOS:
                 if obs.get("exif_contains_no_norm_time"):
                     vid_no_norm_time += 1
+                elif obs.get("norm_date"):
+                    vid_with_norm_time += 1
                 if obs.get("exif_contains_no_gps"):
                     vid_no_gps += 1
+                elif obs.get("gps_latitude") is not None:
+                    vid_with_gps += 1
 
     result = []
     for cat in list(CONTROLLER_ARTEFACT_CATEGORIES):
@@ -242,16 +261,24 @@ def _artefact_coverage(
                 notes.append(f"formats: {fmt_parts}")
 
         elif cat == IMAGES:
+            if img_with_norm_time:
+                notes.append(f"{img_with_norm_time} file(s) {_NOTE_WITH_NORM_TIME}")
+            if img_with_gps:
+                notes.append(f"{img_with_gps} file(s) {_NOTE_WITH_GPS}")
             if img_no_norm_time:
-                notes.append(f"{img_no_norm_time} file(s) is/are missing (normalisable) EXIF timestamp")
+                notes.append(f"{img_no_norm_time} file(s) {_NOTE_MISSING_NORM_TIME}")
             if img_no_gps:
-                notes.append(f"{img_no_gps} file(s) is/are missing EXIF GPS coordinates")
+                notes.append(f"{img_no_gps} file(s) {_NOTE_MISSING_GPS}")
 
         elif cat == VIDEOS:
+            if vid_with_norm_time:
+                notes.append(f"{vid_with_norm_time} file(s) {_NOTE_WITH_NORM_TIME}")
+            if vid_with_gps:
+                notes.append(f"{vid_with_gps} file(s) {_NOTE_WITH_GPS}")
             if vid_no_norm_time:
-                notes.append(f"{vid_no_norm_time} file(s) is/are missing (normalisable) EXIF timestamp")
+                notes.append(f"{vid_no_norm_time} file(s) {_NOTE_MISSING_NORM_TIME}")
             if vid_no_gps:
-                notes.append(f"{vid_no_gps} file(s) is/are missing EXIF GPS coordinates")
+                notes.append(f"{vid_no_gps} file(s) {_NOTE_MISSING_GPS}")
 
         result.append({
             "category": cat,
@@ -943,15 +970,25 @@ def _forensic_conclusions(
         if cat not in (IMAGES, VIDEOS):
             continue
         for note in cov["notes"]:
-            if "missing (normalisable) EXIF timestamp" in note:
+            if _NOTE_MISSING_NORM_TIME in note:
                 media_section.append(
                     f"{cat.capitalize()}: {note}. "
                     f"Temporal correlation of these files is not possible without additional context."
                 )
-            elif "missing EXIF GPS coordinates" in note:
+            elif _NOTE_MISSING_GPS in note:
                 media_section.append(
                     f"{cat.capitalize()}: {note}. "
                     f"Spatial correlation of these files is not possible without additional context."
+                )
+            elif _NOTE_WITH_NORM_TIME in note:
+                media_section.append(
+                    f"{cat.capitalize()}: {note}. "
+                    f"Temporal correlation of these files is possible."
+                )
+            elif _NOTE_WITH_GPS in note:
+                media_section.append(
+                    f"{cat.capitalize()}: {note}. "
+                    f"Spatial correlation of these files is possible."
                 )
 
     # ── Database analysis ────────────────────────────────────────────────────

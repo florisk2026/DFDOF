@@ -147,7 +147,7 @@ def test_artefact_coverage_flight_logs_notes():
     assert "crash dump" in note_text
 
 
-def test_artefact_coverage_images_exif_notes():
+def test_artefact_coverage_images_exif_notes_missing():
     sha = "cccc"
     p3 = [_p3a(config.IMAGES, sha)]
     p5 = [{"evidence_category": config.IMAGES, "evidence_sha256": sha,
@@ -155,8 +155,49 @@ def test_artefact_coverage_images_exif_notes():
     cov = p7._artefact_coverage(p3, p5)
     img = next(c for c in cov if c["category"] == config.IMAGES)
     note_text = " ".join(img["notes"])
-    assert "missing (normalisable) EXIF timestamp" in note_text
-    assert "missing EXIF GPS coordinates" in note_text
+    assert p7._NOTE_MISSING_NORM_TIME in note_text
+    assert p7._NOTE_MISSING_GPS in note_text
+    assert p7._NOTE_WITH_NORM_TIME not in note_text
+    assert p7._NOTE_WITH_GPS not in note_text
+
+
+def test_artefact_coverage_images_exif_notes_present():
+    sha = "dddd"
+    p3 = [_p3a(config.IMAGES, sha)]
+    p5 = [{"evidence_category": config.IMAGES, "evidence_sha256": sha,
+            "observations": [{"norm_date": "2018-04-19", "norm_time": "17:24:49+00:00",
+                               "gps_latitude": 39.9, "gps_longitude": -105.1}]}]
+    cov = p7._artefact_coverage(p3, p5)
+    img = next(c for c in cov if c["category"] == config.IMAGES)
+    note_text = " ".join(img["notes"])
+    assert p7._NOTE_WITH_NORM_TIME in note_text
+    assert p7._NOTE_WITH_GPS in note_text
+    assert p7._NOTE_MISSING_NORM_TIME not in note_text
+    assert p7._NOTE_MISSING_GPS not in note_text
+
+
+def test_artefact_coverage_images_exif_notes_mixed():
+    sha_ok = "aaaa"
+    sha_bad = "bbbb"
+    p3 = [_p3a(config.IMAGES, sha_ok), _p3a(config.IMAGES, sha_bad)]
+    p5 = [
+        {"evidence_category": config.IMAGES, "evidence_sha256": sha_ok,
+         "observations": [{"norm_date": "2018-04-19", "norm_time": "17:24:49+00:00",
+                            "gps_latitude": 39.9, "gps_longitude": -105.1}]},
+        {"evidence_category": config.IMAGES, "evidence_sha256": sha_bad,
+         "observations": [{"exif_contains_no_norm_time": True, "exif_contains_no_gps": True}]},
+    ]
+    cov = p7._artefact_coverage(p3, p5)
+    img = next(c for c in cov if c["category"] == config.IMAGES)
+    notes = img["notes"]
+    assert any(p7._NOTE_WITH_NORM_TIME in n for n in notes)
+    assert any(p7._NOTE_WITH_GPS in n for n in notes)
+    assert any(p7._NOTE_MISSING_NORM_TIME in n for n in notes)
+    assert any(p7._NOTE_MISSING_GPS in n for n in notes)
+    # positive notes appear before negative notes
+    idx_with = next(i for i, n in enumerate(notes) if p7._NOTE_WITH_NORM_TIME in n)
+    idx_miss = next(i for i, n in enumerate(notes) if p7._NOTE_MISSING_NORM_TIME in n)
+    assert idx_with < idx_miss
 
 
 def test_artefact_coverage_no_duplicate_categories():
@@ -795,11 +836,28 @@ def test_forensic_no_media_no_items():
 def test_forensic_exif_no_norm_time_in_media_analysis():
     source_cov = [{"source": "controller_ios", "detected": True}]
     artefact_cov = [{"category": config.IMAGES, "count": 6,
-                     "notes": ["6 file(s) missing (normalisable) EXIF timestamp"]}]
+                     "notes": [f"6 file(s) {p7._NOTE_MISSING_NORM_TIME}"]}]
     c = p7._forensic_conclusions(source_cov, [], {}, artefact_cov, [])
-    assert any("missing (normalisable) EXIF timestamp" in s for s in c["media_analysis"])
-    # Must NOT be in further_investigation (it's a finding, not an action item there)
-    assert not any("missing (normalisable) EXIF timestamp" in s for s in c["further_investigation"])
+    assert any(p7._NOTE_MISSING_NORM_TIME in s for s in c["media_analysis"])
+    assert not any(p7._NOTE_MISSING_NORM_TIME in s for s in c["further_investigation"])
+
+
+def test_forensic_exif_with_norm_time_in_media_analysis():
+    source_cov = [{"source": "controller_ios", "detected": True}]
+    artefact_cov = [{"category": config.IMAGES, "count": 5,
+                     "notes": [f"5 file(s) {p7._NOTE_WITH_NORM_TIME}"]}]
+    c = p7._forensic_conclusions(source_cov, [], {}, artefact_cov, [])
+    assert any(p7._NOTE_WITH_NORM_TIME in s for s in c["media_analysis"])
+    assert any("Temporal correlation" in s and "is possible" in s for s in c["media_analysis"])
+
+
+def test_forensic_exif_with_gps_in_media_analysis():
+    source_cov = [{"source": "controller_ios", "detected": True}]
+    artefact_cov = [{"category": config.VIDEOS, "count": 3,
+                     "notes": [f"3 file(s) {p7._NOTE_WITH_GPS}"]}]
+    c = p7._forensic_conclusions(source_cov, [], {}, artefact_cov, [])
+    assert any(p7._NOTE_WITH_GPS in s for s in c["media_analysis"])
+    assert any("Spatial correlation" in s and "is possible" in s for s in c["media_analysis"])
 
 
 def test_forensic_row_anomaly_in_data_quality():
