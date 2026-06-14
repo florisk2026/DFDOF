@@ -34,6 +34,7 @@ def _get_exiftool_version() -> str | None:
 
 _EXIF_IMAGE_FIELDS: set[str] = {
 	"DateTimeOriginal", "CreateDate",
+	"OffsetTimeOriginal", "OffsetTimeDigitized",
 	"GPSLatitude", "GPSLongitude", "GPSAltitude",
 	"GPSLatitudeRef", "GPSLongitudeRef", "GPSAltitudeRef",
 	"Make", "Model", "Software",
@@ -47,6 +48,7 @@ _EXIF_IMAGE_FIELDS: set[str] = {
 
 _EXIF_VIDEO_FIELDS: set[str] = {
 	"CreateDate", "ModifyDate", "Duration",
+	"OffsetTimeOriginal", "OffsetTimeDigitized",
 	"ImageWidth", "ImageHeight",
 	"Make", "Model", "Software", "GPSCoordinates",
 	"AbsoluteAltitude", "RelativeAltitude",

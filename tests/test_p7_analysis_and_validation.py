@@ -151,12 +151,12 @@ def test_artefact_coverage_images_exif_notes():
     sha = "cccc"
     p3 = [_p3a(config.IMAGES, sha)]
     p5 = [{"evidence_category": config.IMAGES, "evidence_sha256": sha,
-            "observations": [{"exif_zero_date": True, "exif_missing_gps": True}]}]
+            "observations": [{"exif_contains_no_norm_time": True, "exif_contains_no_gps": True}]}]
     cov = p7._artefact_coverage(p3, p5)
     img = next(c for c in cov if c["category"] == config.IMAGES)
     note_text = " ".join(img["notes"])
-    assert "zeroed EXIF" in note_text
-    assert "missing GPS" in note_text
+    assert "missing (normalisable) EXIF timestamp" in note_text
+    assert "missing EXIF GPS coordinates" in note_text
 
 
 def test_artefact_coverage_no_duplicate_categories():
@@ -792,14 +792,14 @@ def test_forensic_no_media_no_items():
                    for s in c["media_analysis"] + c["further_investigation"])
 
 
-def test_forensic_exif_zero_date_in_media_analysis():
+def test_forensic_exif_no_norm_time_in_media_analysis():
     source_cov = [{"source": "controller_ios", "detected": True}]
     artefact_cov = [{"category": config.IMAGES, "count": 6,
-                     "notes": ["6 file(s) with zeroed EXIF timestamp"]}]
+                     "notes": ["6 file(s) missing (normalisable) EXIF timestamp"]}]
     c = p7._forensic_conclusions(source_cov, [], {}, artefact_cov, [])
-    assert any("zeroed EXIF" in s for s in c["media_analysis"])
+    assert any("missing (normalisable) EXIF timestamp" in s for s in c["media_analysis"])
     # Must NOT be in further_investigation (it's a finding, not an action item there)
-    assert not any("zeroed EXIF" in s for s in c["further_investigation"])
+    assert not any("missing (normalisable) EXIF timestamp" in s for s in c["further_investigation"])
 
 
 def test_forensic_row_anomaly_in_data_quality():
