@@ -24,7 +24,7 @@ import sys
 from collections import defaultdict
 
 # Informational keys stored alongside anomaly observations — not anomalies themselves
-_INFO_KEYS = {"norm_date", "norm_time", "gps_latitude", "gps_longitude"}
+_INFO_KEYS = {"norm_date", "norm_time", "gps_latitude", "gps_longitude", "offset_time"}
 
 # All recognised anomaly check keys (from P5)
 _ANOMALY_KEYS = {
@@ -35,7 +35,7 @@ _ANOMALY_KEYS = {
     "battery_cell_voltage_out_of_range", "battery_cell_imbalance",
     "battery_temperature_out_of_range", "motor_on_empty_battery",
     "contains_no_value", "contains_constant_value",
-    "exif_zero_date", "exif_missing_gps",
+    "exif_contains_no_norm_time", "exif_contains_no_gps",
     "format", "entries", "non_readable",
 }
 

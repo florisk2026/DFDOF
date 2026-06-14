@@ -112,19 +112,16 @@ def parse_datcon_time(value: str) -> str | None:
 
 
 def parse_exif_date(value: str) -> tuple[str, str] | None:
-    """Parse EXIF date string and return (norm_date, norm_time) in UTC.
+    """Parse EXIF date string and return (norm_date, norm_time+00:00) in UTC.
 
-    Handles: 'YYYY:MM:DD HH:MM:SS', 'YYYY:MM:DD HH:MM:SS.sss',
-             'YYYY:MM:DD HH:MM:SS+HH:MM', 'YYYY:MM:DD HH:MM:SS-HH:MM',
-             'YYYY:MM:DD HH:MM:SSZ'.
-    No timezone suffix → assumed UTC (DJI-native logs carry no offset).
+    Handles: 'YYYY:MM:DD HH:MM:SS.sss+HH:MM', 'YYYY:MM:DD HH:MM:SSZ'.
+    No timezone suffix → returns None (timezone unknown, UTC cannot be confirmed).
     Returns None for zero date or unparseable input.
+    norm_time always carries an explicit '+00:00' suffix when returned.
     """
     if not value:
         return None
     s = value.strip()
-    if s.startswith("0000"):
-        return None
     base = s[:19]  # YYYY:MM:DD HH:MM:SS
     try:
         dt = datetime.strptime(base, "%Y:%m:%d %H:%M:%S")
@@ -132,8 +129,10 @@ def parse_exif_date(value: str) -> tuple[str, str] | None:
         return None
     # Strip sub-seconds from tail, isolate timezone suffix
     tz_part = s[19:].lstrip(".0123456789")  # e.g. "" | "Z" | "+02:00" | "-05:00"
-    if tz_part in ("", "Z"):
+    if tz_part == "Z":
         offset_minutes = 0
+    elif tz_part == "":
+        return None  # timezone unknown — cannot confirm UTC
     elif len(tz_part) == 6 and tz_part[0] in ("+", "-"):
         try:
             sign = 1 if tz_part[0] == "+" else -1
@@ -144,7 +143,7 @@ def parse_exif_date(value: str) -> tuple[str, str] | None:
     else:
         return None
     dt_utc = dt - timedelta(minutes=offset_minutes)
-    return dt_utc.strftime("%Y-%m-%d"), dt_utc.strftime("%H:%M:%S")
+    return dt_utc.strftime("%Y-%m-%d"), dt_utc.strftime("%H:%M:%S") + "+00:00"
 
 
 def parse_iso_timestamp(value: str) -> str | None:
@@ -152,6 +151,7 @@ def parse_iso_timestamp(value: str) -> str | None:
 
     '2018-04-19T17:24:49Z'      → '2018-04-19T17:24:49+00:00'
     '2018-04-19T17:24:49+02:00' → '2018-04-19T17:24:49+02:00'
+    No timezone suffix → returns None (timezone unknown, UTC cannot be confirmed).
     Sub-seconds are preserved. Returns None on empty or unparseable input.
     """
     if not value:
@@ -164,7 +164,7 @@ def parse_iso_timestamp(value: str) -> str | None:
     except ValueError:
         return None
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+        return None  # timezone unknown — cannot confirm UTC
     return dt.isoformat()
 
 

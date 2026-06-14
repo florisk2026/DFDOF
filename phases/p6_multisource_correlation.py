@@ -178,7 +178,7 @@ def _get_ts(row: dict[str, str], ts_col: str) -> datetime | None:
     except ValueError:
         return None
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+        return None  # timezone unknown — cannot confirm UTC
     return dt
 
 
@@ -737,15 +737,15 @@ def _state_change_events(
 def _exif_obs_datetime(obs_data: dict[str, Any]) -> datetime | None:
     """Combine norm_date + norm_time into a UTC-aware datetime.
 
-    parse_exif_date in utils_phase.py treats all EXIF timestamps as UTC
-    (strips timezone suffix, confirmed DJI-only pipeline).
+    norm_date/norm_time are only present when UTC was confirmed by parse_exif_date.
+    norm_time carries an explicit '+00:00' suffix, so fromisoformat is already timezone-aware.
     """
     d = obs_data.get("norm_date", "")
     t = obs_data.get("norm_time", "")
     if not d or not t:
         return None
     try:
-        return datetime.fromisoformat(f"{d}T{t}").replace(tzinfo=timezone.utc)
+        return datetime.fromisoformat(f"{d}T{t}")
     except ValueError:
         return None
 
@@ -757,7 +757,7 @@ def _parse_flight_dt(val: Any) -> datetime | None:
     try:
         dt = datetime.fromisoformat(str(val))
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            return None  # timezone unknown — cannot confirm UTC
         return dt
     except ValueError:
         return None
@@ -847,7 +847,7 @@ def _correlate_exif_observations(
                     continue
                 if pointer not in flight["plausibly_correlated"]:
                     flight["plausibly_correlated"].append(pointer)
-                ts_str = f"{norm_date}T{norm_time}+00:00"
+                ts_str = f"{norm_date}T{norm_time}"
                 coord  = {"latitude": obs_lat, "longitude": obs_lon}
                 flight["events"].append(_make_event(
                     timestamp      = ts_str,

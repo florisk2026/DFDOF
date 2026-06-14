@@ -871,7 +871,7 @@ def test_tip_log_message_events(tmp_path: Path) -> None:
 # Unit tests — exif observation correlation helpers
 
 def test_exif_obs_datetime_valid() -> None:
-    obs = {"norm_date": "2018-04-19", "norm_time": "11:25:10"}
+    obs = {"norm_date": "2018-04-19", "norm_time": "11:25:10+00:00"}
     dt = p6._exif_obs_datetime(obs)
     assert dt == datetime(2018, 4, 19, 11, 25, 10, tzinfo=timezone.utc)
 
@@ -956,7 +956,7 @@ def test_exif_correlation_event_added(tmp_path: Path, monkeypatch) -> None:
         fr_identification=config.IDENTIFICATION_CONTROLLER_IOS,
         exif_obs_data={
             "norm_date": inside_ts.strftime("%Y-%m-%d"),
-            "norm_time": inside_ts.strftime("%H:%M:%S"),
+            "norm_time": inside_ts.strftime("%H:%M:%S") + "+00:00",
             "gps_latitude": 39.9612,
             "gps_longitude": -106.2165,
         },
@@ -976,7 +976,7 @@ def test_exif_correlation_event_added(tmp_path: Path, monkeypatch) -> None:
     ev = media_events[0]
     assert ev["data"]["media_type"] == config.IMAGES
     assert ev["data"]["date"] == inside_ts.strftime("%Y-%m-%d")
-    assert ev["data"]["time"] == inside_ts.strftime("%H:%M:%S")
+    assert ev["data"]["time"] == inside_ts.strftime("%H:%M:%S") + "+00:00"
     assert ev["timezone"] == "UTC"
 
 
@@ -993,7 +993,7 @@ def test_exif_correlation_no_match(tmp_path: Path, monkeypatch) -> None:
         fr_identification=config.IDENTIFICATION_CONTROLLER_IOS,
         exif_obs_data={
             "norm_date": "2020-01-01",
-            "norm_time": "00:00:00",
+            "norm_time": "00:00:00+00:00",
         },
         exif_sha=exif_sha,
         exif_category=config.IMAGES,

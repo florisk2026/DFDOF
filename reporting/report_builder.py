@@ -714,11 +714,11 @@ def _p5_anomaly_detail(pdf: _PDF, state: State) -> None:
                         fired.append(f"format: {val}  |  entries: {entry_count}")
                     elif key == "entries":
                         pass  # handled with "format" above
-                    elif key == "exif_zero_date" and val is True:
-                        fired.append("exif_zero_date: EXIF timestamp is zeroed or missing")
-                    elif key == "exif_missing_gps" and val is True:
-                        fired.append("exif_missing_gps: no GPS coordinates in EXIF metadata")
-                    elif key in ("norm_date", "norm_time", "gps_latitude", "gps_longitude"):
+                    elif key == "exif_contains_no_norm_time" and val is True:
+                        fired.append("exif_contains_no_norm_time: is/are missing (normalisable) EXIF timestamp")
+                    elif key == "exif_contains_no_gps" and val is True:
+                        fired.append("exif_contains_no_gps: is/are missing EXIF GPS coordinates")
+                    elif key in ("norm_date", "norm_time", "gps_latitude", "gps_longitude", "offset_time"):
                         pass  # informational fields, not anomalies
                     elif key in _ROW_CHECKS and isinstance(val, list):
                         fired.append(f"{key}: {len(val)} row(s) affected")
@@ -988,7 +988,7 @@ def _appendix_tool_overview(pdf: _PDF) -> None:
             "telemetry anomaly checks (timestamp regression/gaps, zero coordinates, GPS "
             "quality, altitude spikes, motor-airborne-off) plus format-specific checks for "
             "flight records (battery voltage, temperature) and drone logs (quaternion, hDOP). "
-            "Detects empty databases, unreadable flight logs, and zeroed EXIF timestamps.",
+            "Detects empty databases, unreadable flight logs, and missing (normalisable) EXIF timestamps.",
             "Input: decoded artefacts.  Output: normalised CSVs, anomaly observations.",
         ),
         (

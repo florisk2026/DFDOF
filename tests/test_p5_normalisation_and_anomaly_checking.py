@@ -430,7 +430,7 @@ def test_flight_record_battery_cell_voltage_out_of_range(tmp_path: Path, monkeyp
 # Phase 5 integration tests — EXIF
 
 def test_exif_anomaly_observation(tmp_path: Path, monkeypatch) -> None:
-    """EXIF JSON with zero date and no GPS → Observation with exif_zero_date and exif_missing_gps.
+    """EXIF JSON with zero date and no GPS → Observation with exif_contains_no_norm_time and exif_contains_no_gps.
 
     norm_date/norm_time must be absent (zero date → omit).
     evidence_sha256 must be the parent (original media) sha256, not the JSON sha256.
@@ -459,8 +459,8 @@ def test_exif_anomaly_observation(tmp_path: Path, monkeypatch) -> None:
     assert len(anomalies) == 1
     anomaly = anomalies[0]
     obs = anomaly["observations"][0]
-    assert obs["exif_zero_date"] is True
-    assert obs["exif_missing_gps"] is True
+    assert obs["exif_contains_no_norm_time"] is True
+    assert obs["exif_contains_no_gps"] is True
     assert "norm_date" not in obs
     assert "norm_time" not in obs
     parent_sha = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"][0]["sha256"]
@@ -470,7 +470,7 @@ def test_exif_anomaly_observation(tmp_path: Path, monkeypatch) -> None:
 
 
 def test_exif_valid_date_normalised(tmp_path: Path, monkeypatch) -> None:
-    """EXIF JSON with valid CreateDate → Observation has norm_date + norm_time; no anomaly flags."""
+    """EXIF JSON with valid CreateDate + offset → Observation has norm_date + norm_time; no anomaly flags."""
     project_root = tmp_path
     (project_root / "Documents").mkdir(parents=True)
     monkeypatch.setattr(Path, "home", lambda: project_root)
@@ -480,7 +480,7 @@ def test_exif_valid_date_normalised(tmp_path: Path, monkeypatch) -> None:
         json.dumps([{
             "SourceFile": str(exif_json),
             "File": {"FileName": "DJI_0002.MP4", "MIMEType": "video/mp4"},
-            "QuickTime": {"CreateDate": "2018:04:19 17:24:49"},
+            "QuickTime": {"CreateDate": "2018:04:19 17:24:49", "OffsetTimeDigitized": "+00:00"},
             "Track1": {"GPSCoordinates": "39.961 -106.216 2380.0"},
         }]),
         encoding="utf-8",
@@ -497,13 +497,46 @@ def test_exif_valid_date_normalised(tmp_path: Path, monkeypatch) -> None:
     anomaly = anomalies[0]
     obs = anomaly["observations"][0]
     assert obs["norm_date"] == "2018-04-19"
-    assert obs["norm_time"] == "17:24:49"
+    assert obs["norm_time"] == "17:24:49+00:00"
     assert obs["gps_latitude"] == 39.961
     assert obs["gps_longitude"] == -106.216
-    assert "exif_zero_date" not in obs
-    assert "exif_missing_gps" not in obs
+    assert "exif_contains_no_norm_time" not in obs
+    assert "exif_contains_no_gps" not in obs
     parent_sha = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"][0]["sha256"]
     assert anomaly["evidence_sha256"] == parent_sha
+
+
+def test_exif_no_offset_no_norm_time(tmp_path: Path, monkeypatch) -> None:
+    """EXIF JSON with valid CreateDate but no offset → no norm_date/norm_time; exif_contains_no_norm_time flagged."""
+    project_root = tmp_path
+    (project_root / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    exif_json = tmp_path / "DJI_0003_exif.json"
+    exif_json.write_text(
+        json.dumps([{
+            "SourceFile": str(exif_json),
+            "File": {"FileName": "DJI_0003.MP4", "MIMEType": "video/mp4"},
+            "QuickTime": {"CreateDate": "2018:04:19 17:24:49"},
+            "Track1": {"GPSCoordinates": "39.961 -106.216 2380.0"},
+        }]),
+        encoding="utf-8",
+    )
+
+    state = _build_state(
+        tmp_path, config.IDENTIFICATION_DRONE_SD,
+        exif_json, config.ACQUISITION_EXIFTOOL, config.VIDEOS,
+    )
+    result = p5.run_phase_5(state)
+
+    anomalies = result.phase_outputs[p5._PHASE_NAME]["derived_anomalies"]
+    assert len(anomalies) == 1
+    obs = anomalies[0]["observations"][0]
+    assert obs["exif_contains_no_norm_time"] is True
+    assert "exif_contains_no_gps" not in obs
+    assert "norm_date" not in obs
+    assert "norm_time" not in obs
+    assert obs["gps_latitude"] == 39.961
 
 
 # Phase 5 infrastructure tests

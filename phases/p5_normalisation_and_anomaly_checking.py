@@ -750,10 +750,11 @@ def _process_exif(
     artefact: dict[str, Any],
     exif_data: Any = None,
 ) -> Observation | None:
-    """Normalise EXIF timestamps and check for zero-date / missing GPS.
+    """Normalise EXIF timestamps and check for missing normalisable timestamp / GPS.
 
     Uses parent_sha256 (original media sha256) as evidence_sha256, not the JSON's own sha256.
-    Returns None if there is nothing to report (valid date, valid GPS, unparseable file).
+    Returns None if the file cannot be read or contains no parseable EXIF structure.
+    norm_time is always 'HH:MM:SS+00:00' when present.
     """
     stored_path = Path(str(artefact.get("stored_path") or ""))
     if not stored_path.exists():
@@ -768,25 +769,27 @@ def _process_exif(
         return None
 
     date_val = _exif_find(data, "DateTimeOriginal") or _exif_find(data, "CreateDate")
-    exif_zero_date = not date_val or date_val == "0000:00:00 00:00:00"
+    offset_val = _exif_find(data, "OffsetTimeOriginal") or _exif_find(data, "OffsetTimeDigitized")
+    if date_val and offset_val:
+        date_val = f"{date_val}{str(offset_val).strip()}"
     lat, lon = _exif_location(data)
-    exif_missing_gps = lat is None or lon is None
 
     parsed = parse_exif_date(date_val or "")
-
-    if parsed is None and not exif_zero_date and not exif_missing_gps:
-        return None
+    exif_contains_no_norm_time = parsed is None
+    exif_contains_no_gps = lat is None or lon is None
 
     obs: dict[str, Any] = {}
     if parsed:
         obs["norm_date"], obs["norm_time"] = parsed
+    if offset_val:
+        obs["offset_time"] = str(offset_val).strip()
     if lat is not None and lon is not None:
         obs["gps_latitude"] = lat
         obs["gps_longitude"] = lon
-    if exif_zero_date:
-        obs["exif_zero_date"] = True
-    if exif_missing_gps:
-        obs["exif_missing_gps"] = True
+    if exif_contains_no_norm_time:
+        obs["exif_contains_no_norm_time"] = True
+    if exif_contains_no_gps:
+        obs["exif_contains_no_gps"] = True
 
     return make_observation(
         stored_path=str(stored_path),

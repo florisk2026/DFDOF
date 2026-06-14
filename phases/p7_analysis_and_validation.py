@@ -151,11 +151,11 @@ def _artefact_coverage(
     fl_non_readable = 0
     fl_crash_dump = 0
     fl_format_counts: dict[str, int] = {}
-    # images / videos: exif_zero_date, exif_missing_gps
-    img_zero_date = 0
-    img_missing_gps = 0
-    vid_zero_date = 0
-    vid_missing_gps = 0
+    # images / videos: exif_contains_no_norm_time, exif_contains_no_gps
+    img_no_norm_time = 0
+    img_no_gps = 0
+    vid_no_norm_time = 0
+    vid_no_gps = 0
 
     for obs_dict in p5_anomalies:
         cat = obs_dict.get("evidence_category", "")
@@ -195,16 +195,16 @@ def _artefact_coverage(
                     fl_format_counts[fmt] = fl_format_counts.get(fmt, 0) + 1
 
             elif cat == IMAGES:
-                if obs.get("exif_zero_date"):
-                    img_zero_date += 1
-                if obs.get("exif_missing_gps"):
-                    img_missing_gps += 1
+                if obs.get("exif_contains_no_norm_time"):
+                    img_no_norm_time += 1
+                if obs.get("exif_contains_no_gps"):
+                    img_no_gps += 1
 
             elif cat == VIDEOS:
-                if obs.get("exif_zero_date"):
-                    vid_zero_date += 1
-                if obs.get("exif_missing_gps"):
-                    vid_missing_gps += 1
+                if obs.get("exif_contains_no_norm_time"):
+                    vid_no_norm_time += 1
+                if obs.get("exif_contains_no_gps"):
+                    vid_no_gps += 1
 
     result = []
     for cat in list(CONTROLLER_ARTEFACT_CATEGORIES):
@@ -242,16 +242,16 @@ def _artefact_coverage(
                 notes.append(f"formats: {fmt_parts}")
 
         elif cat == IMAGES:
-            if img_zero_date:
-                notes.append(f"{img_zero_date} file(s) with zeroed EXIF timestamp")
-            if img_missing_gps:
-                notes.append(f"{img_missing_gps} file(s) missing GPS")
+            if img_no_norm_time:
+                notes.append(f"{img_no_norm_time} file(s) is/are missing (normalisable) EXIF timestamp")
+            if img_no_gps:
+                notes.append(f"{img_no_gps} file(s) is/are missing EXIF GPS coordinates")
 
         elif cat == VIDEOS:
-            if vid_zero_date:
-                notes.append(f"{vid_zero_date} file(s) with zeroed EXIF timestamp")
-            if vid_missing_gps:
-                notes.append(f"{vid_missing_gps} file(s) missing GPS")
+            if vid_no_norm_time:
+                notes.append(f"{vid_no_norm_time} file(s) is/are missing (normalisable) EXIF timestamp")
+            if vid_no_gps:
+                notes.append(f"{vid_no_gps} file(s) is/are missing EXIF GPS coordinates")
 
         result.append({
             "category": cat,
@@ -943,12 +943,12 @@ def _forensic_conclusions(
         if cat not in (IMAGES, VIDEOS):
             continue
         for note in cov["notes"]:
-            if "zeroed EXIF" in note:
+            if "missing (normalisable) EXIF timestamp" in note:
                 media_section.append(
                     f"{cat.capitalize()}: {note}. "
                     f"Temporal correlation of these files is not possible without additional context."
                 )
-            elif "missing GPS" in note:
+            elif "missing EXIF GPS coordinates" in note:
                 media_section.append(
                     f"{cat.capitalize()}: {note}. "
                     f"Spatial correlation of these files is not possible without additional context."
