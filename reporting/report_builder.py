@@ -188,6 +188,8 @@ def _chain_of_custody(pdf: _PDF, state: State) -> None:
     label_w = 22   # "SHA-256:" / "SHA-1:" label column
     hash_w  = _USABLE_W - label_w  # 158 mm — wide enough for 64-char Courier 7pt
 
+    block_h = row_h * 3 + 3  # 3 rows + gap
+    page_bottom = pdf.h - pdf.b_margin
     for ev in state.input_evidence:
         fname  = Path(str(ev.source_path)).name
         source = ev.source_identification or "-"
@@ -195,6 +197,10 @@ def _chain_of_custody(pdf: _PDF, state: State) -> None:
         sha256 = ev.sha256 or "not computed"
         sha1   = ev.sha1   or "not computed"
 
+        if pdf.get_y() + block_h > page_bottom:
+            pdf.add_page()
+
+        pdf.set_auto_page_break(False)
         # Row 1 — file metadata strip (dark-blue header): three separate columns
         pdf.set_font(_FONT, "B", 8)
         pdf.set_fill_color(50, 80, 130)
@@ -220,6 +226,7 @@ def _chain_of_custody(pdf: _PDF, state: State) -> None:
         pdf.set_font("Courier", "", 7)
         pdf.cell(hash_w, row_h, _safe(sha1), border=1, fill=True)
         pdf.ln()
+        pdf.set_auto_page_break(True, margin=18)
         pdf.ln(3)
 
 
@@ -814,9 +821,13 @@ def _hash_block(pdf: _PDF, artefact: dict) -> None:
     sha256   = artefact.get("sha256") or "not computed"
     sha1     = artefact.get("sha1")   or "not computed"
 
-    # All three rows use the same fixed height so they are visually identical.
-    row_h = 5
+    row_h    = 5
+    block_h  = row_h * 3 + 4  # 3 rows + gap
+    page_bottom = pdf.h - pdf.b_margin
+    if pdf.get_y() + block_h > page_bottom:
+        pdf.add_page()
 
+    pdf.set_auto_page_break(False)
     # Row 1 — metadata strip (shaded): file | category | source | method
     pdf.set_font(_FONT, "B", 8)
     pdf.set_fill_color(225, 230, 245)
@@ -841,6 +852,7 @@ def _hash_block(pdf: _PDF, artefact: dict) -> None:
     pdf.set_font("Courier", "", 7)
     pdf.cell(160, row_h, _safe(sha1), border=1, fill=True)
     pdf.ln()
+    pdf.set_auto_page_break(True, margin=18)
     pdf.ln(4)  # inter-block gap
 
 
@@ -1263,7 +1275,13 @@ def _corr_row(
     line_counts = [c.count("\n") + 1 for c in cells]
     row_h = max(line_counts) * base_h
     padded = [c + "\n" * (max(line_counts) - c.count("\n") - 1) for c in cells]
+
+    page_bottom = pdf.h - pdf.b_margin
+    if pdf.get_y() + row_h > page_bottom:
+        pdf.add_page()
+
     y0 = pdf.get_y()
+    pdf.set_auto_page_break(False)
     pdf.set_fill_color(*fill_rgb)
     pdf.set_xy(_MARGIN_L, y0)
     for w in col_widths:
@@ -1275,6 +1293,7 @@ def _corr_row(
         pdf.set_xy(x, y0)
         pdf.multi_cell(w, base_h, text, border=0, fill=False, new_x="RIGHT", new_y="TOP")
         x += w
+    pdf.set_auto_page_break(True, margin=18)
     pdf.set_xy(_MARGIN_L, y0 + row_h)
     pdf.set_text_color(0, 0, 0)
 
