@@ -15,7 +15,7 @@ import bisect
 import csv
 import re
 import statistics
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -79,10 +79,18 @@ _SPATIAL_MAX_MEDIAN_M = 25.0
 # the flight pair is left unmatched below this count.
 _SPATIAL_MIN_PAIRS = 5
 
+# Valid year range for drone operation timestamps.
+# Filters DatCon GPS:dateTimeStamp firmware sentinels (year 1980 — GPS epoch
+# default before fix; year 3236 — DJI firmware uninitialized value).
+_VALID_YEAR_MIN = 2006   # year of first DJI consumer drone
+_VALID_YEAR_MAX = 2099   # far-future sentinel guard
+
 # Column name constants (mirrors P5)
 
 # DatCon
-_DRONE_TS_COL     = "[NORM]:GPS:dateTimeStamp"
+_DRONE_TS_COL          = "[NORM]:GPS:dateTimeStamp"
+_DRONE_CLOCK_COL       = "Clock:offsetTime"
+_DRONE_COMPUTED_TS_COL = "[DERIVED]:UTC"   # in-memory only; not written to disk
 _DRONE_LAT_COL    = "GPS:Lat"
 _DRONE_LON_COL    = "GPS:Long"
 _DRONE_ALT_COL    = "IMU_ATTI(0):alti:D"
@@ -169,6 +177,9 @@ def _get_ts(row: dict[str, str], ts_col: str) -> datetime | None:
 
     Both [NORM] columns are already ISO 8601 +00:00 after P5 normalisation.
     Returns a timezone-aware datetime or None.
+    Timestamps outside _VALID_YEAR_MIN–_VALID_YEAR_MAX are rejected; DatCon
+    emits GPS epoch defaults (year 1980) and firmware sentinels (year 3236)
+    before the GPS module acquires a proper fix.
     """
     val = row.get(ts_col, "").strip()
     if not val:
@@ -179,6 +190,8 @@ def _get_ts(row: dict[str, str], ts_col: str) -> datetime | None:
         return None
     if dt.tzinfo is None:
         return None  # timezone unknown — cannot confirm UTC
+    if not (_VALID_YEAR_MIN <= dt.year <= _VALID_YEAR_MAX):
+        return None  # garbage GPS firmware value
     return dt
 
 
@@ -193,6 +206,47 @@ def _build_time_index(
             index.append((dt, i))
     index.sort(key=lambda t: t[0])
     return index
+
+
+def _anchor_drone_timestamps(
+    rows: list[dict[str, str]], ts_col: str, clock_col: str
+) -> list[datetime | None]:
+    """Derive absolute UTC for every drone log row via Clock:offsetTime anchoring.
+
+    DatCon GPS:dateTimeStamp is unreliable before the GPS module acquires a
+    proper fix — rows before lock carry firmware sentinels (year 3236) or GPS
+    epoch defaults (year 1980). Clock:offsetTime is a monotonic counter
+    (seconds since recording start) that is always reliable.
+
+    This function finds the first GPS timestamp with a plausible year and uses
+    its Clock:offsetTime value as an anchor to back-compute UTC for all rows:
+        UTC(row) = anchor_utc + (row_clock - anchor_clock) seconds
+
+    Returns a list of datetime|None, one per row. Returns [None]*len(rows) if
+    no valid GPS anchor exists (e.g. drone log with no GPS fix at all).
+    """
+    anchor_utc: datetime | None = None
+    anchor_clock: float | None = None
+    for row in rows:
+        ts = _get_ts(row, ts_col)  # already filters garbage years
+        if ts is not None:
+            clock_val = _try_float(row.get(clock_col, ""))
+            if clock_val is not None:
+                anchor_utc = ts
+                anchor_clock = clock_val
+                break
+
+    if anchor_utc is None:
+        return [None] * len(rows)
+
+    result: list[datetime | None] = []
+    for row in rows:
+        clock_val = _try_float(row.get(clock_col, ""))
+        if clock_val is None:
+            result.append(None)
+        else:
+            result.append(anchor_utc + timedelta(seconds=clock_val - anchor_clock))
+    return result
 
 
 def _build_candidate(
@@ -1132,14 +1186,20 @@ def run_phase_6(state: State) -> State:
                     f"empty drone log CSV: {Path(stored).name}",
                     category=DRONE_LOGS)
                 continue
-            cand = _build_candidate(ev_dict, rows, _DRONE_TS_COL,
+            # Derive absolute UTC via clock-offset anchoring. GPS:dateTimeStamp
+            # is unreliable before the drone GPS module acquires a proper fix;
+            # Clock:offsetTime is a reliable monotonic counter throughout.
+            computed = _anchor_drone_timestamps(rows, _DRONE_TS_COL, _DRONE_CLOCK_COL)
+            for row, ts in zip(rows, computed):
+                row[_DRONE_COMPUTED_TS_COL] = ts.isoformat() if ts else ""
+            cand = _build_candidate(ev_dict, rows, _DRONE_COMPUTED_TS_COL,
                                     _DRONE_LAT_COL, _DRONE_LON_COL, header)
             if cand is None:
                 state.raise_anomaly(6, identification,
                     f"no parseable timestamps in drone log: {Path(stored).name}",
                     category=DRONE_LOGS)
                 continue
-            cand["time_index"] = _build_time_index(rows, _DRONE_TS_COL)
+            cand["time_index"] = _build_time_index(rows, _DRONE_COMPUTED_TS_COL)
             drone_candidates.append(cand)
         except Exception as exc:
             state.raise_anomaly(6, identification,

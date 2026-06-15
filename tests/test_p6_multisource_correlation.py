@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import csv
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import config
@@ -187,14 +187,18 @@ def _overlapping_rows(
     interval_s: int = 3,
     lat: str = "39.9612",
     lon: str = "-106.2165",
-) -> list[tuple[str, str, str]]:
-    """Return (norm_id, ts, lat, lon) tuples for n rows at interval_s apart."""
-    from datetime import timedelta
+) -> list[tuple[str, str, str, str, str]]:
+    """Return (norm_id, ts, lat, lon, clock) tuples for n rows at interval_s apart.
+
+    clock is the monotonic Clock:offsetTime matching the timestamp offset, so
+    _anchor_drone_timestamps() correctly derives absolute UTC for all drone rows.
+    """
     base = datetime.fromisoformat(base_ts)
     result = []
     for i in range(n):
         dt = base + timedelta(seconds=i * interval_s)
-        result.append((str(i), dt.isoformat(), lat, lon))
+        clock = str(float(i * interval_s))
+        result.append((str(i), dt.isoformat(), lat, lon, clock))
     return result
 
 
@@ -300,7 +304,7 @@ def test_matched_flight_primary(tmp_path: Path, monkeypatch) -> None:
 
     drone_csv = tmp_path / "FLY029.csv"
     _write_norm_drone_csv(drone_csv, [
-        _drone_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3])
+        _drone_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3], clock=r[4])
         for r in rows_data
     ])
 
@@ -342,7 +346,7 @@ def test_unmatched_drone_only(tmp_path: Path, monkeypatch) -> None:
     rows_data = _overlapping_rows(n=30, interval_s=3)
     drone_csv = tmp_path / "FLY029.csv"
     _write_norm_drone_csv(drone_csv, [
-        _drone_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3])
+        _drone_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3], clock=r[4])
         for r in rows_data
     ])
 
@@ -363,7 +367,7 @@ def test_no_overlap_both_uncorrelated(tmp_path: Path, monkeypatch) -> None:
     fr_csv = tmp_path / "fr.csv"
     dr_csv = tmp_path / "drone.csv"
     _write_norm_fr_csv(fr_csv, [_fr_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3]) for r in fr_rows])
-    _write_norm_drone_csv(dr_csv, [_drone_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3]) for r in dr_rows])
+    _write_norm_drone_csv(dr_csv, [_drone_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3], clock=r[4]) for r in dr_rows])
 
     state = _build_p6_state(tmp_path, monkeypatch, fr_path=fr_csv, drone_path=dr_csv)
     result = p6.run_phase_6(state)
@@ -733,7 +737,7 @@ def test_events_chronological(tmp_path: Path, monkeypatch) -> None:
     fr_csv = tmp_path / "fr.csv"
     drone_csv = tmp_path / "drone.csv"
     _write_norm_fr_csv(fr_csv, [_fr_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3]) for r in rows_data])
-    _write_norm_drone_csv(drone_csv, [_drone_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3]) for r in rows_data])
+    _write_norm_drone_csv(drone_csv, [_drone_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3], clock=r[4]) for r in rows_data])
 
     state = _build_p6_state(tmp_path, monkeypatch, fr_path=fr_csv, drone_path=drone_csv)
     result = p6.run_phase_6(state)
@@ -1568,7 +1572,7 @@ def test_insufficient_overlap_fraction_unmatched(tmp_path: Path, monkeypatch) ->
     fr_csv = tmp_path / "fr.csv"
     drone_csv = tmp_path / "drone.csv"
     _write_norm_fr_csv(fr_csv, [_fr_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3]) for r in fr_rows])
-    _write_norm_drone_csv(drone_csv, [_drone_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3]) for r in drone_rows])
+    _write_norm_drone_csv(drone_csv, [_drone_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3], clock=r[4]) for r in drone_rows])
 
     state = _build_p6_state(tmp_path, monkeypatch, fr_path=fr_csv, drone_path=drone_csv)
     result = p6.run_phase_6(state)
@@ -1590,7 +1594,7 @@ def test_spatial_threshold_rejected(tmp_path: Path, monkeypatch) -> None:
     fr_csv = tmp_path / "fr.csv"
     drone_csv = tmp_path / "drone.csv"
     _write_norm_fr_csv(fr_csv, [_fr_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3]) for r in rows_fr])
-    _write_norm_drone_csv(drone_csv, [_drone_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3]) for r in rows_drone])
+    _write_norm_drone_csv(drone_csv, [_drone_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3], clock=r[4]) for r in rows_drone])
 
     state = _build_p6_state(tmp_path, monkeypatch, fr_path=fr_csv, drone_path=drone_csv)
     result = p6.run_phase_6(state)
@@ -1598,3 +1602,58 @@ def test_spatial_threshold_rejected(tmp_path: Path, monkeypatch) -> None:
     out = result.phase_outputs[p6._PHASE_NAME]
     assert out["flight_count"] == 2
     assert all(not f["correlation"]["matched"] for f in out["flights"])
+
+
+# ---------------------------------------------------------------------------
+# Clock-offset anchoring tests
+# ---------------------------------------------------------------------------
+
+def test_get_ts_filters_garbage_years() -> None:
+    """_get_ts() rejects DatCon firmware sentinels (year 1980, year 3236)."""
+    col = "[NORM]:GPS:dateTimeStamp"
+    assert p6._get_ts({col: "1980-01-08T18:59:09+00:00"}, col) is None
+    assert p6._get_ts({col: "3236-01-12T23:59:48+00:00"}, col) is None
+    result = p6._get_ts({col: "2018-06-19T19:16:58+00:00"}, col)
+    assert result is not None
+    assert result.year == 2018
+
+
+def test_anchor_drone_timestamps_derives_utc_from_clock_offset() -> None:
+    """Rows before the GPS anchor get back-computed UTC via Clock:offsetTime."""
+    ts_col = "[NORM]:GPS:dateTimeStamp"
+    clock_col = "Clock:offsetTime"
+    anchor_utc_str = "2018-06-19T19:23:34+00:00"
+    anchor_clock = 100.0
+
+    rows = [
+        # Row 0: garbage GPS timestamp, clock 0.0 � should be anchor - 100s
+        {ts_col: "3236-01-12T23:59:48+00:00", clock_col: "0.0"},
+        # Row 1: no GPS timestamp, clock 50.0
+        {ts_col: "", clock_col: "50.0"},
+        # Row 2: valid GPS anchor, clock 100.0
+        {ts_col: anchor_utc_str, clock_col: str(anchor_clock)},
+        # Row 3: after anchor, clock 200.0
+        {ts_col: anchor_utc_str, clock_col: "200.0"},
+    ]
+
+    result = p6._anchor_drone_timestamps(rows, ts_col, clock_col)
+
+    anchor_dt = datetime(2018, 6, 19, 19, 23, 34, tzinfo=timezone.utc)
+    assert len(result) == 4
+    assert result[0] == anchor_dt + timedelta(seconds=0.0 - anchor_clock)
+    assert result[1] == anchor_dt + timedelta(seconds=50.0 - anchor_clock)
+    assert result[2] == anchor_dt + timedelta(seconds=0.0)
+    assert result[3] == anchor_dt + timedelta(seconds=100.0)
+
+
+def test_anchor_drone_timestamps_no_valid_anchor_returns_all_none() -> None:
+    """When no GPS timestamp has a valid year, all derived timestamps are None."""
+    ts_col = "[NORM]:GPS:dateTimeStamp"
+    clock_col = "Clock:offsetTime"
+    rows = [
+        {ts_col: "3236-01-12T23:59:48+00:00", clock_col: "0.0"},
+        {ts_col: "1980-01-08T18:59:09+00:00", clock_col: "1.0"},
+        {ts_col: "", clock_col: "2.0"},
+    ]
+    result = p6._anchor_drone_timestamps(rows, ts_col, clock_col)
+    assert result == [None, None, None]
