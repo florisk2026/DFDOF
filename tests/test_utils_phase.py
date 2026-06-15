@@ -19,6 +19,7 @@ from phases.utils_phase import (
     parse_exif_date,
     parse_flightrecord_timestamp,
     parse_iso_timestamp,
+    resolve_col,
     write_json,
 )
 
@@ -314,3 +315,37 @@ def test_find_input_evidence_list_returns_empty_when_no_match(tmp_path: Path) ->
 
     result = find_input_evidence_list_by_identification(state, config.IDENTIFICATION_CONTROLLER_ANDROID)
     assert result == []
+
+
+# --- resolve_col ---
+
+def test_resolve_col_exact_match_first_candidate() -> None:
+    header = ["GPS:Lat", "GPS:Long", "Clock:offsetTime"]
+    assert resolve_col(header, "GPS:Lat", "GPS(0):Lat") == "GPS:Lat"
+
+
+def test_resolve_col_exact_match_second_candidate() -> None:
+    """Falls back to second candidate when first is absent."""
+    header = ["GPS(0):Lat", "GPS(0):Long", "Clock:offsetTime"]
+    assert resolve_col(header, "GPS:Lat", "GPS(0):Lat") == "GPS(0):Lat"
+
+
+def test_resolve_col_prefix_fallback_handles_datcon_suffix() -> None:
+    """Prefix fallback matches 'Controller:motor_state:D' when searching 'Controller:motor_state'."""
+    header = ["GPS:Lat", "Controller:motor_state:D", "Clock:offsetTime"]
+    assert resolve_col(header, "Controller:motor_state") == "Controller:motor_state:D"
+
+
+def test_resolve_col_exact_wins_over_prefix() -> None:
+    """Exact match takes priority over prefix fallback even when prefix would also match."""
+    header = ["Controller:motor_state", "Controller:motor_state:D"]
+    assert resolve_col(header, "Controller:motor_state") == "Controller:motor_state"
+
+
+def test_resolve_col_returns_none_when_not_found() -> None:
+    header = ["GPS:Lat", "GPS:Long"]
+    assert resolve_col(header, "IMU:Lat", "IMU(0):Lat") is None
+
+
+def test_resolve_col_empty_header_returns_none() -> None:
+    assert resolve_col([], "GPS:Lat") is None

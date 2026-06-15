@@ -32,7 +32,7 @@ from config import (
     _write_no_output,
     _has_real_output,
 )
-from phases.utils_phase import haversine_m, write_json
+from phases.utils_phase import haversine_m, resolve_col, write_json
 from state import State
 
 _PHASE_NAME = Path(__file__).stem
@@ -91,12 +91,17 @@ _VALID_YEAR_MAX = 2099   # far-future sentinel guard
 _DRONE_TS_COL          = "[NORM]:GPS:dateTimeStamp"
 _DRONE_CLOCK_COL       = "Clock:offsetTime"
 _DRONE_COMPUTED_TS_COL = "[DERIVED]:UTC"   # in-memory only; not written to disk
-_DRONE_LAT_COL    = "GPS:Lat"
-_DRONE_LON_COL    = "GPS:Long"
+# GPS lat/lon column names vary by DatCon version and drone platform.
+# Newer DatCon (Mavic Air, etc.) uses GPS:Lat/GPS:Long; older Phantom 3 firmware
+# uses GPS(0):Lat/GPS(0):Long. resolve_col() picks the first match at build time.
+_DRONE_LAT_CANDIDATES   = ("GPS:Lat",   "GPS(0):Lat",  "IMUCalcs(0):Lat:C")
+_DRONE_LON_CANDIDATES   = ("GPS:Long",  "GPS(0):Long", "IMUCalcs(0):Long:C")
+_DRONE_MODE_CANDIDATES  = ("Controller:ctrl_mode",
+                            "AirCraftCondition:craft_flight_mode",
+                            "osd_data:flyCState")
+_DRONE_MOTOR_CANDIDATES = ("Controller:motor_state",)  # prefix fallback handles :D suffix
 _DRONE_ALT_COL    = "IMU_ATTI(0):alti:D"
-_DRONE_MODE_COL   = "Controller:ctrl_mode"
 _DRONE_HEIGHT_COL = "IMUCalcs(0):height:C"
-_DRONE_MOTOR_COL  = "Controller:motor_state:D"
 _DRONE_DIST_COL   = "IMU_ATTI(0):distanceTravelled:C"
 _DRONE_WARN_COL   = "eventLog"
 _DRONE_ATTR_COL   = "Attribute|Value"
@@ -238,6 +243,7 @@ def _anchor_drone_timestamps(
 
     if anchor_utc is None:
         return [None] * len(rows)
+    assert anchor_clock is not None
 
     result: list[datetime | None] = []
     for row in rows:
@@ -392,7 +398,7 @@ def _compute_spatial(
             d_row = drone_rows[best_idx]
             d_lat = _try_float(d_row.get(drone_cand["lat_col"], ""))
             d_lon = _try_float(d_row.get(drone_cand["lon_col"], ""))
-            if d_lat is not None and d_lon is not None:
+            if d_lat is not None and d_lon is not None and (d_lat != 0.0 or d_lon != 0.0):
                 distances.append(haversine_m(fr_lat, fr_lon, d_lat, d_lon))
 
     if len(distances) < _SPATIAL_MIN_PAIRS or fr_gps_total == 0:
@@ -433,14 +439,16 @@ def _ts_timezone(ts_str: str) -> str:
     return "unknown"
 
 
-def _event_data_drone(rows: list[dict[str, str]], row_id: int) -> dict[str, Any]:
-    """Standard event data block for a drone log row."""
-    row = rows[row_id]
-    return {
-        "latitude":  _try_float(row.get(_DRONE_LAT_COL, "")),
-        "longitude": _try_float(row.get(_DRONE_LON_COL, "")),
-        "altitude":  _try_float(row.get(_DRONE_ALT_COL, "")),
-    }
+def _event_data_drone(lat_col: str, lon_col: str):
+    """Return an event-data builder for drone log rows using the resolved GPS columns."""
+    def _fn(rows: list[dict[str, str]], row_id: int) -> dict[str, Any]:
+        row = rows[row_id]
+        return {
+            "latitude":  _try_float(row.get(lat_col, "")),
+            "longitude": _try_float(row.get(lon_col, "")),
+            "altitude":  _try_float(row.get(_DRONE_ALT_COL, "")),
+        }
+    return _fn
 
 
 def _event_data_fr(rows: list[dict[str, str]], row_id: int) -> dict[str, Any]:
@@ -1115,18 +1123,21 @@ def _build_flight_dict(
         events += _state_change_events(fr_cand, _FR_PHOTO_COL, "Photo mode changed", "photo_mode", True)
         events += _state_change_events(fr_cand, _FR_SD_COL, "SD storage is full", "sd_state", False)
     if drone_cand is not None:
-        events += _boundary_events(drone_cand, _event_data_drone, _DRONE_TS_COL, _DRONE_DIST_COL, _drone_log_start_extras)
-        ph = _peak_height_event(drone_cand, _event_data_drone, _DRONE_TS_COL, _DRONE_HEIGHT_COL)
+        drone_event_data = _event_data_drone(drone_cand["lat_col"], drone_cand["lon_col"])
+        events += _boundary_events(drone_cand, drone_event_data, _DRONE_TS_COL, _DRONE_DIST_COL, _drone_log_start_extras)
+        ph = _peak_height_event(drone_cand, drone_event_data, _DRONE_TS_COL, _DRONE_HEIGHT_COL)
         if ph:
             events.append(ph)
-        events += _motor_events(drone_cand, _event_data_drone, _DRONE_TS_COL, _DRONE_MOTOR_COL, "1", "0")
-        events += _fly_mode_events(drone_cand, _event_data_drone, _DRONE_TS_COL, _DRONE_MODE_COL)
-        events += _log_message_events(drone_cand, _event_data_drone, _DRONE_TS_COL, _DRONE_WARN_COL)
+        if drone_cand.get("motor_col"):
+            events += _motor_events(drone_cand, drone_event_data, _DRONE_TS_COL, drone_cand["motor_col"], "1", "0")
+        if drone_cand.get("mode_col"):
+            events += _fly_mode_events(drone_cand, drone_event_data, _DRONE_TS_COL, drone_cand["mode_col"])
+        events += _log_message_events(drone_cand, drone_event_data, _DRONE_TS_COL, _DRONE_WARN_COL)
     events.sort(key=lambda e: e["timestamp"] or "")
 
     bbox = _merge_bboxes(
         _build_bbox(fr_cand, _FR_LAT_COL, _FR_LON_COL) if fr_cand is not None else None,
-        _build_bbox(drone_cand, _DRONE_LAT_COL, _DRONE_LON_COL) if drone_cand is not None else None,
+        _build_bbox(drone_cand, drone_cand["lat_col"], drone_cand["lon_col"]) if drone_cand is not None else None,
     )
 
     return {
@@ -1192,14 +1203,20 @@ def run_phase_6(state: State) -> State:
             computed = _anchor_drone_timestamps(rows, _DRONE_TS_COL, _DRONE_CLOCK_COL)
             for row, ts in zip(rows, computed):
                 row[_DRONE_COMPUTED_TS_COL] = ts.isoformat() if ts else ""
+            lat_col   = resolve_col(header, *_DRONE_LAT_CANDIDATES)   or ""
+            lon_col   = resolve_col(header, *_DRONE_LON_CANDIDATES)   or ""
+            mode_col  = resolve_col(header, *_DRONE_MODE_CANDIDATES)  or ""
+            motor_col = resolve_col(header, *_DRONE_MOTOR_CANDIDATES) or ""
             cand = _build_candidate(ev_dict, rows, _DRONE_COMPUTED_TS_COL,
-                                    _DRONE_LAT_COL, _DRONE_LON_COL, header)
+                                    lat_col, lon_col, header)
             if cand is None:
                 state.raise_anomaly(6, identification,
                     f"no parseable timestamps in drone log: {Path(stored).name}",
                     category=DRONE_LOGS)
                 continue
             cand["time_index"] = _build_time_index(rows, _DRONE_COMPUTED_TS_COL)
+            cand["mode_col"]   = mode_col
+            cand["motor_col"]  = motor_col
             drone_candidates.append(cand)
         except Exception as exc:
             state.raise_anomaly(6, identification,

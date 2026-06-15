@@ -562,7 +562,8 @@ def test_event_confidence_low() -> None:
 
 def test_event_data_drone_extracts_columns() -> None:
     rows = [{"GPS:Lat": "39.9612", "GPS:Long": "-106.2165", "IMU_ATTI(0):alti:D": "5.3"}]
-    c = p6._event_data_drone(rows, 0)
+    fn = p6._event_data_drone("GPS:Lat", "GPS:Long")
+    c = fn(rows, 0)
     assert c == {"latitude": 39.9612, "longitude": -106.2165, "altitude": 5.3}
 
 
@@ -771,8 +772,8 @@ def test_peak_height_event_drone(tmp_path: Path) -> None:
         _drone_row(norm_id=str(i), ts=(base + timedelta(seconds=i)).isoformat(), height=h)
         for i, h in enumerate(heights)
     ]
-    cand = _make_cand(rows, _NORM_DRONE_HEADER, p6._DRONE_TS_COL, p6._DRONE_LAT_COL, p6._DRONE_LON_COL)
-    ev = p6._peak_height_event(cand, p6._event_data_drone, p6._DRONE_TS_COL, p6._DRONE_HEIGHT_COL)
+    cand = _make_cand(rows, _NORM_DRONE_HEADER, p6._DRONE_TS_COL, "GPS:Lat", "GPS:Long")
+    ev = p6._peak_height_event(cand, p6._event_data_drone("GPS:Lat", "GPS:Long"), p6._DRONE_TS_COL, p6._DRONE_HEIGHT_COL)
     assert ev is not None
     assert ev["event"] == "Reached peak height"
     assert ev["data"]["relative_height"] == 8.0
@@ -802,8 +803,8 @@ def test_motor_events_drone(tmp_path: Path) -> None:
         _drone_row(norm_id=str(i), ts=(base + timedelta(seconds=i)).isoformat(), motor=m)
         for i, m in enumerate(motors)
     ]
-    cand = _make_cand(rows, _NORM_DRONE_HEADER, p6._DRONE_TS_COL, p6._DRONE_LAT_COL, p6._DRONE_LON_COL)
-    evs = p6._motor_events(cand, p6._event_data_drone, p6._DRONE_TS_COL, p6._DRONE_MOTOR_COL, "1", "0")
+    cand = _make_cand(rows, _NORM_DRONE_HEADER, p6._DRONE_TS_COL, "GPS:Lat", "GPS:Long")
+    evs = p6._motor_events(cand, p6._event_data_drone("GPS:Lat", "GPS:Long"), p6._DRONE_TS_COL, "Controller:motor_state:D", "1", "0")
     labels = [e["event"] for e in evs]
     assert labels == ["Motor turned off", "Motor turned on"]
 
@@ -832,8 +833,8 @@ def test_fly_mode_events(tmp_path: Path) -> None:
         _drone_row(norm_id=str(i), ts=(base + timedelta(seconds=i)).isoformat(), mode=m)
         for i, m in enumerate(modes)
     ]
-    cand = _make_cand(rows, _NORM_DRONE_HEADER, p6._DRONE_TS_COL, p6._DRONE_LAT_COL, p6._DRONE_LON_COL)
-    evs = p6._fly_mode_events(cand, p6._event_data_drone, p6._DRONE_TS_COL, p6._DRONE_MODE_COL)
+    cand = _make_cand(rows, _NORM_DRONE_HEADER, p6._DRONE_TS_COL, "GPS:Lat", "GPS:Long")
+    evs = p6._fly_mode_events(cand, p6._event_data_drone("GPS:Lat", "GPS:Long"), p6._DRONE_TS_COL, "Controller:ctrl_mode")
     assert len(evs) == 3
     assert [e["data"]["fly_mode"] for e in evs] == ["GPS", "ATTI", "Sport"]
 
@@ -843,8 +844,8 @@ def test_motor_data_includes_base_fields(tmp_path: Path) -> None:
     from datetime import timedelta
     base = datetime(2018, 4, 19, 11, 25, 0, tzinfo=timezone.utc)
     rows = [_drone_row(norm_id="0", ts=base.isoformat(), motor="1")]
-    cand = _make_cand(rows, _NORM_DRONE_HEADER, p6._DRONE_TS_COL, p6._DRONE_LAT_COL, p6._DRONE_LON_COL)
-    evs = p6._motor_events(cand, p6._event_data_drone, p6._DRONE_TS_COL, p6._DRONE_MOTOR_COL, "1", "0")
+    cand = _make_cand(rows, _NORM_DRONE_HEADER, p6._DRONE_TS_COL, "GPS:Lat", "GPS:Long")
+    evs = p6._motor_events(cand, p6._event_data_drone("GPS:Lat", "GPS:Long"), p6._DRONE_TS_COL, "Controller:motor_state:D", "1", "0")
     assert len(evs) == 1
     data = evs[0]["data"]
     assert {"latitude", "longitude", "altitude", "motor_state"} <= set(data)
@@ -1657,3 +1658,81 @@ def test_anchor_drone_timestamps_no_valid_anchor_returns_all_none() -> None:
     ]
     result = p6._anchor_drone_timestamps(rows, ts_col, clock_col)
     assert result == [None, None, None]
+
+
+# ---------------------------------------------------------------------------
+# DatCon GPS column diversity tests (Phantom 3 vs Mavic Air)
+# ---------------------------------------------------------------------------
+
+_NORM_DRONE_HEADER_PHANTOM3 = [
+    "[NORM]:ID",
+    "[NORM]:GPS:dateTimeStamp",
+    "GPS(0):Lat", "GPS(0):Long",          # Phantom 3 / older DatCon naming
+    "IMUCalcs(0):height:C",
+    "AirCraftCondition:craft_flight_mode", # Phantom 3 mode column
+    "GPS(0):numSV",
+    "Clock:offsetTime",
+    # No Controller:motor_state on Phantom 3
+]
+
+
+def test_drone_gps_column_fallback_phantom3(tmp_path: Path, monkeypatch) -> None:
+    """Phantom 3 logs use GPS(0):Lat/GPS(0):Long — resolve_col finds them via fallback.
+
+    Verifies that _build_candidate sets has_usable_gps=True when the CSV uses
+    the older GPS(0): column naming convention, not GPS: columns.
+    """
+    rows_data = _overlapping_rows(n=30, interval_s=3)
+    drone_rows = [
+        [r[0], r[1], r[2], r[3], "5.0", "P-GPS", "12", r[4]]
+        for r in rows_data
+    ]
+    drone_csv = tmp_path / "phantom3.csv"
+    with drone_csv.open("w", newline="", encoding="utf-8") as fh:
+        import csv as _csv
+        w = _csv.writer(fh)
+        w.writerow(_NORM_DRONE_HEADER_PHANTOM3)
+        w.writerows(drone_rows)
+
+    fr_rows = _overlapping_rows(n=30, interval_s=3)
+    fr_csv = tmp_path / "fr.csv"
+    _write_norm_fr_csv(fr_csv, [_fr_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3]) for r in fr_rows])
+
+    state = _build_p6_state(tmp_path, monkeypatch, fr_path=fr_csv, drone_path=drone_csv)
+    result = p6.run_phase_6(state)
+
+    out = result.phase_outputs[p6._PHASE_NAME]
+    assert out["flight_count"] == 1
+    matched_flights = [f for f in out["flights"] if f["correlation"]["matched"]]
+    assert len(matched_flights) == 1, "FR and Phantom 3 drone log should correlate via GPS(0): columns"
+
+
+def test_drone_gps_column_fallback_no_motor_col_skips_motor_events(tmp_path: Path, monkeypatch) -> None:
+    """When drone CSV has no motor state column, motor events are skipped gracefully."""
+    rows_data = _overlapping_rows(n=10, interval_s=3)
+    drone_rows = [
+        [r[0], r[1], r[2], r[3], "5.0", "P-GPS", "12", r[4]]
+        for r in rows_data
+    ]
+    drone_csv = tmp_path / "phantom3_no_motor.csv"
+    with drone_csv.open("w", newline="", encoding="utf-8") as fh:
+        import csv as _csv
+        w = _csv.writer(fh)
+        w.writerow(_NORM_DRONE_HEADER_PHANTOM3)
+        w.writerows(drone_rows)
+
+    fr_rows = _overlapping_rows(n=10, interval_s=3)
+    fr_csv = tmp_path / "fr.csv"
+    _write_norm_fr_csv(fr_csv, [_fr_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3]) for r in fr_rows])
+
+    state = _build_p6_state(tmp_path, monkeypatch, fr_path=fr_csv, drone_path=drone_csv)
+    result = p6.run_phase_6(state)
+
+    tl_path = Path(result.phase_outputs[p6._PHASE_NAME]["flights"][0]["stored_path"])
+    events = __import__("json").loads(tl_path.read_text(encoding="utf-8"))["events"]
+    drone_motor_events = [
+        e for e in events
+        if "Motor" in e.get("event", "") and "drone" in e.get("source", "")
+    ]
+    # No motor column in Phantom 3 log → no motor events from drone source
+    assert drone_motor_events == []

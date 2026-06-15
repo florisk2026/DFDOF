@@ -204,3 +204,21 @@ def find_input_evidence_list_by_identification(
 ) -> list[Evidence]:
     """Return all input evidence whose source_identification matches identification."""
     return [e for e in state.input_evidence if e.source_identification == identification]
+
+
+def resolve_col(header: list[str], *candidates: str) -> str | None:
+    """Return first candidate column found in header.
+
+    Tries exact match for each candidate first, then a prefix fallback that
+    handles DatCon's :C/:D type suffixes (e.g. "Controller:motor_state" matches
+    "Controller:motor_state:D"). Returns None if no candidate matches.
+    """
+    header_set = set(header)
+    for col in candidates:
+        if col in header_set:
+            return col
+    for base in candidates:
+        for col in header:
+            if col.startswith(base + ":") or col.startswith(base + " "):
+                return col
+    return None
