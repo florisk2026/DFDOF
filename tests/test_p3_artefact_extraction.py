@@ -838,6 +838,11 @@ def test_run_phase_3_drone_flight_storage_flat_dat(tmp_path: Path, monkeypatch) 
     artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]
     assert any(item["artefact_category"] == DRONE_LOGS for item in artefacts)
     assert not any("drone flight storage" in flag for flag in result.anomaly_flags)
+    drone_log_artefacts = [a for a in artefacts if a["artefact_category"] == DRONE_LOGS]
+    assert all(
+        Path(a["stored_path"]).parent.name == DRONE_LOGS
+        for a in drone_log_artefacts
+    ), "DAT files must be placed in the drone_logs subfolder"
 
 
 def test_run_phase_3_drone_flight_storage_export_dat(tmp_path: Path, monkeypatch) -> None:
@@ -871,6 +876,11 @@ def test_run_phase_3_drone_flight_storage_export_dat(tmp_path: Path, monkeypatch
     assert any(item["artefact_category"] == DRONE_LOGS for item in artefacts)
     assert any("ASSISTANT_EXPORT" in item["source_path"].upper() for item in artefacts)
     assert not any("drone flight storage" in flag for flag in result.anomaly_flags)
+    drone_log_artefacts = [a for a in artefacts if a["artefact_category"] == DRONE_LOGS]
+    assert all(
+        Path(a["stored_path"]).parent.name == DRONE_LOGS
+        for a in drone_log_artefacts
+    ), "DAT files must be placed in the drone_logs subfolder"
 
 
 # Integration

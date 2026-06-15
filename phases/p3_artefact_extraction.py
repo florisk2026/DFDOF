@@ -726,10 +726,11 @@ def _extract_flight_storage_sources(
                 category=DRONE_LOGS,
             )
         else:
+            drone_logs_dir = drone_flight_dir / safe_segment(DRONE_LOGS)
             evidence_list = _filter_empty(
                 extract_logical_files(
                     flight_source,
-                    drone_flight_dir,
+                    drone_logs_dir,
                     dat_members,
                     artefact_category=DRONE_LOGS,
                     missing_ok=True,
