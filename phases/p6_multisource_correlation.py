@@ -25,6 +25,8 @@ from config import (
     DRONE_LOGS,
     FLIGHT_LOGS,
     FLIGHT_RECORDS,
+    IDENTIFICATION_CONTROLLER_ANDROID,
+    IDENTIFICATION_CONTROLLER_IOS,
     VIDEOS,
     clear_and_make,
     output_dir,
@@ -319,6 +321,15 @@ def _compute_overlap(cand_a: dict[str, Any], cand_b: dict[str, Any]) -> float:
 
 
 _FR_DEDUP_DURATION_DIFF_S = 5.0
+
+# Source identifications considered "controller-side" for corroboration.
+# Unmatched drone log candidates from these sources are cached copies on the
+# paired controller — they corroborate drone-controller pairing but do not
+# generate independent events (events are already captured from the primary DL).
+_CONTROLLER_SOURCES: frozenset[str] = frozenset({
+    IDENTIFICATION_CONTROLLER_IOS,
+    IDENTIFICATION_CONTROLLER_ANDROID,
+})
 
 
 def _deduplicate_fr_candidates(
@@ -1270,8 +1281,71 @@ def run_phase_6(state: State) -> State:
             {"matched": False},
         ))
 
+    # -----------------------------------------------------------------------
+    # Corroboration pass: controller-cached drone logs
+    # -----------------------------------------------------------------------
+    # DJI apps cache a copy of the drone's DAT telemetry on the controller
+    # device (e.g. MCDatFlightRecords/). These are already extracted as
+    # DRONE_LOGS by P3 and processed by DatCon in P4. If the drone-side copy
+    # was consumed in the primary match, the controller copy would otherwise
+    # become a spurious solo flight. Instead, we append it to the matched
+    # flight's flights_identified as a corroborating evidence reference —
+    # no new events are built (events were already captured from the primary DL).
+    #
+    # Composite time windows are built once from the primary-match results and
+    # NOT updated as corroborating entries are added, preventing cascading matches.
+    flight_windows: list[tuple[datetime, datetime] | None] = []
+    for _fl in flights:
+        _starts: list[datetime] = []
+        _ends: list[datetime] = []
+        for seg in _fl.get("flights_identified", []):
+            if seg.get("start"):
+                try:
+                    _starts.append(datetime.fromisoformat(seg["start"]))
+                except ValueError:
+                    pass
+            if seg.get("end"):
+                try:
+                    _ends.append(datetime.fromisoformat(seg["end"]))
+                except ValueError:
+                    pass
+        flight_windows.append((min(_starts), max(_ends)) if _starts and _ends else None)
+
+    corroborated_drone: set[int] = set()
     for di, drone_cand in enumerate(drone_candidates):
         if di in matched_drone:
+            continue
+        if drone_cand["evidence_dict"].get("source_identification", "") not in _CONTROLLER_SOURCES:
+            continue
+        cand_start = drone_cand["start_dt"]
+        cand_end   = drone_cand["end_dt"]
+        cand_dur   = drone_cand["duration_s"]
+        best_fi: int | None = None
+        best_ov = 0.0
+        for fi, window in enumerate(flight_windows):
+            if window is None:
+                continue
+            fl_start, fl_end = window
+            overlap  = max(0.0, (min(fl_end, cand_end) - max(fl_start, cand_start)).total_seconds())
+            min_dur  = min((fl_end - fl_start).total_seconds(), cand_dur)
+            if overlap >= _OVERLAP_MIN_S and overlap >= _OVERLAP_MIN_FRACTION * min_dur:
+                if overlap > best_ov:
+                    best_ov = overlap
+                    best_fi = fi
+        if best_fi is not None:
+            s   = drone_cand["start_dt"]
+            e   = drone_cand["end_dt"]
+            dur = round((e - s).total_seconds(), 1) if s and e else None
+            flights[best_fi]["flights_identified"].append({
+                "evidence_sha256": drone_cand["evidence_dict"].get("sha256", ""),
+                "start": s.isoformat() if s else None,
+                "end":   e.isoformat() if e else None,
+                "duration_s": dur,
+            })
+            corroborated_drone.add(di)
+
+    for di, drone_cand in enumerate(drone_candidates):
+        if di in matched_drone or di in corroborated_drone:
             continue
         flight_counter += 1
         flights.append(_build_flight_dict(

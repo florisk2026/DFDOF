@@ -89,7 +89,38 @@ def _fr_row(
     return [norm_id, ts, lat, lon, height, motor, numsv, batt, mode, warn, tip, rec, photo, sd]
 
 
-# State builder
+# State builder helpers
+
+def _make_drone_artefact(
+    tmp_path: Path,
+    normalised_artefacts: list,
+    drone_path: Path,
+    identification: str,
+    src_name: str = "drone_src.dat",
+) -> None:
+    """Build the src→p4→norm evidence chain for a drone log and append to normalised_artefacts."""
+    src = tmp_path / src_name
+    src.write_bytes(b"src")
+    src_ev = make_evidence(
+        source_path=str(src), stored_path=src, parent=None,
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=identification,
+    )
+    p4_drone = make_evidence(
+        source_path=str(drone_path), stored_path=drone_path, parent=src_ev,
+        acquisition_method=config.ACQUISITION_DATCON,
+        type=config.EVIDENCE_TYPE_DECODED,
+        artefact_category=config.DRONE_LOGS,
+    )
+    norm_drone = make_evidence(
+        source_path=str(drone_path), stored_path=drone_path, parent=p4_drone,
+        acquisition_method=config.ACQUISITION_NORMALISE,
+        type=config.EVIDENCE_TYPE_NORMALISED,
+        artefact_category=config.DRONE_LOGS,
+    )
+    normalised_artefacts.append(norm_drone.to_dict())
+
 
 def _build_p6_state(
     tmp_path: Path,
@@ -98,10 +129,15 @@ def _build_p6_state(
     fr_identification: str = config.IDENTIFICATION_CONTROLLER_IOS,
     drone_path: Path | None = None,
     drone_identification: str = config.IDENTIFICATION_DRONE_SD,
+    extra_drone_paths: list[tuple[Path, str]] | None = None,
     fr_anomalies: dict | None = None,
     drone_anomalies: dict | None = None,
 ) -> State:
-    """Build a State with P5 normalised artefacts for P6 testing."""
+    """Build a State with P5 normalised artefacts for P6 testing.
+
+    extra_drone_paths: list of (csv_path, source_identification) for additional
+    drone log candidates (e.g. controller-cached DLs for corroboration tests).
+    """
     project_root = tmp_path
     (project_root / "Documents").mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(Path, "home", lambda: project_root)
@@ -143,36 +179,23 @@ def _build_p6_state(
             derived_anomalies.append(obs.to_dict())
 
     if drone_path is not None:
-        src2 = tmp_path / "drone_src.dat"
-        src2.write_bytes(b"src")
-        src2_ev = make_evidence(
-            source_path=str(src2), stored_path=src2, parent=None,
-            acquisition_method=config.ACQUISITION_LOGICAL,
-            type=config.EVIDENCE_TYPE_INPUT,
-            source_identification=drone_identification,
-        )
-        p4_drone = make_evidence(
-            source_path=str(drone_path), stored_path=drone_path, parent=src2_ev,
-            acquisition_method=config.ACQUISITION_DATCON,
-            type=config.EVIDENCE_TYPE_DECODED,
-            artefact_category=config.DRONE_LOGS,
-        )
-        norm_drone = make_evidence(
-            source_path=str(drone_path), stored_path=drone_path, parent=p4_drone,
-            acquisition_method=config.ACQUISITION_NORMALISE,
-            type=config.EVIDENCE_TYPE_NORMALISED,
-            artefact_category=config.DRONE_LOGS,
-        )
-        normalised_artefacts.append(norm_drone.to_dict())
+        _make_drone_artefact(tmp_path, normalised_artefacts, drone_path, drone_identification)
         if drone_anomalies:
+            norm_drone_sha = normalised_artefacts[-1]["sha256"]
             obs = make_observation(
                 stored_path=str(drone_path),
-                evidence_sha256=norm_drone.sha256,
+                evidence_sha256=norm_drone_sha,
                 evidence_category=config.DRONE_LOGS,
                 acquisition_method=config.ACQUISITION_NORMALISE,
                 observations=[drone_anomalies],
             )
             derived_anomalies.append(obs.to_dict())
+
+    for idx, (extra_path, extra_id) in enumerate(extra_drone_paths or []):
+        _make_drone_artefact(
+            tmp_path, normalised_artefacts, extra_path, extra_id,
+            src_name=f"drone_extra_src_{idx}.dat",
+        )
 
     state.phase_outputs["p5_normalisation_and_anomaly_checking"] = {
         "normalised_artefacts": normalised_artefacts,
@@ -1767,3 +1790,145 @@ def test_drone_gps_column_fallback_no_motor_col_skips_motor_events(tmp_path: Pat
     ]
     # No motor column in Phantom 3 log → no motor events from drone source
     assert drone_motor_events == []
+
+
+# ---------------------------------------------------------------------------
+# Corroboration pass tests: controller-cached drone logs (MCDatFlightRecords)
+# ---------------------------------------------------------------------------
+
+def test_corroborating_controller_dl_appended_to_matched_flight(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """FR + drone-side DL → primary match; controller-cached DL corroborates → 1 flight, 3 sources.
+
+    Scenario: drone-side DAT (drone_flight_storage) is matched with the FR via the
+    primary GPS rule (1 flight, 2 flights_identified). The controller also holds a
+    cached copy of the same DAT (controller_ios). The corroboration pass should attach
+    the controller copy as a third flights_identified entry without creating a new flight.
+    """
+    rows = _overlapping_rows(n=30, interval_s=3)
+
+    fr_csv   = tmp_path / "fr.csv"
+    drone_csv   = tmp_path / "drone.csv"
+    ctrl_dl_csv = tmp_path / "ctrl_dl.csv"
+
+    _write_norm_fr_csv(fr_csv, [_fr_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3]) for r in rows])
+    _write_norm_drone_csv(drone_csv,   [_drone_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3], clock=r[4]) for r in rows])
+    _write_norm_drone_csv(ctrl_dl_csv, [_drone_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3], clock=r[4]) for r in rows])
+
+    state = _build_p6_state(
+        tmp_path, monkeypatch,
+        fr_path=fr_csv, fr_identification=config.IDENTIFICATION_CONTROLLER_IOS,
+        drone_path=drone_csv, drone_identification=config.IDENTIFICATION_DRONE_FLIGHT_STORAGE,
+        extra_drone_paths=[(ctrl_dl_csv, config.IDENTIFICATION_CONTROLLER_IOS)],
+    )
+    result = p6.run_phase_6(state)
+
+    out = result.phase_outputs[p6._PHASE_NAME]
+    assert out["flight_count"] == 1, "Controller DL must not create a new solo flight"
+    flight = out["flights"][0]
+    assert flight["correlation"]["matched"] is True
+    assert len(flight["flights_identified"]) == 3, "FR + drone DL + controller DL = 3 sources"
+
+
+def test_corroborating_controller_dl_appended_to_fr_only_flight(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Solo FR flight (no primary DL match) gains a corroborating controller DL entry.
+
+    The FR has no drone-side DL, so it becomes a solo unmatched flight (matched=False).
+    The controller DL overlaps the FR window and is added to flights_identified without
+    creating a second flight.
+    """
+    rows = _overlapping_rows(n=30, interval_s=3)
+    # FR has no GPS (zero coordinates) → can't primary-match with any drone log
+    fr_rows_no_gps = _overlapping_rows(n=30, interval_s=3, lat="0.0", lon="0.0")
+
+    fr_csv   = tmp_path / "fr.csv"
+    ctrl_dl_csv = tmp_path / "ctrl_dl.csv"
+
+    _write_norm_fr_csv(fr_csv, [_fr_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3]) for r in fr_rows_no_gps])
+    _write_norm_drone_csv(ctrl_dl_csv, [_drone_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3], clock=r[4]) for r in rows])
+
+    state = _build_p6_state(
+        tmp_path, monkeypatch,
+        fr_path=fr_csv, fr_identification=config.IDENTIFICATION_CONTROLLER_IOS,
+        extra_drone_paths=[(ctrl_dl_csv, config.IDENTIFICATION_CONTROLLER_ANDROID)],
+    )
+    result = p6.run_phase_6(state)
+
+    out = result.phase_outputs[p6._PHASE_NAME]
+    assert out["flight_count"] == 1, "Controller DL must not create a new solo flight"
+    flight = out["flights"][0]
+    assert flight["correlation"]["matched"] is False
+    assert len(flight["flights_identified"]) == 2, "FR + controller DL = 2 sources"
+
+
+def test_drone_side_unmatched_dl_stays_solo_not_corroborated(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Unmatched drone-side DL (drone_flight_storage) is NOT eligible for corroboration.
+
+    Only controller-sourced DLs (IDENTIFICATION_CONTROLLER_IOS/ANDROID) are attached
+    to existing flights. A drone-side DL that failed primary matching stays as a solo
+    unmatched flight regardless of temporal overlap.
+    """
+    rows = _overlapping_rows(n=30, interval_s=3)
+
+    fr_csv    = tmp_path / "fr.csv"
+    drone_csv = tmp_path / "drone.csv"
+
+    # FR with no GPS so it can't match primary; drone DL has good GPS.
+    fr_rows_no_gps = _overlapping_rows(n=30, interval_s=3, lat="0.0", lon="0.0")
+    _write_norm_fr_csv(fr_csv,   [_fr_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3]) for r in fr_rows_no_gps])
+    _write_norm_drone_csv(drone_csv, [_drone_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3], clock=r[4]) for r in rows])
+
+    state = _build_p6_state(
+        tmp_path, monkeypatch,
+        fr_path=fr_csv, fr_identification=config.IDENTIFICATION_CONTROLLER_IOS,
+        drone_path=drone_csv, drone_identification=config.IDENTIFICATION_DRONE_FLIGHT_STORAGE,
+    )
+    result = p6.run_phase_6(state)
+
+    out = result.phase_outputs[p6._PHASE_NAME]
+    assert out["flight_count"] == 2, "Drone-side DL must remain as a separate solo flight"
+    fi_counts = [len(f["flights_identified"]) for f in out["flights"]]
+    assert all(n == 1 for n in fi_counts), "No flight should have extra flights_identified entries"
+
+
+def test_controller_dl_insufficient_overlap_stays_solo(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Controller DL with insufficient temporal overlap to any flight stays as solo flight.
+
+    The controller DL's time window only partially overlaps the matched flight — the
+    overlap fraction is below _OVERLAP_MIN_FRACTION (0.75). The corroboration pass
+    must not attach it, so it falls through to the solo-DL loop and becomes its own
+    solo unmatched flight.
+    """
+    rows = _overlapping_rows(n=30, interval_s=3)   # 0–87 s
+
+    # Controller DL is very short and offset: only 10 rows starting at T+80s
+    # → overlaps the flight window by ~7 s < 60 s floor → cannot corroborate
+    ctrl_rows = _overlapping_rows(n=10, base_ts="2018-04-19T11:26:20+00:00", interval_s=3)
+
+    fr_csv   = tmp_path / "fr.csv"
+    drone_csv   = tmp_path / "drone.csv"
+    ctrl_dl_csv = tmp_path / "ctrl_dl.csv"
+
+    _write_norm_fr_csv(fr_csv,       [_fr_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3]) for r in rows])
+    _write_norm_drone_csv(drone_csv, [_drone_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3], clock=r[4]) for r in rows])
+    _write_norm_drone_csv(ctrl_dl_csv, [_drone_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3], clock=r[4]) for r in ctrl_rows])
+
+    state = _build_p6_state(
+        tmp_path, monkeypatch,
+        fr_path=fr_csv, fr_identification=config.IDENTIFICATION_CONTROLLER_IOS,
+        drone_path=drone_csv, drone_identification=config.IDENTIFICATION_DRONE_FLIGHT_STORAGE,
+        extra_drone_paths=[(ctrl_dl_csv, config.IDENTIFICATION_CONTROLLER_IOS)],
+    )
+    result = p6.run_phase_6(state)
+
+    out = result.phase_outputs[p6._PHASE_NAME]
+    assert out["flight_count"] == 2, "Short controller DL with insufficient overlap must stay solo"
+    fi_counts = sorted(len(f["flights_identified"]) for f in out["flights"])
+    assert fi_counts == [1, 2], "Matched flight has 2 sources; solo controller DL has 1"
