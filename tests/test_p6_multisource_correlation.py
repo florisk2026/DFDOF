@@ -1561,11 +1561,39 @@ def test_build_candidate_no_details_app_version_is_none(tmp_path: Path) -> None:
 
 
 def test_insufficient_overlap_fraction_unmatched(tmp_path: Path, monkeypatch) -> None:
-    """FR that overlaps drone log by ~83% of the shorter duration → both unmatched.
+    """FR that overlaps drone log by ~71% of the shorter duration → both unmatched.
+
+    Drone: T+0 → T+87s (30 rows × 3s).
+    FR:   T+25s → T+112s (30 rows × 3s, identical GPS).
+    Overlap: 62s; min_dur: 87s; fraction ≈ 0.71 < 0.75 → no primary match.
+    """
+    drone_rows = _overlapping_rows(n=30, base_ts="2018-04-19T11:25:00+00:00", interval_s=3)
+    fr_rows = _overlapping_rows(n=30, base_ts="2018-04-19T11:25:25+00:00", interval_s=3)
+
+    fr_csv = tmp_path / "fr.csv"
+    drone_csv = tmp_path / "drone.csv"
+    _write_norm_fr_csv(fr_csv, [_fr_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3]) for r in fr_rows])
+    _write_norm_drone_csv(drone_csv, [_drone_row(norm_id=r[0], ts=r[1], lat=r[2], lon=r[3], clock=r[4]) for r in drone_rows])
+
+    state = _build_p6_state(tmp_path, monkeypatch, fr_path=fr_csv, drone_path=drone_csv)
+    result = p6.run_phase_6(state)
+
+    out = result.phase_outputs[p6._PHASE_NAME]
+    assert out["flight_count"] == 2
+    assert all(not f["correlation"]["matched"] for f in out["flights"])
+
+
+def test_overlap_fraction_0_83_matches_with_spatial_confirmation(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """FR that overlaps drone log by ~83% (offset 15 s, identical GPS) → primary match.
+
+    Real-world pattern: DAT log starts at drone power-on; FR starts when the DJI app
+    connects (~30-60 s later). Fraction 0.83 > 0.75 and GPS matches → primary match.
 
     Drone: T+0 → T+87s (30 rows × 3s).
     FR:   T+15s → T+102s (30 rows × 3s, identical GPS).
-    Overlap: 72s; min_dur: 87s; fraction ≈ 0.83 < 0.90 → no primary match.
+    Overlap: 72s; min_dur: 87s; fraction ≈ 0.83 > 0.75 → primary match.
     """
     drone_rows = _overlapping_rows(n=30, base_ts="2018-04-19T11:25:00+00:00", interval_s=3)
     fr_rows = _overlapping_rows(n=30, base_ts="2018-04-19T11:25:15+00:00", interval_s=3)
@@ -1579,8 +1607,11 @@ def test_insufficient_overlap_fraction_unmatched(tmp_path: Path, monkeypatch) ->
     result = p6.run_phase_6(state)
 
     out = result.phase_outputs[p6._PHASE_NAME]
-    assert out["flight_count"] == 2
-    assert all(not f["correlation"]["matched"] for f in out["flights"])
+    assert out["flight_count"] == 1
+    flight = out["flights"][0]
+    assert flight["correlation"]["matched"] is True
+    assert flight["correlation"]["rule"] == "primary"
+    assert 0.82 < flight["correlation"]["overlap_fraction"] < 0.85
 
 
 def test_spatial_threshold_rejected(tmp_path: Path, monkeypatch) -> None:

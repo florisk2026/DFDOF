@@ -56,12 +56,14 @@ _PHASE_NAME = Path(__file__).stem
 
 # Primary GPS-assisted temporal overlap floor (seconds) and minimum fraction.
 # DatCon at 30 Hz, FlightRecord at 10 Hz — 60 s yields ≥600 rows at the slower rate,
-# sufficient for meaningful spatial comparison. The 90 % fraction requirement reflects
-# the expected recording pattern: drone logs begin at power-on while flight records
-# start at tap-to-fly, so the FR is almost entirely contained within the drone log
-# window. A near-complete overlap is therefore a forensically defensible criterion.
+# sufficient for meaningful spatial comparison. The 75 % fraction requirement
+# accommodates the real-world timing difference between DAT logs (which start at
+# drone power-on) and flight records (which start when the DJI app connects, often
+# 30–60 s later). The FR may also extend past the DAT log end when the app
+# disconnects after the firmware has already closed the DAT file. The spatial
+# check (median GPS ≤ 25 m) provides the forensically strong confirmation.
 _OVERLAP_MIN_S = 60.0
-_OVERLAP_MIN_FRACTION = 0.90
+_OVERLAP_MIN_FRACTION = 0.75
 
 # Half-width of the bisect window for nearest-neighbour GPS point matching (seconds).
 # A ±2 s association gate absorbs independent-clock offsets between log sources
