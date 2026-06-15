@@ -1016,7 +1016,7 @@ def _appendix_tool_overview(pdf: _PDF) -> None:
             "P7  Analysis and Validation",
             "Aggregates results from all prior phases into a structured analysis. Resolves "
             "device identity (drone serial, model, app version, account email) across sources "
-            "with confidence levels (single-source / multi-source / inconsistent). Computes "
+            "with confidence levels (controller-only / corroborated / inconsistent). Computes "
             "per-flight metrics (peak height, media capture, record completeness). Produces "
             "coverage scores and a grouped conclusions structure with a dedicated "
             "further_investigation section.",
@@ -1350,9 +1350,9 @@ def _format_size(n_bytes: int) -> str:
 
 def _confidence_badge(confidence: str) -> str:
     badges = {
-        "multi-source":  "[M] Multi-source",
-        "single-source": "[S] Single-source",
-        "inconsistent":  "[!] Inconsistent",
+        "corroborated":    "[C] Corroborated",
+        "controller-only": "[K] Controller-only",
+        "inconsistent":    "[!] Inconsistent",
     }
     return badges.get(confidence, confidence)
 

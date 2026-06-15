@@ -367,7 +367,7 @@ def test_build_analysis_single_source_no_drone():
         "dji_app_version": [],
     }
     result = p7._build_account_and_drone_analysis(sources, [], [])
-    assert result["drone_serial"]["confidence"] == "single-source"
+    assert result["drone_serial"]["confidence"] == "controller-only"
     assert result["drone_serial"]["value"] == "SN001"
 
 
@@ -384,7 +384,7 @@ def test_build_analysis_multi_source_with_drone(tmp_path):
         "dji_app_version": [],
     }
     result = p7._build_account_and_drone_analysis(sources, [], [])
-    assert result["drone_serial"]["confidence"] == "multi-source"
+    assert result["drone_serial"]["confidence"] == "corroborated"
 
 
 def test_build_analysis_inconsistent(tmp_path):
@@ -432,7 +432,7 @@ def test_build_analysis_two_controllers_still_single_source():
         "dji_app_version": [],
     }
     result = p7._build_account_and_drone_analysis(sources, [], [])
-    assert result["drone_serial"]["confidence"] == "single-source"
+    assert result["drone_serial"]["confidence"] == "controller-only"
 
 
 # Section 4 — Flight analysis
@@ -591,7 +591,7 @@ def test_uncorrelated_artefacts_account_reference(tmp_path):
     p3 = [{"sha256": "p3sha", "parent_sha256": None,
             "artefact_category": config.ACCOUNT_DATA, "stored_path": "/tmp/acc.plist"}]
     account = {"drone_serial": {"value": "SN001", "corroboration_sources": ["p4:p3sha"],
-                                "confidence": "single-source"}}
+                                "confidence": "controller-only"}}
     result = p7._uncorrelated_artefacts(p3, [], [], [], account)
     assert result == []
 
@@ -739,7 +739,7 @@ def test_forensic_consistent_serial_in_device_id():
     account = {"drone_serial": {
         "value": "SN001",
         "corroboration_sources": ["p4:abc", "sha004:4"],
-        "confidence": "multi-source",
+        "confidence": "corroborated",
     }}
     c = p7._forensic_conclusions(source_cov, [], account, [], [])
     assert any("SN001" in s for s in c["device_identification"])
@@ -771,7 +771,7 @@ def test_forensic_installed_dji_apps_in_device_id():
     account = {"installed_dji_apps": {
         "value": ["DJI Go 4", "DJI Fly"],
         "corroboration_sources": ["p2:abc"],
-        "confidence": "single-source",
+        "confidence": "controller-only",
     }}
     c = p7._forensic_conclusions(source_cov, [], account, [], [])
     assert any("DJI Go 4" in s and "DJI Fly" in s for s in c["device_identification"])

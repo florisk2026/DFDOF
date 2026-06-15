@@ -477,7 +477,7 @@ def _build_account_and_drone_analysis(
         if field == "drone_name":
             if len(unique_norms) == 1:
                 value: Any = norm_to_canonical[next(iter(unique_norms))]
-                confidence = "multi-source" if has_drone_source else "single-source"
+                confidence = "corroborated" if has_drone_source else "controller-only"
             else:
                 value = sorted(set(str(e["value"]) for e in entries))
                 confidence = "inconsistent"
@@ -489,11 +489,11 @@ def _build_account_and_drone_analysis(
                 if v not in seen:
                     seen.append(v)
             value = seen[0] if len(seen) == 1 else seen
-            confidence = "multi-source" if has_drone_source else "single-source"
+            confidence = "corroborated" if has_drone_source else "controller-only"
         else:
             if len(unique_vals) == 1:
                 value = next(iter(unique_vals))
-                confidence = "multi-source" if has_drone_source else "single-source"
+                confidence = "corroborated" if has_drone_source else "controller-only"
             else:
                 value = sorted(unique_vals)
                 confidence = "inconsistent"
