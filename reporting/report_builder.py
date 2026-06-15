@@ -1304,11 +1304,15 @@ def _table(
     for i, row in enumerate(rows):
         fill_color = (245, 247, 252) if i % 2 == 0 else (255, 255, 255)
 
-        cells     = [_safe(str(c)) for c in row]
+        cells = [_safe(str(c)) for c in row]
+
+        # Measure line counts with auto page-break OFF so dry_run doesn't move get_y().
+        pdf.set_auto_page_break(False)
         max_lines = max(
             len(list(pdf.multi_cell(w, base_h, c, dry_run=True, output="LINES")))  # type: ignore[arg-type]
             for c, w in zip(cells, col_widths)
         )
+        pdf.set_auto_page_break(True, margin=18)
         row_h = max_lines * base_h
 
         # If this row would overflow, start a new page and repeat the header.
@@ -1319,16 +1323,16 @@ def _table(
 
         y0 = pdf.get_y()
 
-        # Draw fill and border rectangles at the exact row height for every cell.
-        # This guarantees uniform cell borders regardless of how many lines each
-        # cell's text occupies, avoiding gaps when cells in the same row differ.
+        # Draw fill/border rects and overlay text all with auto page-break OFF —
+        # we've already handled pagination above, so fpdf2 must not interfere.
+        pdf.set_auto_page_break(False)
+
         pdf.set_fill_color(*fill_color)
         x = _MARGIN_L
         for w in col_widths:
             pdf.rect(x, y0, w, row_h, style="DF")
             x += w
 
-        # Overlay text without fill or border (auto page-break disabled for rect rows).
         x = _MARGIN_L
         for cell_text, w in zip(cells, col_widths):
             pdf.set_xy(x, y0)
@@ -1336,6 +1340,7 @@ def _table(
                            new_x="RIGHT", new_y="TOP")
             x += w
 
+        pdf.set_auto_page_break(True, margin=18)
         pdf.set_xy(_MARGIN_L, y0 + row_h)
     pdf.set_fill_color(255, 255, 255)
 
