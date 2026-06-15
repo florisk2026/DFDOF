@@ -95,19 +95,19 @@ def test_run_phase_3_android_logical(tmp_path: Path, monkeypatch) -> None:
     assert DATABASES in categories
 
 
-def test_run_phase_3_android_logical_no_installed_apps_raises_anomaly(
+def test_run_phase_3_android_logical_no_installed_apps_no_known_dirs_raises_anomaly(
     tmp_path: Path, monkeypatch
 ) -> None:
-    """No installed apps in P2 output → anomaly, no extraction."""
+    """No installed apps in P2 AND no known DJI bundle ID dirs in archive → anomaly, no extraction."""
     project_root = tmp_path
     (project_root / "Documents").mkdir(parents=True)
     monkeypatch.setattr(Path, "home", lambda: project_root)
 
-    # backup_info.json with empty installed apps list
     _write_backup_info(tmp_path, "CASE-NOAPP", [])
 
     android_zip = tmp_path / "android_backup.zip"
-    _write_zip(android_zip, {"data/dji.go.v4/LOG/log.txt": "log"})
+    # Archive contains only an unknown app dir — no known DJI bundle ID segment
+    _write_zip(android_zip, {"data/unknown_app/LOG/log.txt": "log"})
 
     state = _build_state(tmp_path, "CASE-NOAPP")
     android_evidence = make_evidence(
@@ -124,7 +124,38 @@ def test_run_phase_3_android_logical_no_installed_apps_raises_anomaly(
     result = p3.run_phase_3(state)
     artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]
     assert artefacts == []
-    assert any("installed DJI apps not found" in flag for flag in result.anomaly_flags)
+    assert any("no known DJI app directories found in archive" in flag for flag in result.anomaly_flags)
+
+
+def test_run_phase_3_android_logical_fallback_when_no_installed_apps(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """No installed apps in P2 but archive contains known DJI bundle ID dir → fallback extracts."""
+    project_root = tmp_path
+    (project_root / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    _write_backup_info(tmp_path, "CASE-FALLBACK", [])
+
+    android_zip = tmp_path / "android_backup.zip"
+    _write_zip(android_zip, {"dji.go.v4/databases/com.dji.go.db": b"SQLite"})
+
+    state = _build_state(tmp_path, "CASE-FALLBACK")
+    android_evidence = make_evidence(
+        source_path=android_zip,
+        stored_path=android_zip,
+        parent=None,
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=config.IDENTIFICATION_CONTROLLER_ANDROID,
+        skip_hash=True,
+    )
+    state.input_evidence.append(android_evidence)
+
+    result = p3.run_phase_3(state)
+    artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]
+    assert len(artefacts) > 0
+    assert any("falling back to config-defined bundle IDs" in flag for flag in result.anomaly_flags)
 
 
 def test_run_phase_3_android_logical_no_scope_root_raises_anomaly(
@@ -369,18 +400,18 @@ def _make_android_physical_state(
     return state, android_evidence
 
 
-def test_android_physical_no_installed_apps_raises_anomaly(
+def test_android_physical_no_installed_apps_no_known_dirs_raises_anomaly(
     tmp_path: Path, monkeypatch
 ) -> None:
-    """Physical branch raises anomaly and returns empty when no installed apps in P2."""
+    """Physical branch raises anomaly when no installed apps in P2 AND no known DJI dirs in image."""
     state, _ = _make_android_physical_state(
         tmp_path, monkeypatch, "CASE-P3-PHYS-1",
         installed_apps=[],
-        image_entries=[("r/r", 1, "data/data/com.dji.go/databases/dji.db")],
+        image_entries=[("r/r", 1, "data/data/com.other.app/databases/other.db")],
     )
     result = p3.run_phase_3(state)
     flags = result.anomaly_flags
-    assert any("installed DJI apps not found" in f for f in flags)
+    assert any("no known DJI app directories found in image" in f for f in flags)
     artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]
     assert artefacts == []
 

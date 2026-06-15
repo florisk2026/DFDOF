@@ -451,21 +451,31 @@ def _extract_android_sources(
         member_names = _member_names(android_archive)
         installed_apps = _android_installed_apps(state)
         if not installed_apps:
+            scope_roots = _android_discover_scope_roots(
+                member_names, list(DJI_APP_DOMAINS["android"].keys())
+            )
+            if not scope_roots:
+                state.raise_anomaly(
+                    3, IDENTIFICATION_CONTROLLER_ANDROID,
+                    "installed DJI apps not found in P2 output and no known DJI app "
+                    "directories found in archive, extraction aborted",
+                )
+                _write_no_output(controller_android_dir)
+                return extracted
             state.raise_anomaly(
                 3, IDENTIFICATION_CONTROLLER_ANDROID,
-                "installed DJI apps not found in P2 output, extraction aborted",
+                "installed DJI apps not found in P2 output; falling back to config-defined "
+                "bundle IDs for extraction",
             )
-            _write_no_output(controller_android_dir)
-            return extracted
-
-        scope_roots = _android_discover_scope_roots(member_names, installed_apps)
-        if not scope_roots:
-            state.raise_anomaly(
-                3, IDENTIFICATION_CONTROLLER_ANDROID,
-                "no DJI app directories found in archive for installed apps, extraction aborted",
-            )
-            _write_no_output(controller_android_dir)
-            return extracted
+        else:
+            scope_roots = _android_discover_scope_roots(member_names, installed_apps)
+            if not scope_roots:
+                state.raise_anomaly(
+                    3, IDENTIFICATION_CONTROLLER_ANDROID,
+                    "no DJI app directories found in archive for installed apps, extraction aborted",
+                )
+                _write_no_output(controller_android_dir)
+                return extracted
 
         for category in categories:
             try:
@@ -527,14 +537,6 @@ def _extract_android_sources(
         precomputed_entries = _get_cached_entries(state, android_archive)
         offset_sectors = _get_cached_offset(state, android_archive)
         installed_apps = _android_installed_apps(state)
-        if not installed_apps:
-            state.raise_anomaly(
-                3, IDENTIFICATION_CONTROLLER_ANDROID,
-                "installed DJI apps not found in P2 output, extraction aborted",
-            )
-            _write_no_output(controller_android_dir)
-            return extracted
-
         if not precomputed_entries:
             state.raise_anomaly(
                 3, IDENTIFICATION_CONTROLLER_ANDROID,
@@ -544,14 +546,32 @@ def _extract_android_sources(
             return extracted
 
         entry_paths = [e[2] for e in precomputed_entries]
-        scope_roots = _android_discover_scope_roots(entry_paths, installed_apps)
-        if not scope_roots:
+        if not installed_apps:
+            scope_roots = _android_discover_scope_roots(
+                entry_paths, list(DJI_APP_DOMAINS["android"].keys())
+            )
+            if not scope_roots:
+                state.raise_anomaly(
+                    3, IDENTIFICATION_CONTROLLER_ANDROID,
+                    "installed DJI apps not found in P2 output and no known DJI app "
+                    "directories found in image, extraction aborted",
+                )
+                _write_no_output(controller_android_dir)
+                return extracted
             state.raise_anomaly(
                 3, IDENTIFICATION_CONTROLLER_ANDROID,
-                "no DJI app directories found in image for installed apps, extraction aborted",
+                "installed DJI apps not found in P2 output; falling back to config-defined "
+                "bundle IDs for extraction",
             )
-            _write_no_output(controller_android_dir)
-            return extracted
+        else:
+            scope_roots = _android_discover_scope_roots(entry_paths, installed_apps)
+            if not scope_roots:
+                state.raise_anomaly(
+                    3, IDENTIFICATION_CONTROLLER_ANDROID,
+                    "no DJI app directories found in image for installed apps, extraction aborted",
+                )
+                _write_no_output(controller_android_dir)
+                return extracted
 
         for category in categories:
             try:
