@@ -373,6 +373,62 @@ def test_no_overlap_both_uncorrelated(tmp_path: Path, monkeypatch) -> None:
     assert all(not f["correlation"]["matched"] for f in out["flights"])
 
 
+def test_flight_ids_assigned_in_chronological_order(tmp_path: Path, monkeypatch) -> None:
+    """Flight IDs are renumbered after chronological sort, not by discovery order."""
+    (tmp_path / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+    # fr_later is added to state first; fr_earlier is added second.
+    # After P6 sorts by start timestamp, fr_earlier should become flight_01.
+    later_rows = _overlapping_rows(n=20, base_ts="2018-04-19T12:00:00+00:00", interval_s=3)
+    earlier_rows = _overlapping_rows(n=20, base_ts="2018-04-19T11:00:00+00:00", interval_s=3)
+    fr_later = tmp_path / "fr_later.csv"
+    fr_earlier = tmp_path / "fr_earlier.csv"
+    _write_norm_fr_csv(fr_later,   [_fr_row(norm_id=r[0], ts=r[1]) for r in later_rows])
+    _write_norm_fr_csv(fr_earlier, [_fr_row(norm_id=r[0], ts=r[1]) for r in earlier_rows])
+
+    state = State(case_id="CASE-P6-ORDER", operator="Tester")
+
+    def _make_fr_norm_ev(path: Path) -> dict:
+        src = tmp_path / (path.stem + "_src.zip")
+        src.write_bytes(b"src")
+        src_ev = make_evidence(
+            source_path=str(src), stored_path=src, parent=None,
+            acquisition_method=config.ACQUISITION_LOGICAL,
+            type=config.EVIDENCE_TYPE_INPUT,
+            source_identification=config.IDENTIFICATION_CONTROLLER_IOS,
+        )
+        p4_ev = make_evidence(
+            source_path=str(path), stored_path=path, parent=src_ev,
+            acquisition_method=config.ACQUISITION_TXTLOGTOCSV,
+            type=config.EVIDENCE_TYPE_DECODED,
+            artefact_category=config.FLIGHT_RECORDS,
+        )
+        norm_ev = make_evidence(
+            source_path=str(path), stored_path=path, parent=p4_ev,
+            acquisition_method=config.ACQUISITION_NORMALISE,
+            type=config.EVIDENCE_TYPE_NORMALISED,
+            artefact_category=config.FLIGHT_RECORDS,
+        )
+        return norm_ev.to_dict()
+
+    state.phase_outputs["p5_normalisation_and_anomaly_checking"] = {
+        "normalised_artefacts": [_make_fr_norm_ev(fr_later), _make_fr_norm_ev(fr_earlier)],
+        "derived_anomalies": [],
+    }
+
+    result = p6.run_phase_6(state)
+    flights = result.phase_outputs[p6._PHASE_NAME]["flights"]
+
+    assert len(flights) == 2
+    assert flights[0]["flight_id"] == "flight_01"
+    assert flights[1]["flight_id"] == "flight_02"
+    # The earlier-start flight must be flight_01
+    start_0 = flights[0]["flights_identified"][0]["start"]
+    start_1 = flights[1]["flights_identified"][0]["start"]
+    assert start_0 < start_1, "flight_01 must have an earlier start than flight_02"
+
+
 def test_timeline_json_written(tmp_path: Path, monkeypatch) -> None:
     """Per-flight timeline_flightXX.json is written with expected top-level keys."""
     rows_data = _overlapping_rows(n=30, interval_s=3)

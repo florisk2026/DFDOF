@@ -1201,6 +1201,8 @@ def run_phase_6(state: State) -> State:
         ))
 
     flights.sort(key=lambda f: (f["flights_identified"][0]["start"] or "") if f["flights_identified"] else "")
+    for i, flight in enumerate(flights, start=1):
+        flight["flight_id"] = f"flight_{i:02d}"
 
     p4_artefacts: list[dict[str, Any]] = (
         state.phase_outputs.get("p4_decision_and_orchestration", {})
