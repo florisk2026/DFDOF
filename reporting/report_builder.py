@@ -143,6 +143,8 @@ def _cover_page(pdf: _PDF, state: State) -> None:
         "This report is an automated forensic baseline produced by DFDOF. "
         "It is not a court-ready expert report. All findings are bounded by the "
         "data available and must be interpreted by a qualified forensic examiner."
+        "The populated case output directory is the authorative source and "
+        "provides the full overview of the pipeline's findings."
     ), align="C")
     pdf.set_text_color(0, 0, 0)
 
@@ -217,7 +219,8 @@ def _chain_of_custody(pdf: _PDF, state: State) -> None:
         pdf.cell(label_w, row_h, "SHA-1:", border=1, fill=True)
         pdf.set_font("Courier", "", 7)
         pdf.cell(hash_w, row_h, _safe(sha1), border=1, fill=True)
-        pdf.ln(5)
+        pdf.ln()
+        pdf.ln(3)
 
 
 def _pipeline_summary(pdf: _PDF, state: State, p7: dict) -> None:
