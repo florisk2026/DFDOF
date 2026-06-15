@@ -77,10 +77,10 @@ _DRONE_LOG_EXTS_UPPER = tuple(ext.upper() for ext in ARTEFACT_EXTENSIONS[DRONE_L
 
 
 def _is_ios_logical_backup(norm: list[str]) -> bool:
-    """Detect iTunes logical backup: Manifest.db + Info.plist + 50+ hex/hex folders."""
+    """Detect iTunes logical backup: Manifest.db + Info.plist + 50+ hashed artefact files."""
     return (
         all(any(inc in p for p in norm) for inc in CONTROLLER_IOS_INCLUDES)
-        and sum(1 for p in norm if re.search(r"[0-9a-fA-F]{2}/[0-9a-fA-F]{2}/", p)) > 50
+        and sum(1 for p in norm if re.search(r"(?:^|/)[0-9a-fA-F]{2}/[0-9a-fA-F]{40}$", p)) > 200
     )
 
 

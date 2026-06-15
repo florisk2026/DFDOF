@@ -41,9 +41,9 @@ def test_identify_source_ios_logical_nested_structure() -> None:
         f"{prefix}Info.plist",
         f"{prefix}Manifest.db",
     ]
-    for i in range(10):
-        for j in range(10):
-            listing.append(f"{prefix}{i:02x}/{j:02x}/{'abcd' * 16}")
+    # iTunes backup: one 2-hex directory containing a 40-hex-char SHA-1 hash filename
+    for i in range(51):
+        listing.append(f"{prefix}{i:02x}/{'abcdef1234' * 4}")
 
     identified_as = identify_source(listing)
     assert identified_as == "controller_ios"
