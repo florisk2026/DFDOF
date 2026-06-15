@@ -350,8 +350,12 @@ def _flight_section(
         .get("p5_normalisation_and_anomaly_checking", {})
         .get("normalised_artefacts", [])
     )
-    _sha_to_cat = {a.get("sha256", ""): a.get("artefact_category", "") for a in _p5_artefacts}
+    _sha_to_cat    = {a.get("sha256", ""): a.get("artefact_category", "")     for a in _p5_artefacts}
     _sha_to_source = {a.get("sha256", ""): a.get("source_identification", "-") for a in _p5_artefacts}
+    _sha_to_name   = {
+        a.get("sha256", ""): Path(a.get("source_path", "") or "").name
+        for a in _p5_artefacts
+    }
 
     _cat_labels = {
         FLIGHT_RECORDS: "Flight Record",
@@ -364,6 +368,7 @@ def _flight_section(
         cat = _sha_to_cat.get(sha, "")
         label = _cat_labels.get(cat, "Source")
         _kv_hash(pdf, f"{label} SHA-256", sha)
+        _kv(pdf, f"{label} Name", _sha_to_name.get(sha, "-"))
         _kv(pdf, "Start",    seg.get("start", "-"))
         _kv(pdf, "End",      seg.get("end",   "-"))
         _kv(pdf, "Duration", f"{seg.get('duration_s', '-')} s")
