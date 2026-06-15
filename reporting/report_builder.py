@@ -532,7 +532,7 @@ def _flight_section(
         pdf.set_text_color(0, 0, 0)
 
     # ── Flight track ──────────────────────────────────────────────────────────
-    kml       = _find_kml_path(state)
+    kml       = _find_kml_path(state, dl_csv)
     track_png = None
     if fr_csv or dl_csv:
         track_png = plot_flight_track(fr_csv, dl_csv, kml, fid, tmp_dir)
@@ -564,7 +564,7 @@ def _flight_section(
             ))
         pdf.set_text_color(0, 0, 0)
     else:
-        _body_text(pdf, "Flight track plot not available.")
+        _body_text(pdf, "\nFlight track could not be plotted; view the CSV and KML files manually.")
 
 
 def _artefact_coverage(pdf: _PDF, p7: dict) -> None:
@@ -1068,10 +1068,16 @@ def _appendix_tool_overview(pdf: _PDF) -> None:
 
 # Helpers
 
-def _find_kml_path(state: State) -> Path | None:
+def _find_kml_path(state: State, dl_csv: Path | None) -> Path | None:
+    if dl_csv is None:
+        return None
+    stem = dl_csv.stem.removeprefix("norm_")
     for entry in state.tool_invocation_log:
-        if entry.get("tool_name") == "datcon":
-            for p in (entry.get("output_paths") or []):
+        if entry.get("tool_name") != "datcon":
+            continue
+        paths = entry.get("output_paths") or []
+        if any(Path(p).suffix.lower() == ".csv" and Path(p).stem == stem for p in paths):
+            for p in paths:
                 if str(p).lower().endswith(".kml"):
                     return Path(p)
     return None
