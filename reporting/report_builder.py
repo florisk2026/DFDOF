@@ -268,6 +268,24 @@ def _pipeline_summary(pdf: _PDF, state: State, p7: dict) -> None:
             for t in tool_status
         ]
         _table(pdf, headers, rows, col_w)
+    pdf.ln(4)
+
+    # Processing coverage score
+    _subsection_title(pdf, "Processing Coverage Score")
+    cov = p7.get("coverage_score", {})
+    score_items = [
+        ("Evidence Sources Detected",        "evidence_sources_detected"),
+        ("Artefact Categories With Data",    "artefact_categories_with_data"),
+        ("Flights With Primary Correlation", "flights_with_primary_correlation"),
+        ("Tools Succeeded",                  "tools_succeeded"),
+    ]
+    headers3 = ["Metric", "Result"]
+    col_w3   = [130, 30]
+    rows3 = []
+    for label, key in score_items:
+        v = cov.get(key, {})
+        rows3.append([label, f"{v.get('value', '?')} / {v.get('total', '?')}"])
+    _table(pdf, headers3, rows3, col_w3)
 
 
 def _device_identification(pdf: _PDF, p7: dict) -> None:
@@ -306,23 +324,6 @@ def _device_identification(pdf: _PDF, p7: dict) -> None:
         ])
     if rows:
         _table(pdf, headers, rows, col_w)
-    pdf.ln(4)
-
-    _subsection_title(pdf, "Processing Coverage Score")
-    cov = p7.get("coverage_score", {})
-    score_items = [
-        ("Evidence Sources Detected",        "evidence_sources_detected"),
-        ("Artefact Categories With Data",    "artefact_categories_with_data"),
-        ("Flights With Primary Correlation", "flights_with_primary_correlation"),
-        ("Tools Succeeded",                  "tools_succeeded"),
-    ]
-    headers2 = ["Metric", "Result"]
-    col_w2   = [130, 30]
-    rows2 = []
-    for label, key in score_items:
-        v = cov.get(key, {})
-        rows2.append([label, f"{v.get('value', '?')} / {v.get('total', '?')}"])
-    _table(pdf, headers2, rows2, col_w2)
 
 
 def _flight_section(
