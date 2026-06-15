@@ -599,7 +599,7 @@ def _analyse_flight(
 
     if distance_to_homepoint is not None and log_ended_height is not None:
         flight_record_complete: bool | None = (
-            distance_to_homepoint < 3.0 and log_ended_height < 2.0
+            distance_to_homepoint < 5.0 and log_ended_height < 5.0
         )
     else:
         flight_record_complete = None

@@ -506,7 +506,7 @@ def test_analyse_flight_record_complete_false_distance(tmp_path):
 
 def test_analyse_flight_record_complete_false_height(tmp_path):
     events = [{"event": "Log ended", "confidence": "high",
-               "data": {"distance_to_homepoint": 1.0, "height": 3.0}}]
+               "data": {"distance_to_homepoint": 1.0, "height": 6.0}}]
     flight = _write_timeline(tmp_path, "f01", events)
     assert p7._analyse_flight(flight, [])["flight_record_complete"] is False
 
