@@ -816,6 +816,7 @@ def run_phase_3(state: State) -> State:
     else:
         extracted.extend(_extract_flight_storage_sources(state, flight_source, phase_dir))
 
+    extracted.sort(key=lambda e: (e.artefact_category or "", str(e.stored_path or "")))
     state.phase_outputs[_PHASE_NAME] = {
         "completed_at": utc_now_iso(),
         "extracted_artefacts": [item.to_dict() for item in extracted],

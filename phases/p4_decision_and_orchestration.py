@@ -379,6 +379,8 @@ def run_phase_4(state: State) -> State:
 	if not _has_real_output(phase_dir):
 		_write_no_output(phase_dir)
 
+	orchestrated.sort(key=lambda e: (e.artefact_category or "", str(e.stored_path or "")))
+	observations.sort(key=lambda o: (o.content.evidence_category or "", o.content.stored_path or ""))
 	state.phase_outputs[_PHASE_NAME] = {
 		"completed_at": utc_now_iso(),
 		"decision_and_orchestration_artefacts": [item.to_dict() for item in orchestrated],

@@ -1149,6 +1149,7 @@ def run_phase_5(state: State) -> State:
     if not _has_real_output(phase_dir):
         _write_no_output(phase_dir)
 
+    normalised.sort(key=lambda e: (e.artefact_category or "", str(e.stored_path or "")))
     state.phase_outputs[_PHASE_NAME] = {
         "completed_at": utc_now_iso(),
         "normalised_artefacts": [e.to_dict() for e in normalised],
