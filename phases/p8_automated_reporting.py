@@ -32,6 +32,8 @@ def run_phase_8(state: State) -> State:
     if _PHASE_NAME not in state.completed_phases:
         state.completed_phases.append(_PHASE_NAME)
 
+    state.end_time = utc_now_iso()
+
     print(f"  Generating report: {pdf_path.name}")
     build_report(state, pdf_path, plots_dir)
 
@@ -39,7 +41,7 @@ def run_phase_8(state: State) -> State:
         _write_no_output(plots_dir)
 
     state.phase_outputs[_PHASE_NAME] = {
-        "completed_at": utc_now_iso(),
+        "completed_at": state.end_time,
         "report_path": str(pdf_path),
         "plots_dir":   str(plots_dir),
     }

@@ -122,6 +122,7 @@ def _cover_page(pdf: _PDF, state: State) -> None:
         ("Case Identifier",   state.case_id),
         ("Operator",          state.operator),
         ("Analysis Started",  (state.start_time or "")[:19].replace("T", " ")),
+        ("Analysis Completed", (state.end_time or "")[:19].replace("T", " ")),
         ("Evidence Directory", str(state.evidence_directory or "-")),
         ("Output Directory",  str(Path(state.evidence_directory or "").parent / "dfdof_output" / state.case_id)),
         ("Evidence Sources",  str(len(state.input_evidence))),

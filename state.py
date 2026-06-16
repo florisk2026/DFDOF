@@ -45,6 +45,7 @@ class State:
     operator: str
     evidence_directory: str | None = None
     start_time: str = field(default_factory=utc_now_iso)
+    end_time: str | None = None
     input_evidence: list[Evidence] = field(default_factory=list)
     phase_outputs: dict[str, Any] = field(default_factory=dict)
     tool_invocation_log: list[dict[str, Any]] = field(default_factory=list)
@@ -77,6 +78,7 @@ class State:
             "operator": self.operator,
             "case_id": self.case_id,
             "start_time": self.start_time,
+            "end_time": self.end_time,
             "evidence_directory": self.evidence_directory,
             "completed_phases": self.completed_phases,
             "anomaly_flags": self.anomaly_flags,
