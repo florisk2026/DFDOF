@@ -1,0 +1,48 @@
+{
+  "test": "NT4",
+  "requirement": "R4",
+  "description": "Parent-child lineage: complete chain from input_evidence through P5 with no broken or circular links",
+  "timestamp": "2026-06-16T11:03:37.666922+00:00",
+  "cases": [
+    {
+      "case_id": "CASE-df001-2018-ios",
+      "state_path": "C:/Users/Floris/Documents/dfdof_output/CASE-df001-2018-ios/state.json",
+      "artefact_counts": {
+        "input_evidence": 2,
+        "p2": 2,
+        "p3": 45,
+        "p4": 47,
+        "p5": 23
+      },
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "CASE-df048-apr-android",
+      "state_path": "C:/Users/Floris/Documents/dfdof_output/CASE-df048-apr-android/state.json",
+      "artefact_counts": {
+        "input_evidence": 2,
+        "p2": 1,
+        "p3": 30,
+        "p4": 18,
+        "p5": 6
+      },
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "CASE-df005-2017-ios",
+      "state_path": "C:/Users/Floris/Documents/dfdof_output/CASE-df005-2017-ios/state.json",
+      "artefact_counts": {
+        "input_evidence": 2,
+        "p2": 2,
+        "p3": 50,
+        "p4": 36,
+        "p5": 5
+      },
+      "issues": [],
+      "passed": true
+    }
+  ],
+  "summary": "PASS"
+}

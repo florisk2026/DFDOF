@@ -1,0 +1,33 @@
+{
+  "test": "NT3",
+  "requirement": "R3",
+  "description": "Hash integrity: SHA-256 and SHA-1 of input_evidence and P3 artefacts match disk",
+  "timestamp": "2026-06-16T11:03:30.216895+00:00",
+  "cases": [
+    {
+      "case_id": "CASE-df005-2017-android",
+      "state_path": "C:/Users/Floris/Documents/dfdof_output/CASE-df005-2017-android/state.json",
+      "artefacts_checked": 75,
+      "artefacts_skipped_no_hash": 0,
+      "failures": [],
+      "passed": true
+    },
+    {
+      "case_id": "CASE-df005-2018-ios",
+      "state_path": "C:/Users/Floris/Documents/dfdof_output/CASE-df005-2018-ios/state.json",
+      "artefacts_checked": 66,
+      "artefacts_skipped_no_hash": 0,
+      "failures": [],
+      "passed": true
+    },
+    {
+      "case_id": "CASE-df048-jun-android",
+      "state_path": "C:/Users/Floris/Documents/dfdof_output/CASE-df048-jun-android/state.json",
+      "artefacts_checked": 70,
+      "artefacts_skipped_no_hash": 0,
+      "failures": [],
+      "passed": true
+    }
+  ],
+  "summary": "PASS"
+}

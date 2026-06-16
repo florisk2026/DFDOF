@@ -1,4 +1,7 @@
-"""T_EFF — Pipeline Efficiency: wall-clock timing per phase + DatCon interaction count.
+"""NT8 -- Pipeline Efficiency (no pass/fail)
+Wall-clock timing per phase + DatCon interaction count estimate.
+
+No automated pass/fail. Results are stored for analysis in §6 of the thesis.
 
 Usage
 -----
@@ -159,7 +162,7 @@ def _print_results(results: list[dict]) -> None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="T_EFF — Pipeline timing analysis")
+    ap = argparse.ArgumentParser(description="NT8 -- Pipeline efficiency timing")
     ap.add_argument("timing_files", nargs="*", metavar="timing_*.json",
                     help="Timing JSON files produced by PipelineTimer")
     ap.add_argument("--output-dir", metavar="DIR",

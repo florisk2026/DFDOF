@@ -1,0 +1,63 @@
+{
+  "test": "NT1",
+  "requirement": "R1",
+  "description": "Reproducibility: two runs of same evidence produce identical analytical output",
+  "timestamp": "2026-06-16T12:09:40.456016+00:00",
+  "comparisons": [
+    {
+      "run1_case": "CASE-df001-2017-drone-sd",
+      "run2_case": "CASE-df001-2017-drone-sd-2",
+      "state_differences_total": 12,
+      "state_differences_classified": {
+        "analytical": 0,
+        "filesystem_metadata_nondeterministic": 12,
+        "lineage_cascade_from_p4": 0,
+        "p3_enumeration_order": 0
+      },
+      "analytical_differences": [],
+      "timeline_differences": [],
+      "known_nondeterminisms": {
+        "exiftool_filesystem_metadata": "ExifTool JSON output includes FileModifyDate/FileCreateDate which reflect the extracted file's mtime; re-extraction to a new path changes these values, producing different P4 JSON hashes even when image content is identical.",
+        "p5_parent_sha256_cascade": "P5 normalised artefacts inherit parent_sha256 from their P4 parent; when P4 hashes change due to ExifTool filesystem metadata, P5 parent_sha256 changes correspondingly. Norm CSV content is analytically identical."
+      },
+      "passed": true
+    },
+    {
+      "run1_case": "CASE-df048-apr-android",
+      "run2_case": "CASE-df048-apr-android-2",
+      "state_differences_total": 53,
+      "state_differences_classified": {
+        "analytical": 0,
+        "filesystem_metadata_nondeterministic": 48,
+        "lineage_cascade_from_p4": 5,
+        "p3_enumeration_order": 0
+      },
+      "analytical_differences": [],
+      "timeline_differences": [],
+      "known_nondeterminisms": {
+        "exiftool_filesystem_metadata": "ExifTool JSON output includes FileModifyDate/FileCreateDate which reflect the extracted file's mtime; re-extraction to a new path changes these values, producing different P4 JSON hashes even when image content is identical.",
+        "p5_parent_sha256_cascade": "P5 normalised artefacts inherit parent_sha256 from their P4 parent; when P4 hashes change due to ExifTool filesystem metadata, P5 parent_sha256 changes correspondingly. Norm CSV content is analytically identical."
+      },
+      "passed": true
+    },
+    {
+      "run1_case": "CASE-df048-jun-ios",
+      "run2_case": "CASE-df048-jun-ios-run2",
+      "state_differences_total": 92,
+      "state_differences_classified": {
+        "analytical": 0,
+        "filesystem_metadata_nondeterministic": 79,
+        "lineage_cascade_from_p4": 13,
+        "p3_enumeration_order": 0
+      },
+      "analytical_differences": [],
+      "timeline_differences": [],
+      "known_nondeterminisms": {
+        "exiftool_filesystem_metadata": "ExifTool JSON output includes FileModifyDate/FileCreateDate which reflect the extracted file's mtime; re-extraction to a new path changes these values, producing different P4 JSON hashes even when image content is identical.",
+        "p5_parent_sha256_cascade": "P5 normalised artefacts inherit parent_sha256 from their P4 parent; when P4 hashes change due to ExifTool filesystem metadata, P5 parent_sha256 changes correspondingly. Norm CSV content is analytically identical."
+      },
+      "passed": true
+    }
+  ],
+  "summary": "PASS"
+}

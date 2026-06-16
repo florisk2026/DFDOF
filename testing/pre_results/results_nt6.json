@@ -1,0 +1,47 @@
+{
+  "test": "NT6",
+  "requirement": "R5b",
+  "description": "All artefacts accounted for: every P3 artefact is uncorrelated or linked via descendants to an accounting source",
+  "timestamp": "2026-06-16T11:03:44.123307+00:00",
+  "cases": [
+    {
+      "case_id": "CASE-df001-2017-drone-sd",
+      "state_path": "C:/Users/Floris/Documents/dfdof_output/CASE-df001-2017-drone-sd/state.json",
+      "p3_total": 4,
+      "uncorrelated_count": 4,
+      "referenced_count": 0,
+      "truly_unaccounted": 0,
+      "uncorr_duplicates": 0,
+      "unaccounted_details": [],
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "CASE-df048-jun-ios",
+      "state_path": "C:/Users/Floris/Documents/dfdof_output/CASE-df048-jun-ios/state.json",
+      "p3_total": 36,
+      "uncorrelated_count": 30,
+      "referenced_count": 11,
+      "truly_unaccounted": 0,
+      "uncorr_duplicates": 12,
+      "unaccounted_details": [],
+      "issues": [
+        "uncorrelated_artefacts has 12 duplicate sha256(s)"
+      ],
+      "passed": false
+    },
+    {
+      "case_id": "CASE-df001-2018-android",
+      "state_path": "C:/Users/Floris/Documents/dfdof_output/CASE-df001-2018-android/state.json",
+      "p3_total": 30,
+      "uncorrelated_count": 11,
+      "referenced_count": 65,
+      "truly_unaccounted": 0,
+      "uncorr_duplicates": 0,
+      "unaccounted_details": [],
+      "issues": [],
+      "passed": true
+    }
+  ],
+  "summary": "FAIL: see case issues"
+}

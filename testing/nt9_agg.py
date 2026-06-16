@@ -208,7 +208,7 @@ def _print_table(results: list[dict]) -> None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Aggregate coverage results across all cases")
+    ap = argparse.ArgumentParser(description="NT9 -- Aggregate coverage results across all cases")
     ap.add_argument("state_files", nargs="*", metavar="state.json")
     ap.add_argument("--output-dir", metavar="DIR",
                     help="Root dfdof_output directory to scan for state.json files")
