@@ -1,8 +1,8 @@
 {
-  "test": "NT5",
+  "test": "MT5",
   "requirement": "R5a",
   "description": "Source identification: classification and acquisition method per evidence source",
-  "timestamp": "2026-06-16T09:51:09.593142+00:00",
+  "timestamp": "2026-06-17T12:19:32.963678+00:00",
   "cases": [
     {
       "case_id": "CASE-df001-2017-drone-sd",

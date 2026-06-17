@@ -1,8 +1,8 @@
 {
-  "test": "NT6",
+  "test": "AT6",
   "requirement": "R5b",
   "description": "All artefacts accounted for: every P3 artefact is uncorrelated or linked via descendants to an accounting source",
-  "timestamp": "2026-06-16T11:03:44.123307+00:00",
+  "timestamp": "2026-06-17T12:19:39.233485+00:00",
   "cases": [
     {
       "case_id": "CASE-df001-2017-drone-sd",

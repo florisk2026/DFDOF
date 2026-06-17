@@ -1,4 +1,4 @@
-"""NT7 -- UTC Normalisation (R8a + R8b)
+"""Automated Test 7 (AT7) -- UTC Normalisation (R8a + R8b)
 
 Verify that temporal normalisation only occurs when the source data contains
 explicit timezone information.
@@ -17,8 +17,8 @@ Checks:
 
 Usage
 -----
-    python testing/nt7_utc.py state.json [state.json ...]
-    python testing/nt7_utc.py *.json --output pre_results/results_nt7.json
+    python testing/at7_utc.py state.json [state.json ...]
+    python testing/at7_utc.py *.json --output pre_results/results_at7.json
 """
 from __future__ import annotations
 
@@ -168,7 +168,7 @@ def _validate_case(state_path: str) -> dict:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="NT7 -- UTC normalisation correctness")
+    ap = argparse.ArgumentParser(description="AT7 -- UTC normalisation correctness")
     ap.add_argument("state_files", nargs="+", metavar="state.json")
     ap.add_argument("--output", metavar="results.json")
     args = ap.parse_args()
@@ -201,11 +201,11 @@ def main() -> int:
 
     print(f"\n{'='*60}")
     total_issues = sum(len(r.get("issues", [])) for r in results)
-    print(f"NT7 RESULT: {'PASS' if all_pass else 'FAIL'}  ({len(results)} cases, {total_issues} issues)")
+    print(f"AT7 RESULT: {'PASS' if all_pass else 'FAIL'}  ({len(results)} cases, {total_issues} issues)")
 
     if args.output:
         output = {
-            "test": "NT7",
+            "test": "AT7",
             "requirement": "R8a + R8b",
             "description": "UTC normalisation: timestamps normalised to UTC only when timezone info present in source",
             "timestamp": datetime.now(timezone.utc).isoformat(),

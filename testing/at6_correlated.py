@@ -1,4 +1,4 @@
-"""NT6 -- All Artefacts Accounted For (R5b)
+"""Automated Test 6 (AT6) -- All Artefacts Accounted For (R5b)
 
 For each state.json, verify:
 1. uncorrelated_artefacts in P7 contains no duplicate sha256s
@@ -21,8 +21,8 @@ Pass criteria
 
 Usage
 -----
-    python testing/nt6_correlated.py state.json [state.json ...]
-    python testing/nt6_correlated.py *.json --output pre_results/results_nt6.json
+    python testing/at6_correlated.py state.json [state.json ...]
+    python testing/at6_correlated.py *.json --output pre_results/results_at6.json
 """
 from __future__ import annotations
 
@@ -205,7 +205,7 @@ def _validate_case(state_path: str) -> dict:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="NT6 -- All artefacts accounted for")
+    ap = argparse.ArgumentParser(description="AT6 -- All artefacts accounted for")
     ap.add_argument("state_files", nargs="+", metavar="state.json")
     ap.add_argument("--output", metavar="results.json")
     args = ap.parse_args()
@@ -232,11 +232,11 @@ def main() -> int:
                 print(f"  !! {issue}")
 
     print(f"\n{'='*60}")
-    print(f"NT6 RESULT: {'PASS' if all_pass else 'FAIL'}  ({len(results)} cases)")
+    print(f"AT6 RESULT: {'PASS' if all_pass else 'FAIL'}  ({len(results)} cases)")
 
     if args.output:
         output = {
-            "test": "NT6",
+            "test": "AT6",
             "requirement": "R5b",
             "description": "All artefacts accounted for: every P3 artefact is uncorrelated or linked via descendants to an accounting source",
             "timestamp": datetime.now(timezone.utc).isoformat(),

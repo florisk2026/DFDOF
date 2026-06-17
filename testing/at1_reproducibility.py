@@ -1,4 +1,4 @@
-"""NT1 -- Reproducibility (R1)
+"""Automated Test 1 (AT1) -- Reproducibility (R1)
 
 Compare two pipeline runs on the same evidence (different case IDs).
 After stripping all timestamps and path keys, state.json and
@@ -6,8 +6,8 @@ timeline_flightXX.json must be bit-for-bit equivalent.
 
 Usage
 -----
-    python testing/nt1_reproducibility.py state_run1.json state_run2.json
-    python testing/nt1_reproducibility.py state_run1.json state_run2.json --output pre_results/results_nt1.json
+    python testing/at1_reproducibility.py state_run1.json state_run2.json
+    python testing/at1_reproducibility.py state_run1.json state_run2.json --output pre_results/results_at1.json
 
 Pass criteria
 -------------
@@ -202,7 +202,7 @@ def run_comparison(state1_path: str, state2_path: str) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser(
-        description="NT1 -- Reproducibility",
+        description="AT1 -- Reproducibility",
         epilog="Provide state files in pairs: run1_a run2_a [run1_b run2_b ...]",
     )
     ap.add_argument(
@@ -228,7 +228,7 @@ def main() -> int:
             all_pass = False
 
         print(f"\n{'='*60}")
-        print(f"NT1 REPRODUCIBILITY")
+        print(f"AT1 REPRODUCIBILITY")
         print(f"  Run 1: {result['run1_case']}")
         print(f"  Run 2: {result['run2_case']}")
         cls = result.get("state_differences_classified", {})
@@ -251,11 +251,11 @@ def main() -> int:
                 print(f"  {d}")
 
     print(f"\n{'='*60}")
-    print(f"NT1 OVERALL: {'PASS' if all_pass else 'FAIL'}  ({len(pairs)} pair(s))")
+    print(f"AT1 OVERALL: {'PASS' if all_pass else 'FAIL'}  ({len(pairs)} pair(s))")
 
     if args.output:
         output = {
-            "test": "NT1",
+            "test": "AT1",
             "requirement": "R1",
             "description": "Reproducibility: two runs of same evidence produce identical analytical output",
             "timestamp": datetime.now(timezone.utc).isoformat(),

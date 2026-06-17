@@ -1,8 +1,8 @@
 {
-  "test": "NT1",
+  "test": "AT1",
   "requirement": "R1",
   "description": "Reproducibility: two runs of same evidence produce identical analytical output",
-  "timestamp": "2026-06-16T12:09:40.456016+00:00",
+  "timestamp": "2026-06-17T12:16:55.167063+00:00",
   "comparisons": [
     {
       "run1_case": "CASE-df001-2017-drone-sd",

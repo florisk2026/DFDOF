@@ -1,4 +1,4 @@
-"""NT4 -- Complete Parent-Child Lineage (R4)
+"""Automated Test 4 (AT4) -- Complete Parent-Child Lineage (R4)
 
 For each state.json, verify the full SHA-256 parent->child lineage chain
 from input_evidence through P5. Input evidence has no parent (root nodes).
@@ -14,8 +14,8 @@ Chain rules:
 
 Usage
 -----
-    python testing/nt4_chain.py state.json [state.json ...]
-    python testing/nt4_chain.py *.json --output pre_results/results_nt4.json
+    python testing/at4_chain.py state.json [state.json ...]
+    python testing/at4_chain.py *.json --output pre_results/results_at4.json
 """
 from __future__ import annotations
 
@@ -122,7 +122,7 @@ def _validate_case(state_path: str) -> dict:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="NT4 -- Parent-child lineage")
+    ap = argparse.ArgumentParser(description="AT4 -- Parent-child lineage")
     ap.add_argument("state_files", nargs="+", metavar="state.json")
     ap.add_argument("--output", metavar="results.json")
     args = ap.parse_args()
@@ -152,11 +152,11 @@ def main() -> int:
 
     print(f"\n{'='*60}")
     total_issues = sum(len(r.get("issues", [])) for r in results)
-    print(f"NT4 RESULT: {'PASS' if all_pass else 'FAIL'}  ({len(results)} cases, {total_issues} issues)")
+    print(f"AT4 RESULT: {'PASS' if all_pass else 'FAIL'}  ({len(results)} cases, {total_issues} issues)")
 
     if args.output:
         output = {
-            "test": "NT4",
+            "test": "AT4",
             "requirement": "R4",
             "description": "Parent-child lineage: complete chain from input_evidence through P5 with no broken or circular links",
             "timestamp": datetime.now(timezone.utc).isoformat(),

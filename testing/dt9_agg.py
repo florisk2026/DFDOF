@@ -1,14 +1,14 @@
-"""Aggregate Results — produce §6 coverage table from all state.json files.
+"""Data Test 9 (DT9) — Aggregate Results — produce §6 coverage table from all state.json files.
 
 Usage
 -----
-    python testing/aggregate_results.py state.json [state.json ...]
+    python testing/dt9_agg.py state.json [state.json ...]
 
     # Scan a root output directory for all state.json files:
-    python testing/aggregate_results.py --output-dir ~/Documents/dfdof_output
+    python testing/dt9_agg.py --output-dir ~/Documents/dfdof_output
 
     # Write to CSV (primary deliverable for §6 tables):
-    python testing/aggregate_results.py --output-dir ~/Documents/dfdof_output \\
+    python testing/dt9_agg.py --output-dir ~/Documents/dfdof_output \\
         --csv aggregate_results.csv
 
 Output columns
@@ -208,7 +208,7 @@ def _print_table(results: list[dict]) -> None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="NT9 -- Aggregate coverage results across all cases")
+    ap = argparse.ArgumentParser(description="DT9 -- Aggregate coverage results across all cases")
     ap.add_argument("state_files", nargs="*", metavar="state.json")
     ap.add_argument("--output-dir", metavar="DIR",
                     help="Root dfdof_output directory to scan for state.json files")

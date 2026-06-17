@@ -1,4 +1,4 @@
-"""NT5 -- Correct Identification (R5a)
+"""Manual Test 5 (MT5) -- Correct Identification (R5a)
 
 For each state.json, extract:
 - From input_evidence: source_path, source_identification, acquisition_method
@@ -10,8 +10,8 @@ known VTO inventory.
 
 Usage
 -----
-    python testing/nt5_id.py state.json [state.json ...]
-    python testing/nt5_id.py *.json --csv nt5_identification.csv --output pre_results/results_nt5.json
+    python testing/mt5_id.py state.json [state.json ...]
+    python testing/mt5_id.py *.json --csv mt5_identification.csv --output pre_results/results_mt5.json
 """
 from __future__ import annotations
 
@@ -79,7 +79,7 @@ def _validate_case(state_path: str) -> dict:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="NT5 -- Source identification (for manual review)")
+    ap = argparse.ArgumentParser(description="MT5 -- Source identification (for manual review)")
     ap.add_argument("state_files", nargs="+", metavar="state.json")
     ap.add_argument("--csv", metavar="OUTPUT.csv", help="Write flat CSV for manual ground-truth comparison")
     ap.add_argument("--output", metavar="results.json")
@@ -107,7 +107,7 @@ def main() -> int:
             print(f"  Auto-detected issues: {r['issues']}")
 
     print(f"\n{'='*60}")
-    print(f"NT5 NOTE: No automated pass/fail -- manual verification required.")
+    print(f"MT5 NOTE: No automated pass/fail -- manual verification required.")
     print(f"Total sources: {len(all_rows)} across {len(all_results)} cases")
     auto_issues = sum(len(r.get("issues", [])) for r in all_results)
     if auto_issues:
@@ -124,7 +124,7 @@ def main() -> int:
 
     if args.output:
         output = {
-            "test": "NT5",
+            "test": "MT5",
             "requirement": "R5a",
             "description": "Source identification: classification and acquisition method per evidence source",
             "timestamp": datetime.now(timezone.utc).isoformat(),

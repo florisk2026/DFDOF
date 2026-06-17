@@ -1,4 +1,4 @@
-"""NT3 -- Hash Integrity (R3)
+"""Automated Test 3 (AT3) -- Hash Integrity (R3)
 
 For each state.json, compute SHA-256 and SHA-1 of every input_evidence and
 P3 artefact file on disk and compare with the recorded hashes.
@@ -6,8 +6,8 @@ Directories (e.g. iOS parsed folder) have null hashes and are skipped.
 
 Usage
 -----
-    python testing/nt3_hash.py state.json [state.json ...]
-    python testing/nt3_hash.py *.json --output pre_results/results_nt3.json
+    python testing/at3_hash.py state.json [state.json ...]
+    python testing/at3_hash.py *.json --output pre_results/results_at3.json
 
 Pass criteria
 -------------
@@ -112,7 +112,7 @@ def _validate_case(state_path: str) -> dict:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="NT3 -- Hash integrity")
+    ap = argparse.ArgumentParser(description="AT3 -- Hash integrity")
     ap.add_argument("state_files", nargs="+", metavar="state.json")
     ap.add_argument("--output", metavar="results.json")
     args = ap.parse_args()
@@ -142,12 +142,12 @@ def main() -> int:
     print(f"\n{'='*60}")
     total_checked = sum(r.get("artefacts_checked", 0) for r in results)
     total_failures = sum(len(r.get("failures", [])) for r in results)
-    print(f"NT3 RESULT: {'PASS' if all_pass else 'FAIL'}  "
+    print(f"AT3 RESULT: {'PASS' if all_pass else 'FAIL'}  "
           f"({len(results)} cases, {total_checked} files checked, {total_failures} failures)")
 
     if args.output:
         output = {
-            "test": "NT3",
+            "test": "AT3",
             "requirement": "R3",
             "description": "Hash integrity: SHA-256 and SHA-1 of input_evidence and P3 artefacts match disk",
             "timestamp": datetime.now(timezone.utc).isoformat(),

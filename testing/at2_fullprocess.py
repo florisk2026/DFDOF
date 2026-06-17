@@ -1,4 +1,4 @@
-"""NT2 -- Complete Processing Documentation (R2a + R2b + R6)
+"""Automated Test 2 (AT2) -- Complete Processing Documentation (R2a + R2b + R6)
 
 For each state.json, validate:
 - All phases in completed_phases have a corresponding phase_outputs section
@@ -10,8 +10,8 @@ For each state.json, validate:
 
 Usage
 -----
-    python testing/nt2_fullprocess.py state.json [state.json ...]
-    python testing/nt2_fullprocess.py *.json --output pre_results/results_nt2.json
+    python testing/at2_fullprocess.py state.json [state.json ...]
+    python testing/at2_fullprocess.py *.json --output pre_results/results_at2.json
 """
 from __future__ import annotations
 
@@ -175,7 +175,7 @@ def _validate_case(state_path: str) -> dict:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="NT2 -- Complete processing documentation")
+    ap = argparse.ArgumentParser(description="AT2 -- Complete processing documentation")
     ap.add_argument("state_files", nargs="+", metavar="state.json")
     ap.add_argument("--output", metavar="results.json")
     args = ap.parse_args()
@@ -205,11 +205,11 @@ def main() -> int:
             print(f"  Tool log entries: {d.get('tool_log_entries', '?')}")
 
     print(f"\n{'='*60}")
-    print(f"NT2 RESULT: {'PASS' if all_pass else 'FAIL'}  ({len(results)} cases)")
+    print(f"AT2 RESULT: {'PASS' if all_pass else 'FAIL'}  ({len(results)} cases)")
 
     if args.output:
         output = {
-            "test": "NT2",
+            "test": "AT2",
             "requirement": "R2a + R2b + R6",
             "description": "Complete processing documentation: phase outputs, timestamps, artefact fields, tool log",
             "timestamp": datetime.now(timezone.utc).isoformat(),

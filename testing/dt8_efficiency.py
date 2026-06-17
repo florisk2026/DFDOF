@@ -1,4 +1,4 @@
-"""NT8 -- Pipeline Efficiency (no pass/fail)
+"""Data Test 8 (DT8) -- Pipeline Efficiency (no pass/fail)
 Wall-clock timing per phase + DatCon interaction count estimate.
 
 No automated pass/fail. Results are stored for analysis in §6 of the thesis.
@@ -8,13 +8,13 @@ Usage
 Run after all pipeline cases are complete.  Pass the timing JSON files produced by
 PipelineTimer (saved as timing_<case_id>.json in each case output directory):
 
-    python testing/validate_teff_timing.py timing_*.json
+    python testing/dt8_efficiency.py timing_*.json
 
     # Or point to the dfdof_output root and let the script find all timing files:
-    python testing/validate_teff_timing.py --output-dir ~/Documents/dfdof_output
+    python testing/dt8_efficiency.py --output-dir ~/Documents/dfdof_output
 
     # Write summary CSV for §6 tables:
-    python testing/validate_teff_timing.py timing_*.json --csv teff_timing.csv
+    python testing/dt8_efficiency.py timing_*.json --csv teff_timing.csv
 
 Notes on manual data to add
 ----------------------------
@@ -162,13 +162,15 @@ def _print_results(results: list[dict]) -> None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="NT8 -- Pipeline efficiency timing")
+    ap = argparse.ArgumentParser(description="DT8 -- Pipeline efficiency timing")
     ap.add_argument("timing_files", nargs="*", metavar="timing_*.json",
                     help="Timing JSON files produced by PipelineTimer")
     ap.add_argument("--output-dir", metavar="DIR",
                     help="Root output directory to scan for timing_*.json files")
     ap.add_argument("--csv", metavar="OUTPUT.csv",
                     help="Write summary to CSV")
+    ap.add_argument("--output", metavar="results.json",
+                    help="Write structured results to JSON")
     args = ap.parse_args()
 
     paths: list[Path] = []
@@ -210,6 +212,30 @@ def main() -> int:
             writer.writeheader()
             writer.writerows(rows)
         print(f"\nCSV written to {args.csv}")
+
+    if args.output and results:
+        from datetime import datetime, timezone
+        avg_auto = sum(r["automated_s"] for r in results) / len(results)
+        avg_total = sum(r["total_s"] for r in results) / len(results)
+        total_datcon = sum(r["datcon_invocations"] for r in results)
+        output = {
+            "test": "DT8",
+            "description": "Pipeline efficiency timing: wall-clock per phase + DatCon interaction estimate",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "cases": results,
+            "summary": {
+                "case_count": len(results),
+                "mean_automated_s": round(avg_auto, 1),
+                "mean_total_s": round(avg_total, 1),
+                "total_datcon_invocations": total_datcon,
+                "estimated_datcon_total_min": round(total_datcon * 2.5, 1),
+            },
+        }
+        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.output).write_text(
+            json.dumps(output, indent=2), encoding="utf-8"
+        )
+        print(f"\nJSON written to {args.output}")
 
     return 0
 

@@ -1,8 +1,8 @@
 {
-  "test": "NT4",
+  "test": "AT4",
   "requirement": "R4",
   "description": "Parent-child lineage: complete chain from input_evidence through P5 with no broken or circular links",
-  "timestamp": "2026-06-16T11:03:37.666922+00:00",
+  "timestamp": "2026-06-17T12:19:24.096723+00:00",
   "cases": [
     {
       "case_id": "CASE-df001-2018-ios",
