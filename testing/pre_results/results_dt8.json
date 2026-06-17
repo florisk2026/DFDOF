@@ -1,7 +1,7 @@
 {
   "test": "DT8",
   "description": "Pipeline efficiency timing: wall-clock per phase + DatCon interaction estimate",
-  "timestamp": "2026-06-17T12:29:05.517955+00:00",
+  "timestamp": "2026-06-17T15:03:29.122638+00:00",
   "cases": [
     {
       "case_id": "CASE-df001-2017-drone-sd",
@@ -22,26 +22,6 @@
         "P8": 0.2
       },
       "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-df001-2017-drone-sd\\timing_CASE-df001-2017-drone-sd.json"
-    },
-    {
-      "case_id": "CASE-df001-2017-drone-sd-2",
-      "operator": "Floris",
-      "total_s": 48.1,
-      "automated_s": 46.4,
-      "p4_s": 1.8,
-      "datcon_invocations": 0,
-      "estimated_datcon_min": 0.0,
-      "phases": {
-        "P1": 45.1,
-        "P2": 0.0,
-        "P3": 1.1,
-        "P4": 1.8,
-        "P5": 0.0,
-        "P6": 0.0,
-        "P7": 0.0,
-        "P8": 0.2
-      },
-      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-df001-2017-drone-sd-2\\timing_CASE-df001-2017-drone-sd-2.json"
     },
     {
       "case_id": "CASE-df001-2018-android",
@@ -184,26 +164,6 @@
       "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-df048-apr-android\\timing_CASE-df048-apr-android.json"
     },
     {
-      "case_id": "CASE-df048-apr-android-2",
-      "operator": "Floris",
-      "total_s": 97.2,
-      "automated_s": 92.2,
-      "p4_s": 5.0,
-      "datcon_invocations": 0,
-      "estimated_datcon_min": 0.0,
-      "phases": {
-        "P1": 35.0,
-        "P2": 0.3,
-        "P3": 54.9,
-        "P4": 5.0,
-        "P5": 0.4,
-        "P6": 0.1,
-        "P7": 0.0,
-        "P8": 1.5
-      },
-      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-df048-apr-android-2\\timing_CASE-df048-apr-android-2.json"
-    },
-    {
       "case_id": "CASE-df048-apr-ios",
       "operator": "Floris",
       "total_s": 131.6,
@@ -262,53 +222,13 @@
         "P8": 8.1
       },
       "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-df048-jun-ios\\timing_CASE-df048-jun-ios.json"
-    },
-    {
-      "case_id": "CASE-df048-jun-ios-run2",
-      "operator": "Floris",
-      "total_s": 213.4,
-      "automated_s": 179.3,
-      "p4_s": 34.1,
-      "datcon_invocations": 1,
-      "estimated_datcon_min": 2.5,
-      "phases": {
-        "P1": 52.9,
-        "P2": 6.9,
-        "P3": 103.6,
-        "P4": 34.1,
-        "P5": 6.6,
-        "P6": 2.2,
-        "P7": 0.0,
-        "P8": 7.1
-      },
-      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-df048-jun-ios-run2\\timing_CASE-df048-jun-ios-run2.json"
-    },
-    {
-      "case_id": "CASE-PHASES",
-      "operator": "Floris",
-      "total_s": 0.2,
-      "automated_s": 0.2,
-      "p4_s": 0.0,
-      "datcon_invocations": 0,
-      "estimated_datcon_min": 0.0,
-      "phases": {
-        "P1": 0.0,
-        "P2": 0.0,
-        "P3": 0.0,
-        "P4": 0.0,
-        "P5": 0.0,
-        "P6": 0.0,
-        "P7": 0.0,
-        "P8": 0.1
-      },
-      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\CASE-PHASES\\timing_CASE-PHASES.json"
     }
   ],
   "summary": {
-    "case_count": 15,
-    "mean_automated_s": 136.4,
-    "mean_total_s": 247.2,
-    "total_datcon_invocations": 91,
-    "estimated_datcon_total_min": 227.5
+    "case_count": 11,
+    "mean_automated_s": 157.1,
+    "mean_total_s": 304.4,
+    "total_datcon_invocations": 90,
+    "estimated_datcon_total_min": 225.0
   }
 }
