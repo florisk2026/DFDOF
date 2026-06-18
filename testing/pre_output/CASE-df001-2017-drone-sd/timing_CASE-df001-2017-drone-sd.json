@@ -1,0 +1,56 @@
+{
+  "case_id": "CASE-df001-2017-drone-sd",
+  "operator": "Floris",
+  "pipeline_start": "2026-06-16T11:41:50.864484+00:00",
+  "pipeline_end": "2026-06-16T11:42:34.613071+00:00",
+  "total_seconds": 43.707,
+  "automated_seconds": 41.986,
+  "phases": {
+    "p1_provenance": {
+      "start": "2026-06-16T11:41:50.864588+00:00",
+      "end": "2026-06-16T11:42:31.501059+00:00",
+      "duration_s": 40.636
+    },
+    "p2_image_parsing": {
+      "start": "2026-06-16T11:42:31.507015+00:00",
+      "end": "2026-06-16T11:42:31.512167+00:00",
+      "duration_s": 0.005
+    },
+    "p3_artefact_extraction": {
+      "start": "2026-06-16T11:42:31.516593+00:00",
+      "end": "2026-06-16T11:42:32.653704+00:00",
+      "duration_s": 1.137
+    },
+    "p4_decision_and_orchestration": {
+      "start": "2026-06-16T11:42:32.657155+00:00",
+      "end": "2026-06-16T11:42:34.378556+00:00",
+      "duration_s": 1.721
+    },
+    "p5_normalisation_and_anomaly_checking": {
+      "start": "2026-06-16T11:42:34.385104+00:00",
+      "end": "2026-06-16T11:42:34.393438+00:00",
+      "duration_s": 0.008
+    },
+    "p6_multisource_correlation": {
+      "start": "2026-06-16T11:42:34.397972+00:00",
+      "end": "2026-06-16T11:42:34.402818+00:00",
+      "duration_s": 0.005
+    },
+    "p7_analysis_and_validation": {
+      "start": "2026-06-16T11:42:34.406843+00:00",
+      "end": "2026-06-16T11:42:34.407343+00:00",
+      "duration_s": 0.001
+    },
+    "p8_automated_reporting": {
+      "start": "2026-06-16T11:42:34.414503+00:00",
+      "end": "2026-06-16T11:42:34.608361+00:00",
+      "duration_s": 0.194
+    }
+  },
+  "notes": {
+    "p4_includes_datcon_operator_time": true,
+    "automated_seconds_excludes": [
+      "p4_decision_and_orchestration"
+    ]
+  }
+}

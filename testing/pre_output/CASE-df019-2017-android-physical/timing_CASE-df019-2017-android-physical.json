@@ -1,0 +1,56 @@
+{
+  "case_id": "CASE-df019-2017-android-physical",
+  "operator": "Floris",
+  "pipeline_start": "2026-06-15T15:33:24.736973+00:00",
+  "pipeline_end": "2026-06-15T15:33:54.554012+00:00",
+  "total_seconds": 29.365,
+  "automated_seconds": 26.737,
+  "phases": {
+    "p1_provenance": {
+      "start": "2026-06-15T15:33:24.737080+00:00",
+      "end": "2026-06-15T15:33:41.740222+00:00",
+      "duration_s": 17.003
+    },
+    "p2_image_parsing": {
+      "start": "2026-06-15T15:33:41.769491+00:00",
+      "end": "2026-06-15T15:33:41.979516+00:00",
+      "duration_s": 0.21
+    },
+    "p3_artefact_extraction": {
+      "start": "2026-06-15T15:33:42.004231+00:00",
+      "end": "2026-06-15T15:33:47.342491+00:00",
+      "duration_s": 5.338
+    },
+    "p4_decision_and_orchestration": {
+      "start": "2026-06-15T15:33:47.408155+00:00",
+      "end": "2026-06-15T15:33:50.036132+00:00",
+      "duration_s": 2.628
+    },
+    "p5_normalisation_and_anomaly_checking": {
+      "start": "2026-06-15T15:33:50.071422+00:00",
+      "end": "2026-06-15T15:33:51.041293+00:00",
+      "duration_s": 0.97
+    },
+    "p6_multisource_correlation": {
+      "start": "2026-06-15T15:33:51.108791+00:00",
+      "end": "2026-06-15T15:33:51.386606+00:00",
+      "duration_s": 0.278
+    },
+    "p7_analysis_and_validation": {
+      "start": "2026-06-15T15:33:51.468893+00:00",
+      "end": "2026-06-15T15:33:51.481525+00:00",
+      "duration_s": 0.013
+    },
+    "p8_automated_reporting": {
+      "start": "2026-06-15T15:33:51.544541+00:00",
+      "end": "2026-06-15T15:33:54.469270+00:00",
+      "duration_s": 2.925
+    }
+  },
+  "notes": {
+    "p4_includes_datcon_operator_time": true,
+    "automated_seconds_excludes": [
+      "p4_decision_and_orchestration"
+    ]
+  }
+}

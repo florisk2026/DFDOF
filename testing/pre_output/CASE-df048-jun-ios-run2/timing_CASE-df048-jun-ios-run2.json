@@ -1,0 +1,56 @@
+{
+  "case_id": "CASE-df048-jun-ios-run2",
+  "operator": "Floris",
+  "pipeline_start": "2026-06-16T11:47:25.001358+00:00",
+  "pipeline_end": "2026-06-16T11:50:58.472192+00:00",
+  "total_seconds": 213.366,
+  "automated_seconds": 179.302,
+  "phases": {
+    "p1_provenance": {
+      "start": "2026-06-16T11:47:25.001446+00:00",
+      "end": "2026-06-16T11:48:17.947644+00:00",
+      "duration_s": 52.946
+    },
+    "p2_image_parsing": {
+      "start": "2026-06-16T11:48:17.953030+00:00",
+      "end": "2026-06-16T11:48:24.814284+00:00",
+      "duration_s": 6.861
+    },
+    "p3_artefact_extraction": {
+      "start": "2026-06-16T11:48:24.818734+00:00",
+      "end": "2026-06-16T11:50:08.405383+00:00",
+      "duration_s": 103.587
+    },
+    "p4_decision_and_orchestration": {
+      "start": "2026-06-16T11:50:08.411516+00:00",
+      "end": "2026-06-16T11:50:42.475564+00:00",
+      "duration_s": 34.064
+    },
+    "p5_normalisation_and_anomaly_checking": {
+      "start": "2026-06-16T11:50:42.482664+00:00",
+      "end": "2026-06-16T11:50:49.098169+00:00",
+      "duration_s": 6.616
+    },
+    "p6_multisource_correlation": {
+      "start": "2026-06-16T11:50:49.113015+00:00",
+      "end": "2026-06-16T11:50:51.294475+00:00",
+      "duration_s": 2.181
+    },
+    "p7_analysis_and_validation": {
+      "start": "2026-06-16T11:50:51.321842+00:00",
+      "end": "2026-06-16T11:50:51.347292+00:00",
+      "duration_s": 0.025
+    },
+    "p8_automated_reporting": {
+      "start": "2026-06-16T11:50:51.371621+00:00",
+      "end": "2026-06-16T11:50:58.457976+00:00",
+      "duration_s": 7.086
+    }
+  },
+  "notes": {
+    "p4_includes_datcon_operator_time": true,
+    "automated_seconds_excludes": [
+      "p4_decision_and_orchestration"
+    ]
+  }
+}
