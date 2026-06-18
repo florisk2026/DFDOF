@@ -168,7 +168,7 @@ def run_phases(
     shutil.copy2(state_path, case_dir / Path(state_path).name)
 
     print(f"Workflow complete. State written to {state_path}")
-    print(f"All results are stored in {state.evidence_directory}\n")
+    print(f"All results are stored in {case_dir}\n")
     return state
 
 
