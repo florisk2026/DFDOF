@@ -766,12 +766,50 @@ def _extract_flight_storage_sources(
                     "no artefacts extracted",
                     category=DRONE_LOGS,
                 )
-    else:
-        state.raise_anomaly(
-            3, IDENTIFICATION_DRONE_FLIGHT_STORAGE,
-            f"unsupported archive format for {flight_archive.name}",
-            category=DRONE_LOGS,
-        )
+    else:  # Physical image (.001, .E01)
+        entries = _get_cached_entries(state, flight_archive)
+        if not entries:
+            state.raise_anomaly(
+                3, IDENTIFICATION_DRONE_FLIGHT_STORAGE,
+                "no cached image entries from P1, extraction aborted",
+                category=DRONE_LOGS,
+            )
+        else:
+            offset_sectors = _get_cached_offset(state, flight_archive)
+            dat_entries = [
+                e for e in entries
+                if e[0].startswith("r") and Path(e[2]).suffix.lower() == ".dat"
+            ]
+            if not dat_entries:
+                state.raise_anomaly(
+                    3, IDENTIFICATION_DRONE_FLIGHT_STORAGE,
+                    f"no DAT files found in {flight_archive.name}",
+                    category=DRONE_LOGS,
+                )
+            else:
+                drone_logs_dir = drone_flight_dir / safe_segment(DRONE_LOGS)
+                evidence_list = _filter_empty(
+                    extract_tsk_image(
+                        flight_archive,
+                        drone_logs_dir,
+                        include_paths=None,
+                        parent=flight_source,
+                        artefact_category=DRONE_LOGS,
+                        precomputed_entries=dat_entries,
+                        offset_sectors=offset_sectors,
+                        state=state,
+                    ),
+                    state,
+                    IDENTIFICATION_DRONE_FLIGHT_STORAGE,
+                    DRONE_LOGS,
+                )
+                extracted.extend(evidence_list)
+                if not evidence_list:
+                    state.raise_anomaly(
+                        3, IDENTIFICATION_DRONE_FLIGHT_STORAGE,
+                        "no artefacts extracted",
+                        category=DRONE_LOGS,
+                    )
     if not _has_real_output(drone_flight_dir):
         _write_no_output(drone_flight_dir)
     return extracted

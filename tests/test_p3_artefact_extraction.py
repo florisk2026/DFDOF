@@ -15,6 +15,7 @@ from config import (
     VIDEOS,
     DEVICE_AND_BACKUP_INFO,
 )
+import parsing.extract_physical as extract_physical_mod
 from evidence import Evidence, make_evidence
 from phases import p3_artefact_extraction as p3
 from state import State
@@ -912,6 +913,63 @@ def test_run_phase_3_drone_flight_storage_export_dat(tmp_path: Path, monkeypatch
         Path(a["stored_path"]).parent.name == DRONE_LOGS
         for a in drone_log_artefacts
     ), "DAT files must be placed in the drone_logs subfolder"
+
+
+def test_run_phase_3_drone_flight_storage_physical(tmp_path: Path, monkeypatch) -> None:
+    project_root = tmp_path
+    (project_root / "Documents").mkdir(parents=True)
+    monkeypatch.setattr(Path, "home", lambda: project_root)
+
+    flight_image = tmp_path / "drone_internal.001"
+    flight_image.write_bytes(b"image")
+
+    state = _build_state(tmp_path, "CASE-P3-FS-PHYS")
+    flight_evidence = make_evidence(
+        source_path=flight_image,
+        stored_path=flight_image,
+        parent=None,
+        acquisition_method=config.ACQUISITION_PHYSICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=config.IDENTIFICATION_DRONE_FLIGHT_STORAGE,
+        skip_hash=True,
+    )
+    state.input_evidence.append(flight_evidence)
+    state.phase_outputs["p1_provenance"]["image_metadata"] = {
+        str(flight_image.name): {
+            "offset_sectors": 63,
+            "entries": [
+                {"kind": "r/r", "inode": 5, "path": "FLY001.DAT"},
+                {"kind": "r/r", "inode": 6, "path": "FLY002.DAT"},
+                {"kind": "r/r", "inode": 4, "path": "SYS.DJI"},  # not .dat — must be skipped
+            ],
+        }
+    }
+
+    call_inodes: list[int] = []
+
+    def fake_run_command(command, capture_output=True, stdout=None):
+        call_inodes.append(int(command[-1]))
+        if stdout is not None:
+            stdout.write(b"data")
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(extract_physical_mod, "run_command", fake_run_command)
+
+    result = p3.run_phase_3(state)
+    artefacts = result.phase_outputs["p3_artefact_extraction"]["extracted_artefacts"]
+    drone_log_artefacts = [a for a in artefacts if a["artefact_category"] == DRONE_LOGS]
+
+    assert len(drone_log_artefacts) == 2
+    stored_names = {Path(a["stored_path"]).name for a in drone_log_artefacts}
+    assert "FLY001.DAT" in stored_names
+    assert "FLY002.DAT" in stored_names
+    assert all(
+        Path(a["stored_path"]).parent.name == DRONE_LOGS for a in drone_log_artefacts
+    ), "DAT files must be placed in the drone_logs subfolder"
+    assert 4 not in call_inodes  # SYS.DJI must be skipped
+    assert call_inodes.count(5) == 1
+    assert call_inodes.count(6) == 1
+    assert not any("unsupported" in flag for flag in result.anomaly_flags)
 
 
 # Integration
