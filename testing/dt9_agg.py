@@ -120,7 +120,7 @@ def _aggregate(state_path: str) -> dict:
     dims = [
         sources_detected / sources_total if sources_total else 0,
         artefact_cats / artefact_total if artefact_total else 0,
-        flights_corr / flights_total_cs if flights_total_cs else 1,
+        flights_corr / flights_total_cs if flights_total_cs else 0,
         tools_ok / tools_total if tools_total else 1,
     ]
     coverage_pct = round(sum(dims) / len(dims) * 100, 1)

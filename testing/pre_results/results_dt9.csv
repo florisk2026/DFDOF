@@ -1,16 +1,16 @@
 case_id,operator,start_time,sources_detected,sources_total,artefact_categories_with_data,artefact_categories_total,flights_with_primary_correlation,flights_total,tools_succeeded,tools_total,coverage_score_pct,source_combination,flight_count,matched_count,unmatched_count,median_distances,confidences,drone_serial,drone_name,account_email,dji_app_version,anomaly_flag_count,tool_invocation_count
-CASE-df001-2017-drone-sd,Floris,2026-06-16,1,4,2,7,0,0,3,4,57.1,drone_sd,0,0,0,,,,,,,8,10
-CASE-df001-2017-drone-sd-2,Floris,2026-06-16,1,4,2,7,0,0,3,4,57.1,drone_sd,0,0,0,,,,,,,8,10
-CASE-df001-2018-android,Floris,2026-06-15,2,4,6,7,1,16,4,4,60.5,android+drone_flight,16,1,15,0.8,high,03Z1389682,P3 Standard; P3S,,3.1.38,13,25
-CASE-df001-2018-ios,Floris,2026-06-15,2,4,5,7,1,16,3,3,56.9,drone_flight+ios,16,1,15,6.8,medium,03Z1389682,P3 Standard; P3C; P3S,droneforensics@vtoinc.com,3.1.38; 4.2.20,14,24
-CASE-df005-2017-android,Floris,2026-06-17,2,4,6,7,0,2,6,6,58.9,drone_sd+android,2,0,2,,,07JDE5300200GN,P4 Professional,droneforensics@vtoinc.com,4.1.2,10,56
-CASE-df005-2017-ios,Floris,2026-06-15,2,4,7,7,1,1,7,7,87.5,drone_sd+ios,1,1,0,1.2,high,07JDE5300200GN,P4 Professional; P4P,droneforensics@vtoinc.com,3.1.12; 4.1.3,5,61
-CASE-df005-2018-ios,Floris,2026-06-15,2,4,5,7,1,23,3,3,56.4,drone_flight+ios,23,1,22,4.3,high,07JDE5300200GN,P4 Professional; P4P,droneforensics@vtoinc.com,3.1.38; 4.2.20,25,43
-CASE-df019-2017-android-physical,Floris,2026-06-15,1,4,6,7,0,1,5,6,48.5,android,1,0,1,,,08RDD9100100KG,Mavic Pro,droneforensics@vtoinc.com,4.1.5,11,83
-CASE-df048-apr-android,Floris,2026-06-16,2,4,5,7,0,1,5,6,51.2,android+drone_sd,1,0,1,,,0K1DF313BD4PR1,Mavic Air,,4.2.8,10,30
-CASE-df048-apr-android-2,Floris,2026-06-16,2,4,5,7,0,1,5,6,51.2,android+drone_sd,1,0,1,,,0K1DF313BD4PR1,Mavic Air,,4.2.8,10,30
-CASE-df048-apr-ios,Floris,2026-06-15,2,4,7,7,1,1,6,7,83.9,drone_sd+ios,1,1,0,14.1,medium,0K1DECE2BC0633,Mavic Air,Droneforensics@vtoinc.com,4.2.12,6,27
-CASE-df048-jun-android,Floris,2026-06-15,2,4,5,7,1,3,6,7,60.1,android+drone_sd,3,1,2,1.8,high,0670136230; 0K1DF313BD4PR1,Matrice 600 Pro; Mavic Air; MavicAir,,3.1.11; 4.2.16,12,57
-CASE-df048-jun-ios,Floris,2026-06-16,2,4,7,7,1,2,6,7,71.4,drone_sd+ios,2,1,1,6.3,medium,0K1DECE2BC0633,Mavic Air,droneforensics@vtoinc.com,3.1.38; 4.2.20,7,52
-CASE-df048-jun-ios-run2,Floris,2026-06-16,2,4,7,7,1,2,6,7,71.4,drone_sd+ios,2,1,1,6.3,medium,0K1DECE2BC0633,Mavic Air,droneforensics@vtoinc.com,3.1.38; 4.2.20,7,52
-CASE-PHASES,Floris,2026-06-16,0,4,0,7,0,0,0,0,50.0,,0,0,0,,,,,,,10,0
+CASE-df001-2017-drone-sd,Floris,16/06/2026,1,4,2,7,0,0,3,4,32.1,drone_sd,0,0,0,,,,,,,8,10
+CASE-df001-2017-drone-sd-2,Floris,16/06/2026,1,4,2,7,0,0,3,4,32.1,drone_sd,0,0,0,,,,,,,8,10
+CASE-df001-2018-android,Floris,15/06/2026,2,4,6,7,1,16,4,4,60.5,android+drone_flight,16,1,15,0.8,high,03Z1389682,P3 Standard; P3S,,3.1.38,13,25
+CASE-df001-2018-ios,Floris,15/06/2026,2,4,5,7,1,16,3,3,56.9,drone_flight+ios,16,1,15,6.8,medium,03Z1389682,P3 Standard; P3C; P3S,droneforensics@vtoinc.com,3.1.38; 4.2.20,14,24
+CASE-df005-2017-android,Floris,17/06/2026,2,4,6,7,0,2,6,6,58.9,drone_sd+android,2,0,2,,,07JDE5300200GN,P4 Professional,droneforensics@vtoinc.com,4.1.2,10,56
+CASE-df005-2017-ios,Floris,15/06/2026,2,4,7,7,1,1,7,7,87.5,drone_sd+ios,1,1,0,1.2,high,07JDE5300200GN,P4 Professional; P4P,droneforensics@vtoinc.com,3.1.12; 4.1.3,5,61
+CASE-df005-2018-ios,Floris,15/06/2026,2,4,5,7,1,23,3,3,56.4,drone_flight+ios,23,1,22,4.3,high,07JDE5300200GN,P4 Professional; P4P,droneforensics@vtoinc.com,3.1.38; 4.2.20,25,43
+CASE-df019-2017-android-physical,Floris,15/06/2026,1,4,6,7,0,1,5,6,48.5,android,1,0,1,,,08RDD9100100KG,Mavic Pro,droneforensics@vtoinc.com,4.1.5,11,83
+CASE-df048-apr-android,Floris,16/06/2026,2,4,5,7,0,1,5,6,51.2,android+drone_sd,1,0,1,,,0K1DF313BD4PR1,Mavic Air,,4.2.8,10,30
+CASE-df048-apr-android-2,Floris,16/06/2026,2,4,5,7,0,1,5,6,51.2,android+drone_sd,1,0,1,,,0K1DF313BD4PR1,Mavic Air,,4.2.8,10,30
+CASE-df048-apr-ios,Floris,15/06/2026,2,4,7,7,1,1,6,7,83.9,drone_sd+ios,1,1,0,14.1,medium,0K1DECE2BC0633,Mavic Air,Droneforensics@vtoinc.com,4.2.12,6,27
+CASE-df048-jun-android,Floris,15/06/2026,2,4,5,7,1,3,6,7,60.1,android+drone_sd,3,1,2,1.8,high,0670136230; 0K1DF313BD4PR1,Matrice 600 Pro; Mavic Air; MavicAir,,3.1.11; 4.2.16,12,57
+CASE-df048-jun-ios,Floris,16/06/2026,2,4,7,7,1,2,6,7,71.4,drone_sd+ios,2,1,1,6.3,medium,0K1DECE2BC0633,Mavic Air,droneforensics@vtoinc.com,3.1.38; 4.2.20,7,52
+CASE-df048-jun-ios-run2,Floris,16/06/2026,2,4,7,7,1,2,6,7,71.4,drone_sd+ios,2,1,1,6.3,medium,0K1DECE2BC0633,Mavic Air,droneforensics@vtoinc.com,3.1.38; 4.2.20,7,52
+,,,,,,,,,,,,,,,,,,,,,,,
