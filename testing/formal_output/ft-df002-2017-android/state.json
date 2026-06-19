@@ -1,0 +1,1727 @@
+{
+  "operator": "Floris",
+  "case_id": "ft-df002-2017-android",
+  "start_time": "2026-06-18T09:37:58.173137+00:00",
+  "end_time": "2026-06-18T09:39:00.193535+00:00",
+  "evidence_directory": "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df002\\2017\\android",
+  "completed_phases": [
+    "p1_provenance",
+    "p2_image_parsing",
+    "p3_artefact_extraction",
+    "p4_decision_and_orchestration",
+    "p5_normalisation_and_anomaly_checking",
+    "p6_multisource_correlation",
+    "p7_analysis_and_validation",
+    "p8_automated_reporting"
+  ],
+  "anomaly_flags": [
+    "[p2 - controller android - device and backup info]: DeviceInfo.xml not found for df002_flight.zip",
+    "[p2 - controller android - device and backup info]: ApplicationInfo.xml not found for df002_flight.zip",
+    "[p2 - controller ios]: source evidence not found",
+    "[p3 - controller android]: installed DJI apps not found in P2 output; falling back to config-defined bundle IDs for extraction",
+    "[p3 - controller android - drone logs]: no artefacts found",
+    "[p3 - controller android - images]: no artefacts found",
+    "[p3 - controller ios]: source evidence not found",
+    "[p3 - drone flight storage]: source evidence not found",
+    "[p4 - controller ios]: source evidence not found",
+    "[p4 - drone flight storage]: source evidence not found"
+  ],
+  "input_evidence": [
+    {
+      "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df002\\2017\\android\\df002_external.001",
+      "stored_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df002\\2017\\android\\df002_external.001",
+      "source_identification": "drone_sd",
+      "parent_sha256": null,
+      "acquisition_method": "physical",
+      "type": "input",
+      "artefact_category": null,
+      "size": 7948206080,
+      "sha1": "8588c2882c6afad1b61b2d98d1a619c00ce9d160",
+      "sha256": "c524d08c7bcb4d1dde6a20ff53e11c8f68534be45c9dfa8f4265e802ace104d1",
+      "hash_timestamp": "2026-06-18T09:38:25.569578+00:00"
+    },
+    {
+      "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df002\\2017\\android\\df002_flight.zip",
+      "stored_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df002\\2017\\android\\df002_flight.zip",
+      "source_identification": "controller_android",
+      "parent_sha256": null,
+      "acquisition_method": "logical",
+      "type": "input",
+      "artefact_category": null,
+      "size": 140663130,
+      "sha1": "b580b478b2665d5d1ee2631f2e82bc64f937cf28",
+      "sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+      "hash_timestamp": "2026-06-18T09:38:25.984496+00:00"
+    }
+  ],
+  "phase_outputs": {
+    "p1_provenance": {
+      "completed_at": "2026-06-18T09:37:58.173408+00:00",
+      "identified_evidence": [
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df002\\2017\\android\\df002_flight.zip",
+          "identified": true,
+          "identified_as": "controller_android",
+          "operator_confirmed": true,
+          "identified_by_operator_as": null
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df002\\2017\\android\\df002_external.001",
+          "identified": true,
+          "identified_as": "drone_sd",
+          "operator_confirmed": true,
+          "identified_by_operator_as": null
+        }
+      ],
+      "operator_final_confirmation": {
+        "accepted": true,
+        "timestamp": "2026-06-18T09:38:25.984624+00:00"
+      },
+      "image_metadata": {
+        "df002_external.001": {
+          "offset_sectors": 8192,
+          "entries": [
+            {
+              "kind": "d/d",
+              "inode": 3,
+              "path": "DCIM"
+            },
+            {
+              "kind": "d/d",
+              "inode": 1029,
+              "path": "DCIM/100MEDIA"
+            },
+            {
+              "kind": "r/r",
+              "inode": 9221,
+              "path": "DCIM/100MEDIA/DJI_0001.MOV"
+            },
+            {
+              "kind": "r/r",
+              "inode": 9222,
+              "path": "DCIM/100MEDIA/DJI_0002.JPG"
+            },
+            {
+              "kind": "r/r",
+              "inode": 9223,
+              "path": "DCIM/100MEDIA/DJI_0003.MOV"
+            },
+            {
+              "kind": "d/d",
+              "inode": 4,
+              "path": "MISC"
+            },
+            {
+              "kind": "d/d",
+              "inode": 2053,
+              "path": "MISC/IDX"
+            },
+            {
+              "kind": "r/r",
+              "inode": 3078,
+              "path": "MISC/IDX/idx00"
+            },
+            {
+              "kind": "r/r",
+              "inode": 3080,
+              "path": "MISC/IDX/idx01"
+            },
+            {
+              "kind": "d/d",
+              "inode": 2054,
+              "path": "MISC/THM"
+            },
+            {
+              "kind": "d/d",
+              "inode": 4101,
+              "path": "MISC/THM/100"
+            },
+            {
+              "kind": "r/r",
+              "inode": 567301,
+              "path": "MISC/THM/100/DJI_0001.THM"
+            },
+            {
+              "kind": "r/r",
+              "inode": 567302,
+              "path": "MISC/THM/100/DJI_0001.RLV"
+            },
+            {
+              "kind": "r/r",
+              "inode": 567303,
+              "path": "MISC/THM/100/DJI_0003.THM"
+            },
+            {
+              "kind": "r/r",
+              "inode": 567304,
+              "path": "MISC/THM/100/DJI_0003.RLV"
+            },
+            {
+              "kind": "d/d",
+              "inode": 2055,
+              "path": "MISC/LOG"
+            },
+            {
+              "kind": "r/r",
+              "inode": 5127,
+              "path": "MISC/LOG/P3C_CAM_VERSION"
+            },
+            {
+              "kind": "d/d",
+              "inode": 2056,
+              "path": "MISC/XCODE"
+            },
+            {
+              "kind": "r/r",
+              "inode": 2058,
+              "path": "MISC/wifi.conf"
+            }
+          ]
+        }
+      }
+    },
+    "p2_image_parsing": {
+      "completed_at": "2026-06-18T09:38:26.784891+00:00",
+      "parsed_evidence": [
+        {
+          "source_path": "FileSystem\\Media01\\property\\ro.serialno",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p2_image_parsing\\controller_android_parsed\\ro.serialno",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "device_and_backup_info",
+          "size": 16,
+          "sha1": "67cac5fe4bc61732c8944190fca3f954e2a30210",
+          "sha256": "ba468561e5d6828cb3614aa8b1809596a93709addb620b956fda5d6303a32e1c",
+          "hash_timestamp": "2026-06-18T09:38:26.721271+00:00"
+        },
+        {
+          "source_path": "FileSystem\\Media01\\property\\net.hostname",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p2_image_parsing\\controller_android_parsed\\net.hostname",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "device_and_backup_info",
+          "size": 24,
+          "sha1": "c468a936a800bc492017c7a5cbc6b6f021606e3e",
+          "sha256": "9f611fb4b3bf56644fbf2b85ecfe30016ded28c49ec6055fd162cdfb8dd8fc54",
+          "hash_timestamp": "2026-06-18T09:38:26.782933+00:00"
+        }
+      ],
+      "derived_observations": [
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p2_image_parsing\\controller_android_parsed\\ro.serialno",
+          "evidence_sha256": "ba468561e5d6828cb3614aa8b1809596a93709addb620b956fda5d6303a32e1c",
+          "evidence_category": "device_and_backup_info",
+          "acquisition_method": "extract_logical",
+          "observations": [
+            {
+              "device_serial": "3100766426e22400"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p2_image_parsing\\controller_android_parsed\\net.hostname",
+          "evidence_sha256": "9f611fb4b3bf56644fbf2b85ecfe30016ded28c49ec6055fd162cdfb8dd8fc54",
+          "evidence_category": "device_and_backup_info",
+          "acquisition_method": "extract_logical",
+          "observations": [
+            {
+              "device_hostname": "android-c6b4b203979ac235"
+            }
+          ]
+        }
+      ]
+    },
+    "p3_artefact_extraction": {
+      "completed_at": "2026-06-18T09:38:54.343261+00:00",
+      "extracted_artefacts": [
+        {
+          "source_path": "FileSystem\\Media01\\apps\\dji.pilot\\sp\\dji.pilot.xml",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\account_data\\dji.pilot.xml",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "account_data",
+          "size": 2350,
+          "sha1": "55b68ca6eefe4945b71eb141c3e8b218ab26a551",
+          "sha256": "89cccb0960e0cefc8fd2db571f7a14c39894b1e6fa85b8e0adeaab403f81405f",
+          "hash_timestamp": "2026-06-18T09:38:26.903051+00:00"
+        },
+        {
+          "source_path": "FileSystem\\Media01\\apps\\dji.pilot\\db\\dji.db",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\databases\\dji.db",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "databases",
+          "size": 94208,
+          "sha1": "8d6175c5ac7471576495c685cb2fbceffc261ba9",
+          "sha256": "89ed259e1d088aa18eb6f5c31ba9fa0e7167a2f671ac1d7ac63ee44c5c96683b",
+          "hash_timestamp": "2026-06-18T09:38:26.928660+00:00"
+        },
+        {
+          "source_path": "FileSystem\\Media01\\apps\\dji.pilot\\db\\logdb.db",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\databases\\logdb.db",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "databases",
+          "size": 36864,
+          "sha1": "3ba6a20b7be8eedec4afb7230facc552925d9670",
+          "sha256": "62590edaea94d88ce587e504bab4ab73dd2aed6dc36fec2a628a764e8862ec9d",
+          "hash_timestamp": "2026-06-18T09:38:26.945872+00:00"
+        },
+        {
+          "source_path": "FileSystem\\Media01\\sdcard\\DJI\\dji.pilot\\LOG\\ERROR_POP_LOG\\29-06-2017",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\29-06-2017",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_logs",
+          "size": 423,
+          "sha1": "c21659cdf21d8eae0509b6b026c70fefda0ec5cc",
+          "sha256": "4d355f2d0ad84271e8269ef4e7926f983e9a8eeec80e19a3330b9a9b63a510cb",
+          "hash_timestamp": "2026-06-18T09:38:27.159876+00:00"
+        },
+        {
+          "source_path": "FileSystem\\Media01\\sdcard\\DJI\\dji.pilot\\LOG\\CACHE\\active\\log-2017-06-29.txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29.txt",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_logs",
+          "size": 455,
+          "sha1": "4f5381ecc045cc035374c0b436138cc07d68e6b8",
+          "sha256": "e5f92e3b6f5ea6679fa03b6152c78cc59908e245b26ddf501e7b248c849466e2",
+          "hash_timestamp": "2026-06-18T09:38:26.970681+00:00"
+        },
+        {
+          "source_path": "FileSystem\\Media01\\sdcard\\DJI\\dji.pilot\\LOG\\CACHE\\aviatorU\\log-2017-06-29.txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_1.txt",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_logs",
+          "size": 798,
+          "sha1": "7b22b3fcf75eed121ffd49a9a4f48de85de8e4e2",
+          "sha256": "7b99fb94c3cd3b0b7ee7825073d65f00275945ad247f3aec5b2eae44bbf114aa",
+          "hash_timestamp": "2026-06-18T09:38:26.986400+00:00"
+        },
+        {
+          "source_path": "FileSystem\\Media01\\sdcard\\DJI\\dji.pilot\\LOG\\CACHE\\VerPhone\\log-2017-06-29.txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_10.txt",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_logs",
+          "size": 2356,
+          "sha1": "0a39ce791d5789c409d4e58646e0d8f37b6425ce",
+          "sha256": "cef02a1f4d384486e866ae6a4960b4b2fd439fcde38f76c2c101b76e5963cf52",
+          "hash_timestamp": "2026-06-18T09:38:27.144959+00:00"
+        },
+        {
+          "source_path": "FileSystem\\Media01\\sdcard\\DJI\\dji.pilot\\LOG\\CACHE\\CountryCodeConstant\\log-2017-06-29.txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_2.txt",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_logs",
+          "size": 10054,
+          "sha1": "a5af4e9dd7537bcf593a727dc3861ae6c707c86e",
+          "sha256": "4b2b961c32aa13abb345d465fe87d79b2a946595f84421ef081392463eecc4ca",
+          "hash_timestamp": "2026-06-18T09:38:27.010611+00:00"
+        },
+        {
+          "source_path": "FileSystem\\Media01\\sdcard\\DJI\\dji.pilot\\LOG\\CACHE\\FlagInfo\\log-2017-06-29.txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_3.txt",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_logs",
+          "size": 5426,
+          "sha1": "88ab6d69739f48499aa2c3f39ffd18c56b6150fd",
+          "sha256": "77842013c23dc8cefce5816510b80f7f0201c008f7cdf2d3662f7c4af5229d20",
+          "hash_timestamp": "2026-06-18T09:38:27.026465+00:00"
+        },
+        {
+          "source_path": "FileSystem\\Media01\\sdcard\\DJI\\dji.pilot\\LOG\\CACHE\\NFZ\\log-2017-06-29.txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_4.txt",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_logs",
+          "size": 143278,
+          "sha1": "dae50f7f8ea5dd28466b3b56d0ed18409a5d0b5e",
+          "sha256": "3cd3a853ec0e6b86ca600b2b39ed66f97b78b7a03735fd0c83f21f75942ddf21",
+          "hash_timestamp": "2026-06-18T09:38:27.050025+00:00"
+        },
+        {
+          "source_path": "FileSystem\\Media01\\sdcard\\DJI\\dji.pilot\\LOG\\CACHE\\popup\\log-2017-06-29.txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_5.txt",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_logs",
+          "size": 304,
+          "sha1": "476bf56a891acb37b086486498499392d033462d",
+          "sha256": "dd1362b9c0d8e00f1df3d7d0ff9426f38b11a8b4f1922092c529084b108c602b",
+          "hash_timestamp": "2026-06-18T09:38:27.065590+00:00"
+        },
+        {
+          "source_path": "FileSystem\\Media01\\sdcard\\DJI\\dji.pilot\\LOG\\CACHE\\ServerLog\\log-2017-06-29.txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_6.txt",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_logs",
+          "size": 895,
+          "sha1": "7ed69e48eb87c5f22584cc999432704cca1d686d",
+          "sha256": "ba220bf87005a1ea99fcb8e397351ef001fb5bee96e402dd1c932234c5e03305",
+          "hash_timestamp": "2026-06-18T09:38:27.081544+00:00"
+        },
+        {
+          "source_path": "FileSystem\\Media01\\sdcard\\DJI\\dji.pilot\\LOG\\CACHE\\SYNC\\log-2017-06-29.txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_7.txt",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_logs",
+          "size": 4387,
+          "sha1": "6d5f2a91983f23cb30486ba7cf5868f38173600b",
+          "sha256": "6dfe8afd13d0e3a5481b85e688d8595889793fac439dbde294c1e0332b81bafa",
+          "hash_timestamp": "2026-06-18T09:38:27.097623+00:00"
+        },
+        {
+          "source_path": "FileSystem\\Media01\\sdcard\\DJI\\dji.pilot\\LOG\\CACHE\\UpgradeLog\\log-2017-06-29.txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_8.txt",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_logs",
+          "size": 1517,
+          "sha1": "77a49d165264a851fdf1c954b5290689923fa13c",
+          "sha256": "2329c42465c85ac3df76c50a73215224cdee1a554f4c0135f6d4dcab2cb80385",
+          "hash_timestamp": "2026-06-18T09:38:27.113947+00:00"
+        },
+        {
+          "source_path": "FileSystem\\Media01\\sdcard\\DJI\\dji.pilot\\LOG\\CACHE\\UP_Default\\log-2017-06-29.txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_9.txt",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_logs",
+          "size": 1673,
+          "sha1": "7e329189faa9a919015d0d2199438e5714ad133e",
+          "sha256": "d3a35d18cdc85053da4db9c2ec1aedadcd5de230cd54c064d157512c8dd3dfa8",
+          "hash_timestamp": "2026-06-18T09:38:27.129191+00:00"
+        },
+        {
+          "source_path": "FileSystem\\Media01\\sdcard\\DJI\\dji.pilot\\FlightRecord\\DJIFlightRecord_2017-06-29_[13-39-52].txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_records\\DJIFlightRecord_2017-06-29_[13-39-52].txt",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_records",
+          "size": 726559,
+          "sha1": "fdeee2fcade2395e6773eef9309ce215da0b1ffd",
+          "sha256": "ebaeb3f04f8ed6392ada37f23dd6438c60487e6c1439bc7358db8c58937d73b3",
+          "hash_timestamp": "2026-06-18T09:38:27.196597+00:00"
+        },
+        {
+          "source_path": "MISC\\THM\\100\\DJI_0001.THM",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0001.THM",
+          "source_identification": "drone_sd",
+          "parent_sha256": "c524d08c7bcb4d1dde6a20ff53e11c8f68534be45c9dfa8f4265e802ace104d1",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "images",
+          "size": 38400,
+          "sha1": "d4aef438ca2154a7ef557c6224a162bbe35a8547",
+          "sha256": "6e8299316aa74b00143c718e087d21ad2b5774c4708060a7c1b3e09ae287c655",
+          "hash_timestamp": "2026-06-18T09:38:54.258492+00:00"
+        },
+        {
+          "source_path": "DCIM\\100MEDIA\\DJI_0002.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0002.JPG",
+          "source_identification": "drone_sd",
+          "parent_sha256": "c524d08c7bcb4d1dde6a20ff53e11c8f68534be45c9dfa8f4265e802ace104d1",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "images",
+          "size": 5226340,
+          "sha1": "e8db3bcc57c13fd9445814711fe6a687bbd076f4",
+          "sha256": "8e2a458141656bc8e37c0523c2d42eca57200566a8fdedc32dd87668b93b24c3",
+          "hash_timestamp": "2026-06-18T09:38:43.081909+00:00"
+        },
+        {
+          "source_path": "MISC\\THM\\100\\DJI_0003.THM",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0003.THM",
+          "source_identification": "drone_sd",
+          "parent_sha256": "c524d08c7bcb4d1dde6a20ff53e11c8f68534be45c9dfa8f4265e802ace104d1",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "images",
+          "size": 38400,
+          "sha1": "e369dc283931f95a9b8371652b78eff5189685f8",
+          "sha256": "4ded0ac63c9f4ed3321dd85ac0cd1fc209cbbc36e84c1ce25c63a6ce88ce6f24",
+          "hash_timestamp": "2026-06-18T09:38:54.342086+00:00"
+        },
+        {
+          "source_path": "FileSystem\\Media01\\sdcard\\DJI\\dji.pilot\\DJI_RECORD\\2017_06_29_13_44_19.info",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\videos\\2017_06_29_13_44_19.info",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "videos",
+          "size": 809,
+          "sha1": "74470b13c6bcc860a312ba7462126e872a642274",
+          "sha256": "836a2649180c78233c9be288518bdde5180826defcf8ea0824946cbc6cce8b8c",
+          "hash_timestamp": "2026-06-18T09:38:27.219729+00:00"
+        },
+        {
+          "source_path": "FileSystem\\Media01\\sdcard\\DJI\\dji.pilot\\DJI_RECORD\\2017_06_29_13_44_19.mp4",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\videos\\2017_06_29_13_44_19.mp4",
+          "source_identification": "controller_android",
+          "parent_sha256": "b991fe13218b2b82f193c932365523815fc52e961d195304c35cdf740b632a99",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "videos",
+          "size": 96287115,
+          "sha1": "800f28df92fa375e60dba7ef057d2327fc17c382",
+          "sha256": "7d5ae874be156848f02c9d1a469f88184cbd8d8bcdef8f8466cb84857c3daa39",
+          "hash_timestamp": "2026-06-18T09:38:28.146881+00:00"
+        },
+        {
+          "source_path": "DCIM\\100MEDIA\\DJI_0001.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0001.MOV",
+          "source_identification": "drone_sd",
+          "parent_sha256": "c524d08c7bcb4d1dde6a20ff53e11c8f68534be45c9dfa8f4265e802ace104d1",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "videos",
+          "size": 2457436511,
+          "sha1": "481eeeec7640bc1d67c7942fa83a326ae4a5cf00",
+          "sha256": "315aa974792c756b4f17b42006521119a399667af077ac21cffc284b3f5d2036",
+          "hash_timestamp": "2026-06-18T09:38:42.977817+00:00"
+        },
+        {
+          "source_path": "DCIM\\100MEDIA\\DJI_0003.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0003.MOV",
+          "source_identification": "drone_sd",
+          "parent_sha256": "c524d08c7bcb4d1dde6a20ff53e11c8f68534be45c9dfa8f4265e802ace104d1",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "videos",
+          "size": 1662346614,
+          "sha1": "bce75f96a8697ac7607d28644b4f417a18277a48",
+          "sha256": "5fb666113f6cb26e6e285a71c38caa890f3f8dfd4491bdd24cec2d8c5a5b106d",
+          "hash_timestamp": "2026-06-18T09:38:54.159647+00:00"
+        }
+      ]
+    },
+    "p4_decision_and_orchestration": {
+      "completed_at": "2026-06-18T09:38:58.688988+00:00",
+      "decision_and_orchestration_artefacts": [
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\account_data\\dji.pilot.xml",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\controller_android\\account_data\\dji.pilot.json",
+          "source_identification": "controller_android",
+          "parent_sha256": "89cccb0960e0cefc8fd2db571f7a14c39894b1e6fa85b8e0adeaab403f81405f",
+          "acquisition_method": "p4_decision_and_orchestration",
+          "type": "parsed",
+          "artefact_category": "account_data",
+          "size": 1544,
+          "sha1": "9da396445984b36668902d3984971303bf9b9804",
+          "sha256": "613baaaa15a8d99232de02f29f37eb64f81eee303f2dd35d83badc0085b77354",
+          "hash_timestamp": "2026-06-18T09:38:54.400266+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_records\\DJIFlightRecord_2017-06-29_[13-39-52].txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\controller_android\\flight_records\\DJIFlightRecord_2017-06-29_[13-39-52].csv",
+          "source_identification": "controller_android",
+          "parent_sha256": "ebaeb3f04f8ed6392ada37f23dd6438c60487e6c1439bc7358db8c58937d73b3",
+          "acquisition_method": "txtlogtocsvtool",
+          "type": "decoded",
+          "artefact_category": "flight_records",
+          "size": 6943565,
+          "sha1": "bbb3a205125f8c3b2b27554a48fa0b9f41c9d4c1",
+          "sha256": "91023851aa50e1e2e19df9f39578abe9360df397b0f056636e744793f5fb5e89",
+          "hash_timestamp": "2026-06-18T09:38:55.819472+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0001.THM",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0001_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "6e8299316aa74b00143c718e087d21ad2b5774c4708060a7c1b3e09ae287c655",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "images",
+          "size": 637,
+          "sha1": "de4751a91e008f6ee43d9a44ac421730462ac116",
+          "sha256": "6a55423d3679aa466cda66626d05c0fecb92d242fccb1c00215b4712c8e73d41",
+          "hash_timestamp": "2026-06-18T09:38:56.991955+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0002.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0002_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "8e2a458141656bc8e37c0523c2d42eca57200566a8fdedc32dd87668b93b24c3",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "images",
+          "size": 5223,
+          "sha1": "df5711b3d61f59b94e00e31cf26a0db150eaebce",
+          "sha256": "cce97b4b353513e9fe548da2edfe92b9ee7510cba4468ee81b8753e29b75d41f",
+          "hash_timestamp": "2026-06-18T09:38:57.302242+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0003.THM",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0003_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "4ded0ac63c9f4ed3321dd85ac0cd1fc209cbbc36e84c1ce25c63a6ce88ce6f24",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "images",
+          "size": 637,
+          "sha1": "e8ca8b2cf537d5de90b3c0b9020838905a253891",
+          "sha256": "27d23315dc1640c204a6cd0c2547b1eb45650e12a245f6f6b32fd5bb96da0d62",
+          "hash_timestamp": "2026-06-18T09:38:57.665284+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\videos\\2017_06_29_13_44_19.info",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\controller_android\\videos\\2017_06_29_13_44_19.json",
+          "source_identification": "controller_android",
+          "parent_sha256": "836a2649180c78233c9be288518bdde5180826defcf8ea0824946cbc6cce8b8c",
+          "acquisition_method": "p4_decision_and_orchestration",
+          "type": "parsed",
+          "artefact_category": "videos",
+          "size": 1095,
+          "sha1": "f92d30a787032bde491ff609ec9790a9c45eb178",
+          "sha256": "9065c5cd471328f8dc70f35cbeb92669c063aa47839bd4ced9f4cc9705285bda",
+          "hash_timestamp": "2026-06-18T09:38:55.823069+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\videos\\2017_06_29_13_44_19.mp4",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\controller_android\\videos\\2017_06_29_13_44_19_exif.json",
+          "source_identification": "controller_android",
+          "parent_sha256": "7d5ae874be156848f02c9d1a469f88184cbd8d8bcdef8f8466cb84857c3daa39",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "videos",
+          "size": 2999,
+          "sha1": "4ff8ef1373899e4b6e3ce6c2fd3222a1c3f26de0",
+          "sha256": "40b0776542602eae66e643ac6dca1629cbd17238b1d24bfee1ed854aa2e9dc71",
+          "hash_timestamp": "2026-06-18T09:38:56.701850+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0001.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0001_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "315aa974792c756b4f17b42006521119a399667af077ac21cffc284b3f5d2036",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "videos",
+          "size": 4158,
+          "sha1": "ea06f62672c2c2a25fd08b2648ba06000a4711bf",
+          "sha256": "6ac94402e416c643ba6a1ce87ed075533d5f61115a7bc267f98aa757ca2f3fec",
+          "hash_timestamp": "2026-06-18T09:38:58.203633+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0003.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0003_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "5fb666113f6cb26e6e285a71c38caa890f3f8dfd4491bdd24cec2d8c5a5b106d",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "videos",
+          "size": 4131,
+          "sha1": "1dd7f1217487585dd591653b07f654ec1002d5f1",
+          "sha256": "3d4807704d21c95976f4e7d730bf44917840caee33a378646fd28780cb17665c",
+          "hash_timestamp": "2026-06-18T09:38:58.688113+00:00"
+        }
+      ],
+      "derived_observations": [
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\account_data\\dji.pilot.xml",
+          "evidence_sha256": "89cccb0960e0cefc8fd2db571f7a14c39894b1e6fa85b8e0adeaab403f81405f",
+          "evidence_category": "account_data",
+          "acquisition_method": "p4_decision_and_orchestration",
+          "observations": [
+            {
+              "account_uid": "879825329191059456",
+              "account_token": "08259a1f76914475996d936aa2f2dda477186332",
+              "aircraft_sn": "03Z1419944",
+              "firmware_version": "1.3.50+",
+              "product_type": "2"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0001.THM",
+          "evidence_sha256": "6e8299316aa74b00143c718e087d21ad2b5774c4708060a7c1b3e09ae287c655",
+          "evidence_category": "images",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {}
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0002.JPG",
+          "evidence_sha256": "8e2a458141656bc8e37c0523c2d42eca57200566a8fdedc32dd87668b93b24c3",
+          "evidence_category": "images",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "MIMEType": "image/jpeg",
+              "AbsoluteAltitude": "+2556.90",
+              "Model": "FC300C",
+              "Orientation": 1,
+              "DateTimeOriginal": "2017:06:29 13:44:06",
+              "GPSLongitudeRef": "W",
+              "ImageHeight": 3000,
+              "GimbalRollDegree": "+0.00",
+              "GPSLatitude": 39.9596206388889,
+              "FlightRollDegree": -2.9,
+              "GPSLatitudeRef": "N",
+              "FlightPitchDegree": -2.4,
+              "RelativeAltitude": "+15.60",
+              "ImageWidth": 4000,
+              "CreateDate": "2017:06:29 13:44:06",
+              "Make": "DJI",
+              "GPSAltitude": 2556.898,
+              "GimbalYawDegree": "+42.20",
+              "Software": "v01.14.4920",
+              "GPSLongitude": 106.218918111111,
+              "GimbalPitchDegree": -21.1,
+              "FlightYawDegree": "+43.20",
+              "GPSAltitudeRef": 0,
+              "FileType": "JPEG"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0003.THM",
+          "evidence_sha256": "4ded0ac63c9f4ed3321dd85ac0cd1fc209cbbc36e84c1ce25c63a6ce88ce6f24",
+          "evidence_category": "images",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {}
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\videos\\2017_06_29_13_44_19.info",
+          "evidence_sha256": "836a2649180c78233c9be288518bdde5180826defcf8ea0824946cbc6cce8b8c",
+          "evidence_category": "videos",
+          "acquisition_method": "p4_decision_and_orchestration",
+          "observations": [
+            {
+              "CaptureDate": "2017/06/29 13:44:19",
+              "PositionRelativeAlt": "158.0",
+              "PositionGPSLat": "39.95962117801732",
+              "PositionGPSAlt": "158.0",
+              "PositionGPSLng": "-106.21891423355427"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\videos\\2017_06_29_13_44_19.mp4",
+          "evidence_sha256": "7d5ae874be156848f02c9d1a469f88184cbd8d8bcdef8f8466cb84857c3daa39",
+          "evidence_category": "videos",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "MIMEType": "video/mp4",
+              "ImageHeight": 720,
+              "MediaDuration": 331.696677777778,
+              "ImageWidth": 1280,
+              "CompatibleBrands": [
+                "isom",
+                "iso2",
+                "avc1",
+                "mp41"
+              ],
+              "Duration": 331.697,
+              "FileType": "MP4"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0001.MOV",
+          "evidence_sha256": "315aa974792c756b4f17b42006521119a399667af077ac21cffc284b3f5d2036",
+          "evidence_category": "videos",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "MIMEType": "video/quicktime",
+              "ModifyDate": "2017:06:29 10:14:06",
+              "Model": "FC300C",
+              "ImageHeight": 1520,
+              "MediaDuration": 491.824666666667,
+              "ImageWidth": 2704,
+              "CreateDate": "2017:06:29 10:14:06",
+              "CompatibleBrands": [
+                "qt  "
+              ],
+              "Duration": 491.824666666667,
+              "GPSCoordinates": "39.96001 -106.21645 10.8",
+              "FileType": "MOV"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0003.MOV",
+          "evidence_sha256": "5fb666113f6cb26e6e285a71c38caa890f3f8dfd4491bdd24cec2d8c5a5b106d",
+          "evidence_category": "videos",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "MIMEType": "video/quicktime",
+              "ModifyDate": "2017:06:29 13:44:09",
+              "Model": "FC300C",
+              "ImageHeight": 1520,
+              "MediaDuration": 332.8325,
+              "ImageWidth": 2704,
+              "CreateDate": "2017:06:29 13:44:09",
+              "CompatibleBrands": [
+                "qt  "
+              ],
+              "Duration": 332.8325,
+              "GPSCoordinates": "39.959622 -106.218916 15.7",
+              "FileType": "MOV"
+            }
+          ]
+        }
+      ]
+    },
+    "p5_normalisation_and_anomaly_checking": {
+      "completed_at": "2026-06-18T09:38:59.814981+00:00",
+      "normalised_artefacts": [
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\controller_android\\flight_records\\DJIFlightRecord_2017-06-29_[13-39-52].csv",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p5_normalisation_and_anomaly_checking\\controller_android\\flight_records\\norm_DJIFlightRecord_2017-06-29_[13-39-52].csv",
+          "source_identification": "controller_android",
+          "parent_sha256": "91023851aa50e1e2e19df9f39578abe9360df397b0f056636e744793f5fb5e89",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "type": "normalised",
+          "artefact_category": "flight_records",
+          "size": 7149047,
+          "sha1": "9fd354d7cd0f45c83bed1960537af06a7757d05d",
+          "sha256": "26e38258c0d1b7cac499d46595880a3d6ac2699aa417c56cbb8700836e6934fc",
+          "hash_timestamp": "2026-06-18T09:38:59.810249+00:00"
+        }
+      ],
+      "derived_anomalies": [
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\29-06-2017",
+          "evidence_sha256": "4d355f2d0ad84271e8269ef4e7926f983e9a8eeec80e19a3330b9a9b63a510cb",
+          "evidence_category": "flight_logs",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "format": "heading_log",
+              "entries": [
+                {
+                  "timestamp": "13:38:57",
+                  "message": "Aircraft is in Attitude mode, so that it will not hover. Please fly with caution."
+                },
+                {
+                  "timestamp": "13:39:06",
+                  "message": "Aircraft is in Attitude mode, so that it will not hover. Please fly with caution."
+                },
+                {
+                  "timestamp": "13:39:53",
+                  "message": "Home Point Recorded"
+                },
+                {
+                  "timestamp": "13:39:53",
+                  "message": "Taking off"
+                },
+                {
+                  "timestamp": "13:39:53",
+                  "message": "Return-to-Home Altitude:98FT"
+                },
+                {
+                  "timestamp": "13:49:42",
+                  "message": "Low Power. Returning home"
+                },
+                {
+                  "timestamp": "13:49:49",
+                  "message": "Aircraft is in Attitude mode, so that it will not hover. Please fly with caution."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29.txt",
+          "evidence_sha256": "e5f92e3b6f5ea6679fa03b6152c78cc59908e245b26ddf501e7b248c849466e2",
+          "evidence_category": "flight_logs",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "format": "unknown"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_1.txt",
+          "evidence_sha256": "7b99fb94c3cd3b0b7ee7825073d65f00275945ad247f3aec5b2eae44bbf114aa",
+          "evidence_category": "flight_logs",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "format": "unknown"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_10.txt",
+          "evidence_sha256": "cef02a1f4d384486e866ae6a4960b4b2fd439fcde38f76c2c101b76e5963cf52",
+          "evidence_category": "flight_logs",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "format": "unknown"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_2.txt",
+          "evidence_sha256": "4b2b961c32aa13abb345d465fe87d79b2a946595f84421ef081392463eecc4ca",
+          "evidence_category": "flight_logs",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "format": "unknown"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_3.txt",
+          "evidence_sha256": "77842013c23dc8cefce5816510b80f7f0201c008f7cdf2d3662f7c4af5229d20",
+          "evidence_category": "flight_logs",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "format": "unknown"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_4.txt",
+          "evidence_sha256": "3cd3a853ec0e6b86ca600b2b39ed66f97b78b7a03735fd0c83f21f75942ddf21",
+          "evidence_category": "flight_logs",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "format": "unknown"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_5.txt",
+          "evidence_sha256": "dd1362b9c0d8e00f1df3d7d0ff9426f38b11a8b4f1922092c529084b108c602b",
+          "evidence_category": "flight_logs",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "format": "unknown"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_6.txt",
+          "evidence_sha256": "ba220bf87005a1ea99fcb8e397351ef001fb5bee96e402dd1c932234c5e03305",
+          "evidence_category": "flight_logs",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "format": "unknown"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_7.txt",
+          "evidence_sha256": "6dfe8afd13d0e3a5481b85e688d8595889793fac439dbde294c1e0332b81bafa",
+          "evidence_category": "flight_logs",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "format": "unknown"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_8.txt",
+          "evidence_sha256": "2329c42465c85ac3df76c50a73215224cdee1a554f4c0135f6d4dcab2cb80385",
+          "evidence_category": "flight_logs",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "format": "unknown"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_logs\\log-2017-06-29_9.txt",
+          "evidence_sha256": "d3a35d18cdc85053da4db9c2ec1aedadcd5de230cd54c064d157512c8dd3dfa8",
+          "evidence_category": "flight_logs",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "format": "unknown"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p5_normalisation_and_anomaly_checking\\controller_android\\flight_records\\norm_DJIFlightRecord_2017-06-29_[13-39-52].csv",
+          "evidence_sha256": "26e38258c0d1b7cac499d46595880a3d6ac2699aa417c56cbb8700836e6934fc",
+          "evidence_category": "flight_records",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "altitude_negative": [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+              "contains_no_value": ["APP_SER_WARN.warn", "CENTER_BATTERY.isBatteryOnCharge", "CENTER_BATTERY.isNeedStudy", "CENTER_BATTERY.lastStudyCycle", "CENTER_BATTERY.totalStudyCycle", "CENTER_BATTERY.voltageCell5 [V]", "CUSTOM.travelled [m]", "DETAILS.area", "DETAILS.cameraSn", "DETAILS.city", "DETAILS.citypart", "DETAILS.rcSn", "DETAILS.street", "GIMBAL.pitchAdjust", "GIMBAL.timeStamp", "HOME.forceLandingHeight [m]", "HOME.heightLimitStatus", "HOME.isBigGale", "HOME.isBigGaleWarning", "HOME.isCompassInstallErr", "HOME.isFanCurrentInAbnormalState", "HOME.motor1EscmState", "HOME.motor2EscmState", "HOME.motor3EscmState", "HOME.motor4EscmState", "HOME.motor5EscmState", "HOME.motor6EscmState", "HOME.motor7EscmState", "HOME.motor8EscmState", "HOME.paddleState", "HOME.useAbsoluteHeight", "OSD.ctrlDevice", "OSD.ctrlDevice.RAW", "OSD.motorFailReason", "OSD.motorFailReason.RAW", "RC.bandwidth", "RC_GPS.accuracy", "RC_GPS.gpsNum", "RC_GPS.gpsStatus", "RC_GPS.latitude", "RC_GPS.longitude", "RC_GPS.startupTime", "RC_GPS.xSpeed [m/s]", "RC_GPS.ySpeed [m/s]", "RECOVER.cameraSn", "RECOVER.gimbalType", "RECOVER.rcSn"],
+              "contains_constant_value": ["APP_WARN.warn", "CAMERA_INFO.cameraType", "CAMERA_INFO.connectState", "CAMERA_INFO.encryptStatus", "CAMERA_INFO.firmErrorType", "CAMERA_INFO.firmUpgradeState", "CAMERA_INFO.hotState", "CAMERA_INFO.isTimePhotoing", "CAMERA_INFO.sdCardInsertState", "CAMERA_INFO.sdCardState", "CAMERA_INFO.sdCardTotalSize", "CAMERA_INFO.sensorState", "CAMERA_INFO.timeSyncState", "CAMERA_INFO.usbState", "CAMERA_INFO.version", "CENTER_BATTERY.connStatus", "CENTER_BATTERY.errorType", "CENTER_BATTERY.fullCapacity [mAh]", "CENTER_BATTERY.life", "CENTER_BATTERY.loopNum", "CENTER_BATTERY.productDate", "CENTER_BATTERY.serialNo", "CENTER_BATTERY.voltageCell6 [V]", "CUSTOM.isPhoto", "CUSTOM.isVideo", "DEFORM.deformMode", "DEFORM.deformMode.RAW", "DEFORM.isDeformProtected", "DEFORM.isExceptionState", "DETAILS.activeTimestamp", "DETAILS.aircraftName", "DETAILS.aircraftSnBytes", "DETAILS.appType", "DETAILS.appVersion", "DETAILS.batterySn", "DETAILS.droneType", "DETAILS.isFavorite", "DETAILS.isNew", "DETAILS.latitude", "DETAILS.longitude", "DETAILS.maxHeight [m]", "DETAILS.maxHorizontalSpeed [m/s]", "DETAILS.maxVerticalSpeed [m/s]", "DETAILS.needUpload", "DETAILS.photoNum", "DETAILS.recordLineCount", "DETAILS.takeOffAltitude [m]", "DETAILS.timestamp", "DETAILS.totalDistance [m]", "DETAILS.totalTime [s]", "DETAILS.videoTime [s]", "FIRMWARE.version", "GIMBAL.autoCalibrationResult", "GIMBAL.isAutoCalibration", "GIMBAL.isDoubleClick", "GIMBAL.isPitchInLimit", "GIMBAL.isRollInLimit", "GIMBAL.isSingleClick", "GIMBAL.isStuck", "GIMBAL.isTopPosition", "GIMBAL.isTripleClick", "GIMBAL.isYawInLimit", "GIMBAL.mode", "GIMBAL.mode.RAW", "GIMBAL.rollAdjust", "GIMBAL.version", "GIMBAL.yawAngle", "HOME.aircraftHeadDirection", "HOME.compassCeleStatus", "HOME.courseLockAngle", "HOME.dataRecorderFileIndex", "HOME.dataRecorderRemainTime", "HOME.dataRecorderStatus", "HOME.goHomeHeight [m]", "HOME.goHomeMode", "HOME.goHomeStatus", "HOME.hasGoHome", "HOME.height [m]", "HOME.iocMode", "HOME.isBeginnerMode", "HOME.isCompassCeleing", "HOME.isDynamicHomePointEnabled", "HOME.isFlycInNavigationMode", "HOME.isFlycInSimulationMode", "HOME.isHomeRecord", "HOME.isIOCEnabled", "HOME.isMultipleModeOpen", "HOME.isReachedLimitDistance", "HOME.isReachedLimitHeight", "HOME.isWingBroken", "HOME.latitude", "HOME.longitude", "MC_PARAM.OAenabled", "MC_PARAM.VPSenabled", "MC_PARAM.failSafeAction", "MC_PARAM.rthOAenabled", "OSD.batteryType", "OSD.canIOCWork", "OSD.compassError", "OSD.droneType", "OSD.flycCommand", "OSD.flycCommand.RAW", "OSD.flycVersion", "OSD.goHomeStatus", "OSD.goHomeStatus.RAW", "OSD.imuInitFailReason", "OSD.imuInitFailReason.RAW", "OSD.isAcceletorOverRange", "OSD.isBarometerDeadInAir", "OSD.isGPSused", "OSD.isGoHomeHeightModified", "OSD.isImuPreheated", "OSD.isMotorBlocked", "OSD.isMotorUp", "OSD.isOutOfLimit", "OSD.isPropellerCatapult", "OSD.isQuickSpin", "OSD.isSwaveWork", "OSD.isVibrating", "OSD.isVisionUsed", "OSD.modeChannel", "OSD.motorRevolution", "OSD.motorStartFailedCause", "OSD.motorStartFailedCause.RAW", "OSD.nonGPSCause", "OSD.nonGPSCause.RAW", "OSD.waveError", "RC.custom1", "RC.custom2", "RC.goHome", "RC.isWheelChanged", "RC.mode", "RC.playback", "RC.record", "RC.shutter", "RC.wheelClick", "RC.wheelOffset", "RECOVER.activeTimestamp", "RECOVER.aircraftName", "RECOVER.aircraftSnBytes", "RECOVER.appType", "RECOVER.appVersion", "RECOVER.batterySn", "RECOVER.droneType", "SMART_BATTERY.goHomeStatus", "SMART_BATTERY.goHomeStatus.RAW", "SMART_BATTERY.lowWarning", "SMART_BATTERY.lowWarningGoHome", "SMART_BATTERY.seriousLowWarning", "SMART_BATTERY.seriousLowWarningLanding"]
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\controller_android\\videos\\2017_06_29_13_44_19.json",
+          "evidence_sha256": "836a2649180c78233c9be288518bdde5180826defcf8ea0824946cbc6cce8b8c",
+          "evidence_category": "videos",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.95962117801732,
+              "gps_longitude": -106.21891423355427
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\controller_android\\videos\\2017_06_29_13_44_19_exif.json",
+          "evidence_sha256": "7d5ae874be156848f02c9d1a469f88184cbd8d8bcdef8f8466cb84857c3daa39",
+          "evidence_category": "videos",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "exif_contains_no_norm_time": true,
+              "exif_contains_no_gps": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0001_exif.json",
+          "evidence_sha256": "6e8299316aa74b00143c718e087d21ad2b5774c4708060a7c1b3e09ae287c655",
+          "evidence_category": "images",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "exif_contains_no_norm_time": true,
+              "exif_contains_no_gps": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0002_exif.json",
+          "evidence_sha256": "8e2a458141656bc8e37c0523c2d42eca57200566a8fdedc32dd87668b93b24c3",
+          "evidence_category": "images",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.9596206388889,
+              "gps_longitude": 106.218918111111,
+              "exif_contains_no_norm_time": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0003_exif.json",
+          "evidence_sha256": "4ded0ac63c9f4ed3321dd85ac0cd1fc209cbbc36e84c1ce25c63a6ce88ce6f24",
+          "evidence_category": "images",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "exif_contains_no_norm_time": true,
+              "exif_contains_no_gps": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0001_exif.json",
+          "evidence_sha256": "315aa974792c756b4f17b42006521119a399667af077ac21cffc284b3f5d2036",
+          "evidence_category": "videos",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.96001,
+              "gps_longitude": -106.21645,
+              "exif_contains_no_norm_time": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0003_exif.json",
+          "evidence_sha256": "5fb666113f6cb26e6e285a71c38caa890f3f8dfd4491bdd24cec2d8c5a5b106d",
+          "evidence_category": "videos",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.959622,
+              "gps_longitude": -106.218916,
+              "exif_contains_no_norm_time": true
+            }
+          ]
+        }
+      ]
+    },
+    "p6_multisource_correlation": {
+      "completed_at": "2026-06-18T09:39:00.121588+00:00",
+      "flight_count": 1,
+      "flights": [
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p6_multisource_correlation\\timeline_flight01.json",
+          "flight_id": "flight_01",
+          "flights_identified": [
+            {
+              "evidence_sha256": "26e38258c0d1b7cac499d46595880a3d6ac2699aa417c56cbb8700836e6934fc",
+              "start": "2017-06-29T19:39:52.161000+00:00",
+              "end": "2017-06-29T19:49:43.057000+00:00",
+              "duration_s": 590.9
+            }
+          ],
+          "correlation": {
+            "matched": false
+          },
+          "plausibly_correlated": [],
+          "possibly_correlated": [
+            {
+              "source": "controller_android:videos",
+              "source_pointer": "p5:836a2649180c78233c9be288518bdde5180826defcf8ea0824946cbc6cce8b8c",
+              "data": {
+                "longitude": -106.21891423355427,
+                "latitude": 39.95962117801732
+              }
+            },
+            {
+              "source": "drone_sd:videos",
+              "source_pointer": "p5:5fb666113f6cb26e6e285a71c38caa890f3f8dfd4491bdd24cec2d8c5a5b106d",
+              "data": {
+                "longitude": -106.218916,
+                "latitude": 39.959622
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "p7_analysis_and_validation": {
+      "completed_at": "2026-06-18T09:39:00.171051+00:00",
+      "flight_count_analysed": 1,
+      "source_coverage": [
+        {
+          "source": "controller_android",
+          "detected": true
+        },
+        {
+          "source": "controller_ios",
+          "detected": false
+        },
+        {
+          "source": "drone_sd",
+          "detected": true
+        },
+        {
+          "source": "drone_flight_storage",
+          "detected": false
+        }
+      ],
+      "artefact_coverage": [
+        {
+          "category": "account_data",
+          "count": 1,
+          "notes": []
+        },
+        {
+          "category": "databases",
+          "count": 2,
+          "notes": []
+        },
+        {
+          "category": "drone_logs",
+          "count": 0,
+          "notes": []
+        },
+        {
+          "category": "flight_logs",
+          "count": 12,
+          "notes": [
+            "formats: 1 heading_log, 11 unknown"
+          ]
+        },
+        {
+          "category": "flight_records",
+          "count": 1,
+          "notes": [
+            "1 file(s) with row anomalies",
+            "1 file(s) with empty columns",
+            "1 file(s) with constant-value columns"
+          ]
+        },
+        {
+          "category": "images",
+          "count": 3,
+          "notes": [
+            "1 file(s) contain(s) EXIF GPS coordinates",
+            "3 file(s) missing (normalisable) EXIF timestamp",
+            "2 file(s) missing EXIF GPS coordinates"
+          ]
+        },
+        {
+          "category": "videos",
+          "count": 4,
+          "notes": [
+            "3 file(s) contain(s) EXIF GPS coordinates",
+            "3 file(s) missing (normalisable) EXIF timestamp",
+            "1 file(s) missing EXIF GPS coordinates"
+          ]
+        }
+      ],
+      "artefact_coverage_per_source": [
+        {
+          "source": "controller_android",
+          "artefacts": [
+            {
+              "category": "account_data",
+              "count": 1
+            },
+            {
+              "category": "databases",
+              "count": 2
+            },
+            {
+              "category": "flight_logs",
+              "count": 12
+            },
+            {
+              "category": "flight_records",
+              "count": 1
+            },
+            {
+              "category": "videos",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "source": "drone_sd",
+          "artefacts": [
+            {
+              "category": "images",
+              "count": 3
+            },
+            {
+              "category": "videos",
+              "count": 2
+            }
+          ]
+        }
+      ],
+      "tool_status": [
+        {
+          "tool": "exiftool",
+          "invocation_count": 6,
+          "success_count": 4,
+          "status": "partial"
+        },
+        {
+          "tool": "fls",
+          "invocation_count": 1,
+          "success_count": 1,
+          "status": "ok"
+        },
+        {
+          "tool": "icat",
+          "invocation_count": 5,
+          "success_count": 5,
+          "status": "ok"
+        },
+        {
+          "tool": "mmls",
+          "invocation_count": 1,
+          "success_count": 1,
+          "status": "ok"
+        },
+        {
+          "tool": "parser_android",
+          "invocation_count": 1,
+          "success_count": 1,
+          "status": "ok"
+        },
+        {
+          "tool": "txtlogtocsvtool",
+          "invocation_count": 1,
+          "success_count": 1,
+          "status": "ok"
+        }
+      ],
+      "account_and_drone_analysis": {
+        "drone_serial": {
+          "value": "03Z1419944",
+          "corroboration_sources": [
+            "p4:89cccb0960e0cefc8fd2db571f7a14c39894b1e6fa85b8e0adeaab403f81405f",
+            "26e38258c0d1b7cac499d46595880a3d6ac2699aa417c56cbb8700836e6934fc:0"
+          ],
+          "confidence": "controller-only"
+        },
+        "drone_name": {
+          "value": "P3 Standard",
+          "corroboration_sources": [
+            "26e38258c0d1b7cac499d46595880a3d6ac2699aa417c56cbb8700836e6934fc:0"
+          ],
+          "confidence": "controller-only"
+        },
+        "dji_app_version": {
+          "value": "3.1.6",
+          "corroboration_sources": [
+            "26e38258c0d1b7cac499d46595880a3d6ac2699aa417c56cbb8700836e6934fc:0"
+          ],
+          "confidence": "controller-only"
+        },
+        "product_type": {
+          "value": "2",
+          "corroboration_sources": [
+            "p4:89cccb0960e0cefc8fd2db571f7a14c39894b1e6fa85b8e0adeaab403f81405f"
+          ],
+          "confidence": "controller-only"
+        },
+        "firmware_version": {
+          "value": "1.3.50+",
+          "corroboration_sources": [
+            "p4:89cccb0960e0cefc8fd2db571f7a14c39894b1e6fa85b8e0adeaab403f81405f"
+          ],
+          "confidence": "controller-only"
+        },
+        "account_uid": {
+          "value": "879825329191059456",
+          "corroboration_sources": [
+            "p4:89cccb0960e0cefc8fd2db571f7a14c39894b1e6fa85b8e0adeaab403f81405f"
+          ],
+          "confidence": "controller-only"
+        }
+      },
+      "flight_analyses": [
+        {
+          "flight_id": "flight_01",
+          "matched": false,
+          "correlation_confidence": null,
+          "source_count": 1,
+          "event_count": 18,
+          "high_confidence_event_count": 18,
+          "peak_height_m": 32.6,
+          "distance_travelled": 1399.61,
+          "photo_taken": true,
+          "number_photos_taken": 1,
+          "video_taken": true,
+          "duration_recording": 0.0,
+          "flight_record_complete": true,
+          "flight_modes_observed": [
+            "GPS_Atti",
+            "AutoTakeoff",
+            "AutoLanding"
+          ],
+          "possibly_correlated_count": 2,
+          "plausibly_correlated_count": 0,
+          "corroboration_sources": [
+            "26e38258c0d1b7cac499d46595880a3d6ac2699aa417c56cbb8700836e6934fc",
+            "5fb666113f6cb26e6e285a71c38caa890f3f8dfd4491bdd24cec2d8c5a5b106d",
+            "836a2649180c78233c9be288518bdde5180826defcf8ea0824946cbc6cce8b8c"
+          ]
+        }
+      ],
+      "uncorrelated_artefacts": [
+        {"evidence_sha256": "89ed259e1d088aa18eb6f5c31ba9fa0e7167a2f671ac1d7ac63ee44c5c96683b"},
+        {"evidence_sha256": "62590edaea94d88ce587e504bab4ab73dd2aed6dc36fec2a628a764e8862ec9d"},
+        {"evidence_sha256": "4d355f2d0ad84271e8269ef4e7926f983e9a8eeec80e19a3330b9a9b63a510cb"},
+        {"evidence_sha256": "e5f92e3b6f5ea6679fa03b6152c78cc59908e245b26ddf501e7b248c849466e2"},
+        {"evidence_sha256": "7b99fb94c3cd3b0b7ee7825073d65f00275945ad247f3aec5b2eae44bbf114aa"},
+        {"evidence_sha256": "cef02a1f4d384486e866ae6a4960b4b2fd439fcde38f76c2c101b76e5963cf52"},
+        {"evidence_sha256": "4b2b961c32aa13abb345d465fe87d79b2a946595f84421ef081392463eecc4ca"},
+        {"evidence_sha256": "77842013c23dc8cefce5816510b80f7f0201c008f7cdf2d3662f7c4af5229d20"},
+        {"evidence_sha256": "3cd3a853ec0e6b86ca600b2b39ed66f97b78b7a03735fd0c83f21f75942ddf21"},
+        {"evidence_sha256": "dd1362b9c0d8e00f1df3d7d0ff9426f38b11a8b4f1922092c529084b108c602b"},
+        {"evidence_sha256": "ba220bf87005a1ea99fcb8e397351ef001fb5bee96e402dd1c932234c5e03305"},
+        {"evidence_sha256": "6dfe8afd13d0e3a5481b85e688d8595889793fac439dbde294c1e0332b81bafa"},
+        {"evidence_sha256": "2329c42465c85ac3df76c50a73215224cdee1a554f4c0135f6d4dcab2cb80385"},
+        {"evidence_sha256": "d3a35d18cdc85053da4db9c2ec1aedadcd5de230cd54c064d157512c8dd3dfa8"},
+        {"evidence_sha256": "6e8299316aa74b00143c718e087d21ad2b5774c4708060a7c1b3e09ae287c655"},
+        {"evidence_sha256": "8e2a458141656bc8e37c0523c2d42eca57200566a8fdedc32dd87668b93b24c3"},
+        {"evidence_sha256": "4ded0ac63c9f4ed3321dd85ac0cd1fc209cbbc36e84c1ce25c63a6ce88ce6f24"},
+        {"evidence_sha256": "7d5ae874be156848f02c9d1a469f88184cbd8d8bcdef8f8466cb84857c3daa39"},
+        {"evidence_sha256": "315aa974792c756b4f17b42006521119a399667af077ac21cffc284b3f5d2036"}
+      ],
+      "coverage_score": {
+        "evidence_sources_detected": {
+          "value": 2,
+          "total": 4
+        },
+        "artefact_categories_with_data": {
+          "value": 6,
+          "total": 7
+        },
+        "flights_with_primary_correlation": {
+          "value": 0,
+          "total": 1
+        },
+        "tools_succeeded": {
+          "value": 5,
+          "total": 6
+        }
+      },
+      "conclusions": {
+        "case_overview": [
+          "2 evidence source(s) detected: controller_android, drone_sd.",
+          "1 flight(s) identified; 0 with primary GPS+temporal correlation."
+        ],
+        "device_identification": [
+          "Drone Serial Number: 03Z1419944 (confidence: controller-only).",
+          "Drone Model: P3 Standard (confidence: controller-only).",
+          "DJI Application Version: 3.1.6 (confidence: controller-only).",
+          "Product Type: 2 (confidence: controller-only).",
+          "Firmware Version: 1.3.50+ (confidence: controller-only).",
+          "Account UID: 879825329191059456 (confidence: controller-only)."
+        ],
+        "flight_analysis": [
+          "2 artefact(s) possibly correlated to a flight by indirect indicators  -  manual verification recommended."
+        ],
+        "media_analysis": [
+          "Flight record indicates video recording was initiated  -  a .info sidecar file is available for additional metadata.",
+          "Images: 1 file(s) contain(s) EXIF GPS coordinates. Spatial correlation of these files is possible.",
+          "Images: 3 file(s) missing (normalisable) EXIF timestamp. Temporal correlation of these files is not possible without additional context.",
+          "Images: 2 file(s) missing EXIF GPS coordinates. Spatial correlation of these files is not possible without additional context.",
+          "Videos: 3 file(s) contain(s) EXIF GPS coordinates. Spatial correlation of these files is possible.",
+          "Videos: 3 file(s) missing (normalisable) EXIF timestamp. Temporal correlation of these files is not possible without additional context.",
+          "Videos: 1 file(s) missing EXIF GPS coordinates. Spatial correlation of these files is not possible without additional context."
+        ],
+        "database_analysis": [],
+        "data_quality": [
+          "Flight_logs: log files present in the following format(s): 1 heading_log, 11 unknown.",
+          "Flight_records: 1 file(s) with row anomalies detected in telemetry data.",
+          "Flight_records: 1 file(s) with empty columns  -  some telemetry channels contain no data.",
+          "Flight_records: 1 file(s) with constant-value columns  -  some telemetry channels may be unreliable."
+        ],
+        "further_investigation": [
+          "Note: no installed DJI applications found - Device and account information.",
+          "Note: no controller device name found - Device and account information.",
+          "Note: no controller device found - Device and account information.",
+          "Note: no account e-mail found - Device and account information.",
+          "Note: no last country code found - Device and account information.",
+          "Note: no aircraft model code found - Device and account information.",
+          "Note: no controller serial number found - Device and account information.",
+          "Note: no last known latitude found - Device and account information.",
+          "Note: no last known longitude found - Device and account information.",
+          "Note: no account nickname found - Device and account information.",
+          "Note: no device uuid found - Device and account information.",
+          "1 flight record(s) could not be correlated to a drone log (flight_01). Independent corroboration is absent for these flight(s).",
+          "Photo(s) were recorded during the flight. Copies may reside on both the controller and the drone SD card  -  both sources should be examined.",
+          "2 database file(s) contain records and should be examined for relevant artefacts."
+        ]
+      }
+    },
+    "p8_automated_reporting": {
+      "completed_at": "2026-06-18T09:39:00.193535+00:00",
+      "report_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\ft-df002-2017-android_forensic_baseline.pdf",
+      "plots_dir": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p8_automated_reporting"
+    }
+  },
+  "tool_invocation_log": [
+    {
+      "timestamp": "2026-06-18T09:37:58.225075+00:00",
+      "tool_name": "mmls",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\mmls.exe",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df002\\2017\\android\\df002_external.001"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: DOS Partition Table\nOffset Sector: 0\nUnits are in 512-byte sectors\n\n      Slot      Start        End          Leng...",
+      "output_paths": null
+    },
+    {
+      "timestamp": "2026-06-18T09:38:02.557634+00:00",
+      "tool_name": "fls",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\fls.exe",
+        "-r",
+        "-p",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df002\\2017\\android\\df002_external.001"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: d/d 3:\tDCIM\nd/d 1029:\tDCIM/100MEDIA\nr/r 9221:\tDCIM/100MEDIA/DJI_0001.MOV\nr/r 9222:\tDCIM/100MEDIA/DJI_0002.JPG\nr/r ...",
+      "output_paths": null
+    },
+    {
+      "timestamp": "2026-06-18T09:38:26.689780+00:00",
+      "tool_name": "parser_android",
+      "version": null,
+      "args": [
+        "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df002\\2017\\android\\df002_flight.zip",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p2_image_parsing\\controller_android_parsed"
+      ],
+      "return_code": null,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p2_image_parsing\\controller_android_parsed"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T09:38:35.828053+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df002\\2017\\android\\df002_external.001",
+        "9221"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0001.MOV"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T09:38:43.058617+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df002\\2017\\android\\df002_external.001",
+        "9222"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0002.JPG"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T09:38:48.292244+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df002\\2017\\android\\df002_external.001",
+        "9223"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0003.MOV"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T09:38:54.238177+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df002\\2017\\android\\df002_external.001",
+        "567301"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0001.THM"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T09:38:54.329672+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df002\\2017\\android\\df002_external.001",
+        "567303"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0003.THM"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T09:38:55.790907+00:00",
+      "tool_name": "txtlogtocsvtool",
+      "version": "2018-06-11",
+      "args": [
+        "C:\\Program Files (x86)\\CsvView\\executables\\TXTlogToCSVtool.exe",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\flight_records\\DJIFlightRecord_2017-06-29_[13-39-52].txt",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\controller_android\\flight_records\\DJIFlightRecord_2017-06-29_[13-39-52].csv"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\controller_android\\flight_records\\DJIFlightRecord_2017-06-29_[13-39-52].csv"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T09:38:56.691890+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\controller_android\\videos\\2017_06_29_13_44_19.mp4"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df002-2017-android/p3_artefact_extraction/controller...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\controller_android\\videos\\2017_06_29_13_44_19_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T09:38:56.984532+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0001.THM"
+      ],
+      "return_code": 1,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df002-2017-android/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0001_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T09:38:57.292492+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0002.JPG"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df002-2017-android/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0002_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T09:38:57.657899+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0003.THM"
+      ],
+      "return_code": 1,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df002-2017-android/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0003_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T09:38:58.192302+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0001.MOV"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df002-2017-android/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0001_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T09:38:58.680309+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0003.MOV"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df002-2017-android/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0003_exif.json"
+      ]
+    }
+  ]
+}

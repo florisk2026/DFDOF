@@ -1,0 +1,394 @@
+{
+  "test": "DT8",
+  "description": "Pipeline efficiency timing: wall-clock per phase + DatCon interaction estimate",
+  "timestamp": "2026-06-19T11:34:38.912885+00:00",
+  "cases": [
+    {
+      "case_id": "ft-df002-2017-android",
+      "operator": "Floris",
+      "total_s": 64.2,
+      "automated_s": 59.9,
+      "p4_s": 4.3,
+      "datcon_invocations": 0,
+      "estimated_datcon_min": 0.0,
+      "phases": {
+        "P1": 28.5,
+        "P2": 0.1,
+        "P3": 27.6,
+        "P4": 4.3,
+        "P5": 1.1,
+        "P6": 0.3,
+        "P7": 0.0,
+        "P8": 2.3
+      },
+      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android\\timing_ft-df002-2017-android.json"
+    },
+    {
+      "case_id": "ft-df002-2017-android-2",
+      "operator": "Floris",
+      "total_s": 63.6,
+      "automated_s": 58.5,
+      "p4_s": 5.1,
+      "datcon_invocations": 0,
+      "estimated_datcon_min": 0.0,
+      "phases": {
+        "P1": 29.4,
+        "P2": 0.1,
+        "P3": 25.5,
+        "P4": 5.1,
+        "P5": 1.0,
+        "P6": 0.3,
+        "P7": 0.0,
+        "P8": 2.1
+      },
+      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-android-2\\timing_ft-df002-2017-android-2.json"
+    },
+    {
+      "case_id": "ft-df002-2017-ios",
+      "operator": "Floris",
+      "total_s": 65.0,
+      "automated_s": 60.5,
+      "p4_s": 4.5,
+      "datcon_invocations": 0,
+      "estimated_datcon_min": 0.0,
+      "phases": {
+        "P1": 29.9,
+        "P2": 3.7,
+        "P3": 23.3,
+        "P4": 4.5,
+        "P5": 1.2,
+        "P6": 0.4,
+        "P7": 0.0,
+        "P8": 2.0
+      },
+      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df002-2017-ios\\timing_ft-df002-2017-ios.json"
+    },
+    {
+      "case_id": "ft-df003-2017-ios",
+      "operator": "Floris",
+      "total_s": 294.6,
+      "automated_s": 140.6,
+      "p4_s": 154.0,
+      "datcon_invocations": 7,
+      "estimated_datcon_min": 17.5,
+      "phases": {
+        "P1": 46.3,
+        "P2": 4.3,
+        "P3": 23.6,
+        "P4": 154.0,
+        "P5": 38.2,
+        "P6": 9.8,
+        "P7": 0.1,
+        "P8": 18.3
+      },
+      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df003-2017-ios\\timing_ft-df003-2017-ios.json"
+    },
+    {
+      "case_id": "ft-df004-2017-sd-only",
+      "operator": "Floris",
+      "total_s": 179.7,
+      "automated_s": 170.9,
+      "p4_s": 8.8,
+      "datcon_invocations": 0,
+      "estimated_datcon_min": 0.0,
+      "phases": {
+        "P1": 62.2,
+        "P2": 0.0,
+        "P3": 108.5,
+        "P4": 8.8,
+        "P5": 0.0,
+        "P6": 0.0,
+        "P7": 0.0,
+        "P8": 0.2
+      },
+      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\timing_ft-df004-2017-sd-only.json"
+    },
+    {
+      "case_id": "ft-df006-2017-android",
+      "operator": "Floris",
+      "total_s": 492.3,
+      "automated_s": 280.9,
+      "p4_s": 211.4,
+      "datcon_invocations": 11,
+      "estimated_datcon_min": 27.5,
+      "phases": {
+        "P1": 82.3,
+        "P2": 0.1,
+        "P3": 103.3,
+        "P4": 211.4,
+        "P5": 51.0,
+        "P6": 15.4,
+        "P7": 0.1,
+        "P8": 28.7
+      },
+      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df006-2017-android\\timing_ft-df006-2017-android.json"
+    },
+    {
+      "case_id": "ft-df006-2017-ios",
+      "operator": "Floris",
+      "total_s": 473.8,
+      "automated_s": 273.1,
+      "p4_s": 200.7,
+      "datcon_invocations": 11,
+      "estimated_datcon_min": 27.5,
+      "phases": {
+        "P1": 83.5,
+        "P2": 3.9,
+        "P3": 98.8,
+        "P4": 200.7,
+        "P5": 51.0,
+        "P6": 12.7,
+        "P7": 0.1,
+        "P8": 23.1
+      },
+      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df006-2017-ios\\timing_ft-df006-2017-ios.json"
+    },
+    {
+      "case_id": "ft-df006-2017-ios-2",
+      "operator": "Floris",
+      "total_s": 490.6,
+      "automated_s": 276.1,
+      "p4_s": 214.6,
+      "datcon_invocations": 11,
+      "estimated_datcon_min": 27.5,
+      "phases": {
+        "P1": 80.6,
+        "P2": 5.8,
+        "P3": 102.1,
+        "P4": 214.6,
+        "P5": 50.4,
+        "P6": 12.4,
+        "P7": 0.2,
+        "P8": 24.7
+      },
+      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df006-2017-ios-2\\timing_ft-df006-2017-ios-2.json"
+    },
+    {
+      "case_id": "ft-df019-2017-android-only",
+      "operator": "Floris",
+      "total_s": 26.6,
+      "automated_s": 24.8,
+      "p4_s": 1.8,
+      "datcon_invocations": 0,
+      "estimated_datcon_min": 0.0,
+      "phases": {
+        "P1": 16.3,
+        "P2": 0.1,
+        "P3": 5.9,
+        "P4": 1.8,
+        "P5": 0.7,
+        "P6": 0.2,
+        "P7": 0.0,
+        "P8": 1.7
+      },
+      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-android-only\\timing_ft-df019-2017-android-only.json"
+    },
+    {
+      "case_id": "ft-df019-2017-ios",
+      "operator": "Floris",
+      "total_s": 123.9,
+      "automated_s": 117.5,
+      "p4_s": 6.4,
+      "datcon_invocations": 0,
+      "estimated_datcon_min": 0.0,
+      "phases": {
+        "P1": 68.1,
+        "P2": 4.0,
+        "P3": 39.5,
+        "P4": 6.4,
+        "P5": 1.4,
+        "P6": 0.4,
+        "P7": 0.0,
+        "P8": 4.1
+      },
+      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios\\timing_ft-df019-2017-ios.json"
+    },
+    {
+      "case_id": "ft-df019-2017-ios-only",
+      "operator": "Floris",
+      "total_s": 18.2,
+      "automated_s": 13.8,
+      "p4_s": 4.3,
+      "datcon_invocations": 0,
+      "estimated_datcon_min": 0.0,
+      "phases": {
+        "P1": 1.1,
+        "P2": 4.8,
+        "P3": 1.2,
+        "P4": 4.3,
+        "P5": 1.5,
+        "P6": 0.5,
+        "P7": 0.0,
+        "P8": 4.7
+      },
+      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\timing_ft-df019-2017-ios-only.json"
+    },
+    {
+      "case_id": "ft-df019-2018-ios",
+      "operator": "Floris",
+      "total_s": 658.5,
+      "automated_s": 249.7,
+      "p4_s": 408.8,
+      "datcon_invocations": 23,
+      "estimated_datcon_min": 57.5,
+      "phases": {
+        "P1": 53.1,
+        "P2": 5.0,
+        "P3": 9.6,
+        "P4": 408.8,
+        "P5": 122.1,
+        "P6": 27.2,
+        "P7": 0.2,
+        "P8": 32.6
+      },
+      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2018-ios\\timing_ft-df019-2018-ios.json"
+    },
+    {
+      "case_id": "ft-df020-2017-android",
+      "operator": "Floris",
+      "total_s": 127.4,
+      "automated_s": 122.9,
+      "p4_s": 4.4,
+      "datcon_invocations": 0,
+      "estimated_datcon_min": 0.0,
+      "phases": {
+        "P1": 76.7,
+        "P2": 0.1,
+        "P3": 43.4,
+        "P4": 4.4,
+        "P5": 0.8,
+        "P6": 0.2,
+        "P7": 0.0,
+        "P8": 1.7
+      },
+      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df020-2017-android\\timing_ft-df020-2017-android.json"
+    },
+    {
+      "case_id": "ft-df020-2017-ios",
+      "operator": "Floris",
+      "total_s": 162.1,
+      "automated_s": 121.1,
+      "p4_s": 41.0,
+      "datcon_invocations": 1,
+      "estimated_datcon_min": 2.5,
+      "phases": {
+        "P1": 64.4,
+        "P2": 4.7,
+        "P3": 40.6,
+        "P4": 41.0,
+        "P5": 4.3,
+        "P6": 1.7,
+        "P7": 0.0,
+        "P8": 5.4
+      },
+      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df020-2017-ios\\timing_ft-df020-2017-ios.json"
+    },
+    {
+      "case_id": "ft-df020-2018-android",
+      "operator": "Floris",
+      "total_s": 1612.8,
+      "automated_s": 506.3,
+      "p4_s": 1106.5,
+      "datcon_invocations": 64,
+      "estimated_datcon_min": 160.0,
+      "phases": {
+        "P1": 93.2,
+        "P2": 0.1,
+        "P3": 40.3,
+        "P4": 1106.5,
+        "P5": 222.8,
+        "P6": 52.0,
+        "P7": 0.7,
+        "P8": 97.3
+      },
+      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df020-2018-android\\timing_ft-df020-2018-android.json"
+    },
+    {
+      "case_id": "ft-df049-2018-apr-android",
+      "operator": "Floris",
+      "total_s": 100.0,
+      "automated_s": 95.8,
+      "p4_s": 4.2,
+      "datcon_invocations": 0,
+      "estimated_datcon_min": 0.0,
+      "phases": {
+        "P1": 39.5,
+        "P2": 0.0,
+        "P3": 55.9,
+        "P4": 4.2,
+        "P5": 0.0,
+        "P6": 0.0,
+        "P7": 0.0,
+        "P8": 0.4
+      },
+      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df049-2018-apr-android\\timing_ft-df049-2018-apr-android.json"
+    },
+    {
+      "case_id": "ft-df049-2018-apr-ios",
+      "operator": "Floris",
+      "total_s": 94.7,
+      "automated_s": 91.4,
+      "p4_s": 3.3,
+      "datcon_invocations": 0,
+      "estimated_datcon_min": 0.0,
+      "phases": {
+        "P1": 37.1,
+        "P2": 2.7,
+        "P3": 51.1,
+        "P4": 3.3,
+        "P5": 0.2,
+        "P6": 0.0,
+        "P7": 0.0,
+        "P8": 0.2
+      },
+      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df049-2018-apr-ios\\timing_ft-df049-2018-apr-ios.json"
+    },
+    {
+      "case_id": "ft-df049-2018-apr-ios-2",
+      "operator": "Floris",
+      "total_s": 100.1,
+      "automated_s": 96.0,
+      "p4_s": 4.1,
+      "datcon_invocations": 0,
+      "estimated_datcon_min": 0.0,
+      "phases": {
+        "P1": 27.5,
+        "P2": 2.8,
+        "P3": 65.2,
+        "P4": 4.1,
+        "P5": 0.2,
+        "P6": 0.0,
+        "P7": 0.0,
+        "P8": 0.3
+      },
+      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df049-2018-apr-ios-2\\timing_ft-df049-2018-apr-ios-2.json"
+    },
+    {
+      "case_id": "ft-df050-2018-android",
+      "operator": "Floris",
+      "total_s": 646.4,
+      "automated_s": 298.3,
+      "p4_s": 348.2,
+      "datcon_invocations": 18,
+      "estimated_datcon_min": 45.0,
+      "phases": {
+        "P1": 111.8,
+        "P2": 0.5,
+        "P3": 178.8,
+        "P4": 348.2,
+        "P5": 1.6,
+        "P6": 0.3,
+        "P7": 0.1,
+        "P8": 5.2
+      },
+      "timing_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df050-2018-android\\timing_ft-df050-2018-android.json"
+    }
+  ],
+  "summary": {
+    "case_count": 19,
+    "mean_automated_s": 161.0,
+    "mean_total_s": 305.0,
+    "total_datcon_invocations": 146,
+    "estimated_datcon_total_min": 365.0
+  }
+}

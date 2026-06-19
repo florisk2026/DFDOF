@@ -1,0 +1,217 @@
+{
+  "test": "AT7",
+  "requirement": "R8a + R8b",
+  "description": "UTC normalisation: timestamps normalised to UTC only when timezone info present in source",
+  "timestamp": "2026-06-19T11:32:51.630198+00:00",
+  "cases": [
+    {
+      "case_id": "ft-df002-2017-android",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df002-2017-android/state.json",
+      "details": {
+        "drone_log_csvs_checked": 0,
+        "flight_record_csvs_checked": 1,
+        "flight_log_entries_checked": 7,
+        "images_videos_checked": 0,
+        "info_sidecars_checked": 1
+      },
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "ft-df002-2017-ios",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df002-2017-ios/state.json",
+      "details": {
+        "drone_log_csvs_checked": 0,
+        "flight_record_csvs_checked": 1,
+        "flight_log_entries_checked": 119,
+        "images_videos_checked": 0,
+        "info_sidecars_checked": 0
+      },
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "ft-df003-2017-ios",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df003-2017-ios/state.json",
+      "details": {
+        "drone_log_csvs_checked": 7,
+        "flight_record_csvs_checked": 2,
+        "flight_log_entries_checked": 178,
+        "images_videos_checked": 0,
+        "info_sidecars_checked": 0
+      },
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "ft-df004-2017-sd-only",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df004-2017-sd-only/state.json",
+      "details": {
+        "drone_log_csvs_checked": 0,
+        "flight_record_csvs_checked": 0,
+        "flight_log_entries_checked": 0,
+        "images_videos_checked": 0,
+        "info_sidecars_checked": 0
+      },
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "ft-df006-2017-android",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df006-2017-android/state.json",
+      "details": {
+        "drone_log_csvs_checked": 11,
+        "flight_record_csvs_checked": 2,
+        "flight_log_entries_checked": 24,
+        "images_videos_checked": 0,
+        "info_sidecars_checked": 1
+      },
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "ft-df006-2017-ios",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df006-2017-ios/state.json",
+      "details": {
+        "drone_log_csvs_checked": 11,
+        "flight_record_csvs_checked": 1,
+        "flight_log_entries_checked": 82,
+        "images_videos_checked": 0,
+        "info_sidecars_checked": 0
+      },
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "ft-df019-2017-android-only",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df019-2017-android-only/state.json",
+      "details": {
+        "drone_log_csvs_checked": 0,
+        "flight_record_csvs_checked": 1,
+        "flight_log_entries_checked": 38,
+        "images_videos_checked": 0,
+        "info_sidecars_checked": 1
+      },
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "ft-df019-2017-ios",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df019-2017-ios/state.json",
+      "details": {
+        "drone_log_csvs_checked": 0,
+        "flight_record_csvs_checked": 3,
+        "flight_log_entries_checked": 220,
+        "images_videos_checked": 0,
+        "info_sidecars_checked": 0
+      },
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "ft-df019-2017-ios-only",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df019-2017-ios-only/state.json",
+      "details": {
+        "drone_log_csvs_checked": 0,
+        "flight_record_csvs_checked": 3,
+        "flight_log_entries_checked": 220,
+        "images_videos_checked": 0,
+        "info_sidecars_checked": 0
+      },
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "ft-df019-2018-ios",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df019-2018-ios/state.json",
+      "details": {
+        "drone_log_csvs_checked": 23,
+        "flight_record_csvs_checked": 1,
+        "flight_log_entries_checked": 1867,
+        "images_videos_checked": 0,
+        "info_sidecars_checked": 0
+      },
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "ft-df020-2017-android",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df020-2017-android/state.json",
+      "details": {
+        "drone_log_csvs_checked": 0,
+        "flight_record_csvs_checked": 1,
+        "flight_log_entries_checked": 16,
+        "images_videos_checked": 0,
+        "info_sidecars_checked": 1
+      },
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "ft-df020-2017-ios",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df020-2017-ios/state.json",
+      "details": {
+        "drone_log_csvs_checked": 1,
+        "flight_record_csvs_checked": 1,
+        "flight_log_entries_checked": 239,
+        "images_videos_checked": 0,
+        "info_sidecars_checked": 0
+      },
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "ft-df020-2018-android",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df020-2018-android/state.json",
+      "details": {
+        "drone_log_csvs_checked": 63,
+        "flight_record_csvs_checked": 3,
+        "flight_log_entries_checked": 17,
+        "images_videos_checked": 0,
+        "info_sidecars_checked": 3
+      },
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "ft-df049-2018-apr-android",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df049-2018-apr-android/state.json",
+      "details": {
+        "drone_log_csvs_checked": 0,
+        "flight_record_csvs_checked": 0,
+        "flight_log_entries_checked": 0,
+        "images_videos_checked": 0,
+        "info_sidecars_checked": 0
+      },
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "ft-df049-2018-apr-ios",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df049-2018-apr-ios/state.json",
+      "details": {
+        "drone_log_csvs_checked": 0,
+        "flight_record_csvs_checked": 0,
+        "flight_log_entries_checked": 20,
+        "images_videos_checked": 0,
+        "info_sidecars_checked": 0
+      },
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "ft-df050-2018-android",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df050-2018-android/state.json",
+      "details": {
+        "drone_log_csvs_checked": 8,
+        "flight_record_csvs_checked": 3,
+        "flight_log_entries_checked": 19,
+        "images_videos_checked": 0,
+        "info_sidecars_checked": 1
+      },
+      "issues": [],
+      "passed": true
+    }
+  ],
+  "summary": "PASS"
+}

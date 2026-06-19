@@ -1,0 +1,56 @@
+{
+  "case_id": "ft-df050-2018-android",
+  "operator": "Floris",
+  "pipeline_start": "2026-06-18T12:37:30.368585+00:00",
+  "pipeline_end": "2026-06-18T12:48:16.890028+00:00",
+  "total_seconds": 646.426,
+  "automated_seconds": 298.253,
+  "phases": {
+    "p1_provenance": {
+      "start": "2026-06-18T12:37:30.368639+00:00",
+      "end": "2026-06-18T12:39:22.201435+00:00",
+      "duration_s": 111.833
+    },
+    "p2_image_parsing": {
+      "start": "2026-06-18T12:39:22.206462+00:00",
+      "end": "2026-06-18T12:39:22.658295+00:00",
+      "duration_s": 0.452
+    },
+    "p3_artefact_extraction": {
+      "start": "2026-06-18T12:39:22.661746+00:00",
+      "end": "2026-06-18T12:42:21.501501+00:00",
+      "duration_s": 178.84
+    },
+    "p4_decision_and_orchestration": {
+      "start": "2026-06-18T12:42:21.512720+00:00",
+      "end": "2026-06-18T12:48:09.685864+00:00",
+      "duration_s": 348.173
+    },
+    "p5_normalisation_and_anomaly_checking": {
+      "start": "2026-06-18T12:48:09.696933+00:00",
+      "end": "2026-06-18T12:48:11.271597+00:00",
+      "duration_s": 1.575
+    },
+    "p6_multisource_correlation": {
+      "start": "2026-06-18T12:48:11.283042+00:00",
+      "end": "2026-06-18T12:48:11.596178+00:00",
+      "duration_s": 0.313
+    },
+    "p7_analysis_and_validation": {
+      "start": "2026-06-18T12:48:11.611470+00:00",
+      "end": "2026-06-18T12:48:11.667958+00:00",
+      "duration_s": 0.057
+    },
+    "p8_automated_reporting": {
+      "start": "2026-06-18T12:48:11.692788+00:00",
+      "end": "2026-06-18T12:48:16.875962+00:00",
+      "duration_s": 5.183
+    }
+  },
+  "notes": {
+    "p4_includes_datcon_operator_time": true,
+    "automated_seconds_excludes": [
+      "p4_decision_and_orchestration"
+    ]
+  }
+}

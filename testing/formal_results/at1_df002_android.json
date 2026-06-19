@@ -1,0 +1,34 @@
+{
+  "test": "AT1",
+  "requirement": "R1",
+  "description": "Reproducibility: two runs of same evidence produce identical analytical output",
+  "timestamp": "2026-06-19T11:26:39.354588+00:00",
+  "comparisons": [
+    {
+      "run1_case": "ft-df002-2017-android",
+      "run2_case": "ft-df002-2017-android-2",
+      "state_differences_total": 30,
+      "state_differences_classified": {
+        "analytical": 6,
+        "filesystem_metadata_nondeterministic": 24,
+        "lineage_cascade_from_p4": 0,
+        "p3_enumeration_order": 0
+      },
+      "analytical_differences": [
+        "state.phase_outputs.p2_image_parsing.derived_observations[0].evidence_sha256: 'ba468561e5d6828cb3614aa8b1809596a93709addb620b956fda5d6303a32e1c' vs '9f611fb4b3bf56644fbf2b85ecfe30016ded28c49ec6055fd162cdfb8dd8fc54'",
+        "state.phase_outputs.p2_image_parsing.derived_observations[0].observations[0].device_serial: only in run1",
+        "state.phase_outputs.p2_image_parsing.derived_observations[0].observations[0].device_hostname: only in run2",
+        "state.phase_outputs.p2_image_parsing.derived_observations[1].evidence_sha256: '9f611fb4b3bf56644fbf2b85ecfe30016ded28c49ec6055fd162cdfb8dd8fc54' vs 'ba468561e5d6828cb3614aa8b1809596a93709addb620b956fda5d6303a32e1c'",
+        "state.phase_outputs.p2_image_parsing.derived_observations[1].observations[0].device_hostname: only in run1",
+        "state.phase_outputs.p2_image_parsing.derived_observations[1].observations[0].device_serial: only in run2"
+      ],
+      "timeline_differences": [],
+      "known_nondeterminisms": {
+        "exiftool_filesystem_metadata": "ExifTool JSON output includes FileModifyDate/FileCreateDate which reflect the extracted file's mtime; re-extraction to a new path changes these values, producing different P4 JSON hashes even when image content is identical.",
+        "p5_parent_sha256_cascade": "P5 normalised artefacts inherit parent_sha256 from their P4 parent; when P4 hashes change due to ExifTool filesystem metadata, P5 parent_sha256 changes correspondingly. Norm CSV content is analytically identical."
+      },
+      "passed": false
+    }
+  ],
+  "summary": "FAIL: differences found in 1 pair(s)"
+}

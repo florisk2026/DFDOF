@@ -1,0 +1,33 @@
+{
+  "test": "AT3",
+  "requirement": "R3",
+  "description": "Hash integrity: SHA-256 and SHA-1 of input_evidence and P3 artefacts match disk",
+  "timestamp": "2026-06-19T11:31:14.680192+00:00",
+  "cases": [
+    {
+      "case_id": "ft-df004-2017-sd-only",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df004-2017-sd-only/state.json",
+      "artefacts_checked": 20,
+      "artefacts_skipped_no_hash": 0,
+      "failures": [],
+      "passed": true
+    },
+    {
+      "case_id": "ft-df019-2017-ios",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df019-2017-ios/state.json",
+      "artefacts_checked": 30,
+      "artefacts_skipped_no_hash": 0,
+      "failures": [],
+      "passed": true
+    },
+    {
+      "case_id": "ft-df020-2018-android",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df020-2018-android/state.json",
+      "artefacts_checked": 128,
+      "artefacts_skipped_no_hash": 0,
+      "failures": [],
+      "passed": true
+    }
+  ],
+  "summary": "PASS"
+}

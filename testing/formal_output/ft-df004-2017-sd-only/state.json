@@ -1,0 +1,2458 @@
+{
+  "operator": "Floris",
+  "case_id": "ft-df004-2017-sd-only",
+  "start_time": "2026-06-19T09:03:59.630937+00:00",
+  "end_time": "2026-06-19T09:06:59.121708+00:00",
+  "evidence_directory": "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017",
+  "completed_phases": [
+    "p1_provenance",
+    "p2_image_parsing",
+    "p3_artefact_extraction",
+    "p4_decision_and_orchestration",
+    "p5_normalisation_and_anomaly_checking",
+    "p6_multisource_correlation",
+    "p7_analysis_and_validation",
+    "p8_automated_reporting"
+  ],
+  "anomaly_flags": [
+    "[p2 - controller android]: source evidence not found",
+    "[p2 - controller ios]: source evidence not found",
+    "[p3 - controller android]: source evidence not found",
+    "[p3 - controller ios]: source evidence not found",
+    "[p3 - drone flight storage]: source evidence not found",
+    "[p4 - controller android]: source evidence not found",
+    "[p4 - controller ios]: source evidence not found",
+    "[p4 - drone flight storage]: source evidence not found"
+  ],
+  "input_evidence": [
+    {
+      "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+      "stored_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+      "source_identification": "drone_sd",
+      "parent_sha256": null,
+      "acquisition_method": "physical",
+      "type": "input",
+      "artefact_category": null,
+      "size": 16022241280,
+      "sha1": "5d7bdc08f6e306261778b6d1559a83c9cbc4d3d5",
+      "sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+      "hash_timestamp": "2026-06-19T09:04:51.263923+00:00"
+    }
+  ],
+  "phase_outputs": {
+    "p1_provenance": {
+      "completed_at": "2026-06-19T09:03:59.631255+00:00",
+      "identified_evidence": [
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+          "identified": true,
+          "identified_as": "drone_sd",
+          "operator_confirmed": true,
+          "identified_by_operator_as": null
+        }
+      ],
+      "operator_final_confirmation": {
+        "accepted": true,
+        "timestamp": "2026-06-19T09:04:51.264084+00:00"
+      },
+      "image_metadata": {
+        "df004_external.001": {
+          "offset_sectors": 8192,
+          "entries": [
+            {
+              "kind": "d/d",
+              "inode": 3,
+              "path": "DCIM"
+            },
+            {
+              "kind": "d/d",
+              "inode": 1029,
+              "path": "DCIM/100MEDIA"
+            },
+            {
+              "kind": "r/r",
+              "inode": 793605,
+              "path": "DCIM/100MEDIA/DJI_0001.JPG"
+            },
+            {
+              "kind": "r/r",
+              "inode": 793606,
+              "path": "DCIM/100MEDIA/DJI_0002.JPG"
+            },
+            {
+              "kind": "r/r",
+              "inode": 793607,
+              "path": "DCIM/100MEDIA/DJI_0003.JPG"
+            },
+            {
+              "kind": "r/r",
+              "inode": 793608,
+              "path": "DCIM/100MEDIA/DJI_0004.MOV"
+            },
+            {
+              "kind": "r/r",
+              "inode": 793609,
+              "path": "DCIM/100MEDIA/DJI_0005.JPG"
+            },
+            {
+              "kind": "r/r",
+              "inode": 793610,
+              "path": "DCIM/100MEDIA/DJI_0006.JPG"
+            },
+            {
+              "kind": "r/r",
+              "inode": 793611,
+              "path": "DCIM/100MEDIA/DJI_0007.MOV"
+            },
+            {
+              "kind": "r/r",
+              "inode": 793612,
+              "path": "DCIM/100MEDIA/DJI_0008.JPG"
+            },
+            {
+              "kind": "r/r",
+              "inode": 793613,
+              "path": "DCIM/100MEDIA/DJI_0009.MOV"
+            },
+            {
+              "kind": "r/r",
+              "inode": 793614,
+              "path": "DCIM/100MEDIA/DJI_0010.MOV"
+            },
+            {
+              "kind": "r/r",
+              "inode": 793615,
+              "path": "DCIM/100MEDIA/DJI_0011.JPG"
+            },
+            {
+              "kind": "r/r",
+              "inode": 793616,
+              "path": "DCIM/100MEDIA/DJI_0012.MOV"
+            },
+            {
+              "kind": "r/r",
+              "inode": 793617,
+              "path": "DCIM/100MEDIA/DJI_0013.JPG"
+            },
+            {
+              "kind": "r/r",
+              "inode": 793618,
+              "path": "DCIM/100MEDIA/DJI_0014.JPG"
+            },
+            {
+              "kind": "d/d",
+              "inode": 4,
+              "path": "MISC"
+            },
+            {
+              "kind": "d/d",
+              "inode": 2053,
+              "path": "MISC/IDX"
+            },
+            {
+              "kind": "r/r",
+              "inode": 3078,
+              "path": "MISC/IDX/idx00"
+            },
+            {
+              "kind": "r/r",
+              "inode": 3080,
+              "path": "MISC/IDX/idx01"
+            },
+            {
+              "kind": "r/r",
+              "inode": 3082,
+              "path": "MISC/IDX/idx10"
+            },
+            {
+              "kind": "r/r",
+              "inode": 3084,
+              "path": "MISC/IDX/idx11"
+            },
+            {
+              "kind": "d/d",
+              "inode": 2054,
+              "path": "MISC/THM"
+            },
+            {
+              "kind": "d/d",
+              "inode": 4101,
+              "path": "MISC/THM/100"
+            },
+            {
+              "kind": "r/r",
+              "inode": 1534981,
+              "path": "MISC/THM/100/DJI_0004.MOV"
+            },
+            {
+              "kind": "r/r",
+              "inode": 1534982,
+              "path": "MISC/THM/100/DJI_0007.MOV"
+            },
+            {
+              "kind": "r/r",
+              "inode": 1534983,
+              "path": "MISC/THM/100/DJI_0009.MOV"
+            },
+            {
+              "kind": "r/r",
+              "inode": 1534984,
+              "path": "MISC/THM/100/DJI_0010.MOV"
+            },
+            {
+              "kind": "r/r",
+              "inode": 1534985,
+              "path": "MISC/THM/100/DJI_0012.MOV"
+            },
+            {
+              "kind": "d/d",
+              "inode": 2055,
+              "path": "MISC/LOG"
+            },
+            {
+              "kind": "d/d",
+              "inode": 2056,
+              "path": "MISC/XCODE"
+            }
+          ]
+        }
+      }
+    },
+    "p2_image_parsing": {
+      "completed_at": "2026-06-19T09:05:01.799611+00:00",
+      "parsed_evidence": [],
+      "derived_observations": []
+    },
+    "p3_artefact_extraction": {
+      "completed_at": "2026-06-19T09:06:50.280963+00:00",
+      "extracted_artefacts": [
+        {
+          "source_path": "DCIM\\100MEDIA\\DJI_0001.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0001.JPG",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "images",
+          "size": 7815409,
+          "sha1": "462a5026a46436cc1ce569aef53dadeb7019ae5d",
+          "sha256": "71cd89a350e9298813dac198d7779e74858026047dabc60032066668e38da37f",
+          "hash_timestamp": "2026-06-19T09:05:01.986196+00:00"
+        },
+        {
+          "source_path": "DCIM\\100MEDIA\\DJI_0002.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0002.JPG",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "images",
+          "size": 7893509,
+          "sha1": "bc399d86a1e6f3a433b5918bf8f6f1ac964116cf",
+          "sha256": "a7498e966827f69fdeee0029b0b175f25af23e21cfc123cbfccfd7bf44e4b765",
+          "hash_timestamp": "2026-06-19T09:05:02.226558+00:00"
+        },
+        {
+          "source_path": "DCIM\\100MEDIA\\DJI_0003.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0003.JPG",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "images",
+          "size": 7931930,
+          "sha1": "0692ef7617c8fb9ec68bfdd7edf511349dcbab7b",
+          "sha256": "74c94eebe71aa69d3e596e8e22eb338fcd3dae85f913a2ee983727090eb02989",
+          "hash_timestamp": "2026-06-19T09:05:02.330330+00:00"
+        },
+        {
+          "source_path": "DCIM\\100MEDIA\\DJI_0005.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0005.JPG",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "images",
+          "size": 2830935,
+          "sha1": "43f741248bc50bc6ae7b3fff2440cad1554b4114",
+          "sha256": "3ce8fa47fcc3625e08cbd35701da7c6558282854918bc186abc29bb2a3f7e757",
+          "hash_timestamp": "2026-06-19T09:05:29.415616+00:00"
+        },
+        {
+          "source_path": "DCIM\\100MEDIA\\DJI_0006.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0006.JPG",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "images",
+          "size": 3270235,
+          "sha1": "d06b3bded17a237375b5124a75be2ab90b26544e",
+          "sha256": "6c824d48796fb9a560e071ff69d5f8b96311e2c47ef4211e2c010eecad0557b5",
+          "hash_timestamp": "2026-06-19T09:05:29.487978+00:00"
+        },
+        {
+          "source_path": "DCIM\\100MEDIA\\DJI_0008.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0008.JPG",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "images",
+          "size": 3770275,
+          "sha1": "2f8706f3a155e4e882bbe72c7739154e63061710",
+          "sha256": "206519a0f2d8cad0333b2a8eff35a2385a8b8e983d1a88e3a3928d22284eb739",
+          "hash_timestamp": "2026-06-19T09:05:56.809523+00:00"
+        },
+        {
+          "source_path": "DCIM\\100MEDIA\\DJI_0011.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0011.JPG",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "images",
+          "size": 2378029,
+          "sha1": "68f4c38ec730626405d997ce62a1fdfffd5bd885",
+          "sha256": "95f66607d9b44449b30ee6f43b7d3364329c7f6cb80a0df57243e42a7c1d99a1",
+          "hash_timestamp": "2026-06-19T09:06:34.751363+00:00"
+        },
+        {
+          "source_path": "DCIM\\100MEDIA\\DJI_0013.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0013.JPG",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "images",
+          "size": 1871981,
+          "sha1": "c126ed242305fae7d8f30164343052f7999a1884",
+          "sha256": "226873c8755e08727deff874042b3c73242625eac6a1dd00209d2888840db2b5",
+          "hash_timestamp": "2026-06-19T09:06:47.574561+00:00"
+        },
+        {
+          "source_path": "DCIM\\100MEDIA\\DJI_0014.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0014.JPG",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "images",
+          "size": 1876442,
+          "sha1": "ae67c12e7c70258bd7813972f2da24737c8180c3",
+          "sha256": "f1e7490282b83ea1f3cfd54134aa90b123ba09c7b3870b3d56cfb29e73853413",
+          "hash_timestamp": "2026-06-19T09:06:47.663266+00:00"
+        },
+        {
+          "source_path": "DCIM\\100MEDIA\\DJI_0004.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0004.MOV",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "videos",
+          "size": 4091011755,
+          "sha1": "bdee6a6bda31bc61edcbaa64ccf67941569ddedb",
+          "sha256": "92d4a0b4319aef00336fa5e69c57d4179400044d595fb12b4e9a3bd0148a3e3c",
+          "hash_timestamp": "2026-06-19T09:05:29.267222+00:00"
+        },
+        {
+          "source_path": "MISC\\THM\\100\\DJI_0004.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0004_1.MOV",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "videos",
+          "size": 40961527,
+          "sha1": "7e41eacd2971b9b9d30d3d73d2643cfe977e465c",
+          "sha256": "6f5e0225bcddc45d4d1f1a1825b15691c43136fd73184835cfdf30e315cc824e",
+          "hash_timestamp": "2026-06-19T09:06:48.081360+00:00"
+        },
+        {
+          "source_path": "DCIM\\100MEDIA\\DJI_0007.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0007.MOV",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "videos",
+          "size": 4091289920,
+          "sha1": "2963304c1ca8b388ceb6d840a26d13cc9b929b36",
+          "sha256": "624d64d934613411c9183252e61ac1647f709f5bd11aefb9cde63e2c69d54bf3",
+          "hash_timestamp": "2026-06-19T09:05:56.721727+00:00"
+        },
+        {
+          "source_path": "MISC\\THM\\100\\DJI_0007.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0007_1.MOV",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "videos",
+          "size": 40630918,
+          "sha1": "3897cabf72624dc50dc3e46edabca06db1d21f5a",
+          "sha256": "b03282dab74153c4e9557cd0abac6e4a19711e238f370008f8291d87ef09ffdc",
+          "hash_timestamp": "2026-06-19T09:06:48.517832+00:00"
+        },
+        {
+          "source_path": "DCIM\\100MEDIA\\DJI_0009.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0009.MOV",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "videos",
+          "size": 4091544760,
+          "sha1": "0dbb22dde5d857657da147c4c9f860cd9a89de7b",
+          "sha256": "3adc13f352f975afd19b63d41cae3df4be39406041ef477efb789bc724fc9ee9",
+          "hash_timestamp": "2026-06-19T09:06:24.085591+00:00"
+        },
+        {
+          "source_path": "MISC\\THM\\100\\DJI_0009.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0009_1.MOV",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "videos",
+          "size": 40905109,
+          "sha1": "2272caee7e7f16857f8fffd03fe6ae0b969ac7c0",
+          "sha256": "ba16894a9df586a260702dca40066eb5f21595c74fb932f71cc70fa7f6e5b0cf",
+          "hash_timestamp": "2026-06-19T09:06:49.010591+00:00"
+        },
+        {
+          "source_path": "DCIM\\100MEDIA\\DJI_0010.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0010.MOV",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "videos",
+          "size": 1570936531,
+          "sha1": "01e8f90477eaf7d2dc0b9da4e678a10a3e3740e0",
+          "sha256": "422be9245352fc77228449ddf05a3d1246f0727a0d1c76085cc05ade1a970ded",
+          "hash_timestamp": "2026-06-19T09:06:34.613050+00:00"
+        },
+        {
+          "source_path": "MISC\\THM\\100\\DJI_0010.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0010_1.MOV",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "videos",
+          "size": 53874565,
+          "sha1": "1d1bc6ed7e693aa4f728474ab808badf5c623b7d",
+          "sha256": "702a8fc926e2b55d3610056aee0aca0c0731f0237d09a0a9c8892d6a1fa4c00c",
+          "hash_timestamp": "2026-06-19T09:06:49.491855+00:00"
+        },
+        {
+          "source_path": "DCIM\\100MEDIA\\DJI_0012.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0012.MOV",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "videos",
+          "size": 1721986275,
+          "sha1": "e0db062bb2e123ad6935007bd8c2478f6b2d5bd3",
+          "sha256": "ae0400645630e66a649d1722d6f64e231ce908be4ad131cc405801aeb70d2c2f",
+          "hash_timestamp": "2026-06-19T09:06:47.487096+00:00"
+        },
+        {
+          "source_path": "MISC\\THM\\100\\DJI_0012.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0012_1.MOV",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a8cb0c5184f68921b830d8fca3637a04d12b33193b335a307f541c794ef8235e",
+          "acquisition_method": "extract_physical",
+          "type": "extracted",
+          "artefact_category": "videos",
+          "size": 107577655,
+          "sha1": "9e3a0effa4b278859d4375cbf57cd6b3d082c2ac",
+          "sha256": "c09f918c60900509ce58ab5002535e8b930a4ed72809ae8b5cb6bdc608f0fb52",
+          "hash_timestamp": "2026-06-19T09:06:50.279823+00:00"
+        }
+      ]
+    },
+    "p4_decision_and_orchestration": {
+      "completed_at": "2026-06-19T09:06:59.070586+00:00",
+      "decision_and_orchestration_artefacts": [
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0001.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0001_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "71cd89a350e9298813dac198d7779e74858026047dabc60032066668e38da37f",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "images",
+          "size": 5412,
+          "sha1": "11fa3b65038e56c4497b71165e6916e1d1a2fe34",
+          "sha256": "11af78e770040ecb002849aab17b6948ad2c90c3cf7a2418aa4692447c5d2b2b",
+          "hash_timestamp": "2026-06-19T09:06:50.921484+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0002.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0002_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "a7498e966827f69fdeee0029b0b175f25af23e21cfc123cbfccfd7bf44e4b765",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "images",
+          "size": 5411,
+          "sha1": "b462f277d04f1b89abd664791a17d180b581a08b",
+          "sha256": "0bbdd2d0049d13b0b4ef2b475f765318c32899457545efe96b2dafa16dadef85",
+          "hash_timestamp": "2026-06-19T09:06:51.279714+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0003.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0003_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "74c94eebe71aa69d3e596e8e22eb338fcd3dae85f913a2ee983727090eb02989",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "images",
+          "size": 5412,
+          "sha1": "67f98e6a6fbb1856c3e5799104b387bbc56bfced",
+          "sha256": "bb65a2e2800611dda3497c1d1c4068fe535b5e90968ed7a75c238b18473de136",
+          "hash_timestamp": "2026-06-19T09:06:51.662978+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0005.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0005_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "3ce8fa47fcc3625e08cbd35701da7c6558282854918bc186abc29bb2a3f7e757",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "images",
+          "size": 5497,
+          "sha1": "4907bb1f05b3dd9a463d7b7a89dffb5b39a6392e",
+          "sha256": "bdd72c08bc4e4e263c613c5c4554cf34ee797978c0113466a58a7f81a595134e",
+          "hash_timestamp": "2026-06-19T09:06:51.958477+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0006.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0006_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "6c824d48796fb9a560e071ff69d5f8b96311e2c47ef4211e2c010eecad0557b5",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "images",
+          "size": 5530,
+          "sha1": "4a7ad470cc5141c1c6fb9ec1cbff6767f79c90bd",
+          "sha256": "b296fcf2e06f729b274506331e93c72fe9b2304c4fb6824ae613c8d98ed87b03",
+          "hash_timestamp": "2026-06-19T09:06:52.278395+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0008.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0008_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "206519a0f2d8cad0333b2a8eff35a2385a8b8e983d1a88e3a3928d22284eb739",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "images",
+          "size": 5485,
+          "sha1": "a6b06638aab533b72804d3f65f861b530fe5cbff",
+          "sha256": "60cfbbfef9af49732d0dc3eb27a49a5bbc8527517f95a5b064a17d86fe3cd13e",
+          "hash_timestamp": "2026-06-19T09:06:52.621819+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0011.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0011_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "95f66607d9b44449b30ee6f43b7d3364329c7f6cb80a0df57243e42a7c1d99a1",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "images",
+          "size": 5520,
+          "sha1": "3b1a2cc6095cc402c38d2f3698a520b9297ebd2c",
+          "sha256": "4c193a9ed2b5be692847171f3b1d4b482d3e48bfb8f6b36927d3b44db99bb827",
+          "hash_timestamp": "2026-06-19T09:06:52.957234+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0013.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0013_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "226873c8755e08727deff874042b3c73242625eac6a1dd00209d2888840db2b5",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "images",
+          "size": 5497,
+          "sha1": "f71cbd2c681583882b2ba09e806a8245a463c149",
+          "sha256": "e758119b608afd4f1478c95eefb1f60cb3ca223944cdbb8ea8b487c0c93ff0e3",
+          "hash_timestamp": "2026-06-19T09:06:53.270742+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0014.JPG",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0014_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "f1e7490282b83ea1f3cfd54134aa90b123ba09c7b3870b3d56cfb29e73853413",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "images",
+          "size": 5468,
+          "sha1": "bab477ce6f3de3db2034a5d096cf7694de4918dd",
+          "sha256": "af087f0623dc1a1c6381d1a0c57d9368e3a048c93f5e3c0ab5042b04c736db01",
+          "hash_timestamp": "2026-06-19T09:06:53.553748+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0004_1.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0004_1_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "6f5e0225bcddc45d4d1f1a1825b15691c43136fd73184835cfdf30e315cc824e",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "videos",
+          "size": 4279,
+          "sha1": "5c4ba13e4bb9a361fc144a47638b00b57da2a8fb",
+          "sha256": "3834c9756fb2bbe0733ac8b61d3b2a55415852941c4612f02a9c542d1b59c193",
+          "hash_timestamp": "2026-06-19T09:06:54.701983+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0004.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0004_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "92d4a0b4319aef00336fa5e69c57d4179400044d595fb12b4e9a3bd0148a3e3c",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "videos",
+          "size": 5431,
+          "sha1": "7d668af6b38a9d39a4d240a7992c70c9bb8bf005",
+          "sha256": "c3744ad80bad1458583748bd454302b3bfadde6b42ca9feed9783b2ed6228a84",
+          "hash_timestamp": "2026-06-19T09:06:54.189733+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0007_1.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0007_1_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "b03282dab74153c4e9557cd0abac6e4a19711e238f370008f8291d87ef09ffdc",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "videos",
+          "size": 4265,
+          "sha1": "d7dcb8e8dd2388425f4485fd21d4cf2150a4e6ff",
+          "sha256": "7f8dec858ab16f285dd45fa749c0416a480a620f86d99a505e1297034364e7ca",
+          "hash_timestamp": "2026-06-19T09:06:55.803947+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0007.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0007_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "624d64d934613411c9183252e61ac1647f709f5bd11aefb9cde63e2c69d54bf3",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "videos",
+          "size": 5417,
+          "sha1": "3c9c311d7d24dc0cdd52f17f8e8f1b5d10a3a3d9",
+          "sha256": "07fb9acf868470b497eca316f9e5f9931903c11ebb8f63acf7f1afffe76f335e",
+          "hash_timestamp": "2026-06-19T09:06:55.260463+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0009_1.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0009_1_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "ba16894a9df586a260702dca40066eb5f21595c74fb932f71cc70fa7f6e5b0cf",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "videos",
+          "size": 4261,
+          "sha1": "9b4afaadae8772bf41e447469dd38427f7d092ee",
+          "sha256": "3d8d185e8e74b8d90c4d5084e8af76cd401bdc27138719a1f85c98ca837cd4a6",
+          "hash_timestamp": "2026-06-19T09:06:57.010028+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0009.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0009_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "3adc13f352f975afd19b63d41cae3df4be39406041ef477efb789bc724fc9ee9",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "videos",
+          "size": 5413,
+          "sha1": "8e32fdb108bebaea8b3aaa1bac2b0cdae49bfd0c",
+          "sha256": "02909f9baabe9519047a1ef53153ba2fc298c88eeeb1bf79d872e3a28d5827ad",
+          "hash_timestamp": "2026-06-19T09:06:56.475405+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0010_1.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0010_1_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "702a8fc926e2b55d3610056aee0aca0c0731f0237d09a0a9c8892d6a1fa4c00c",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "videos",
+          "size": 4254,
+          "sha1": "34de55efc3829e3b967a51cb309ca88610a69a9a",
+          "sha256": "6b66c016b9a8a0763bb94f58fe04865c3edc0f6aafa1b90887b8ccad77ee2e8c",
+          "hash_timestamp": "2026-06-19T09:06:58.049376+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0010.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0010_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "422be9245352fc77228449ddf05a3d1246f0727a0d1c76085cc05ade1a970ded",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "videos",
+          "size": 5403,
+          "sha1": "2f48f3ed326bf2ec413edda2a71106af91661b77",
+          "sha256": "7bffb247fcb338fa6ca0d8879e7d29e5c0649e375f66ff5c0fb32c7b1dc7d61c",
+          "hash_timestamp": "2026-06-19T09:06:57.552469+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0012_1.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0012_1_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "c09f918c60900509ce58ab5002535e8b930a4ed72809ae8b5cb6bdc608f0fb52",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "videos",
+          "size": 4251,
+          "sha1": "eae1b8ee39f61f8af2d1a75ea4acd76c44348bf4",
+          "sha256": "798dd7c766e284d6dfc870e5becfaa81e5c8f1f59e4fc1231333d66557322310",
+          "hash_timestamp": "2026-06-19T09:06:59.069894+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0012.MOV",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0012_exif.json",
+          "source_identification": "drone_sd",
+          "parent_sha256": "ae0400645630e66a649d1722d6f64e231ce908be4ad131cc405801aeb70d2c2f",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "videos",
+          "size": 5423,
+          "sha1": "af02d9baf3d05a7b65ba5bb9523d6c210c8b10d8",
+          "sha256": "9a4944df06a0c592cb9197966a3f057de462eb4f27abe1d2a07a12cd80409527",
+          "hash_timestamp": "2026-06-19T09:06:58.578233+00:00"
+        }
+      ],
+      "derived_observations": [
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0001.JPG",
+          "evidence_sha256": "71cd89a350e9298813dac198d7779e74858026047dabc60032066668e38da37f",
+          "evidence_category": "images",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "DateTimeOriginal": "2017:06:29 01:35:30",
+              "ImageWidth": 5472,
+              "GPSAltitudeRef": 0,
+              "FlightYawDegree": "+132.90",
+              "Orientation": 1,
+              "GPSLatitudeRef": "N",
+              "GimbalYawDegree": "+132.30",
+              "RelativeAltitude": "+0.00",
+              "GPSLongitude": 0,
+              "CreateDate": "2017:06:29 01:35:30",
+              "Model": "FC6310",
+              "Software": "v01.02.1478",
+              "GPSAltitude": 1740.555,
+              "Make": "DJI",
+              "GimbalRollDegree": "+0.00",
+              "ImageHeight": 3078,
+              "GPSLongitudeRef": "E",
+              "FlightPitchDegree": -1.6,
+              "GPSLatitude": 0,
+              "FlightRollDegree": "+0.30",
+              "MIMEType": "image/jpeg",
+              "FileType": "JPEG",
+              "AbsoluteAltitude": "+1740.56",
+              "GimbalPitchDegree": "+0.00"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0002.JPG",
+          "evidence_sha256": "a7498e966827f69fdeee0029b0b175f25af23e21cfc123cbfccfd7bf44e4b765",
+          "evidence_category": "images",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "DateTimeOriginal": "2017:06:29 01:35:32",
+              "ImageWidth": 5472,
+              "GPSAltitudeRef": 0,
+              "FlightYawDegree": "+133.10",
+              "Orientation": 1,
+              "GPSLatitudeRef": "N",
+              "GimbalYawDegree": "+132.40",
+              "RelativeAltitude": "+0.00",
+              "GPSLongitude": 0,
+              "CreateDate": "2017:06:29 01:35:32",
+              "Model": "FC6310",
+              "Software": "v01.02.1478",
+              "GPSAltitude": 1740.555,
+              "Make": "DJI",
+              "GimbalRollDegree": "+0.00",
+              "ImageHeight": 3078,
+              "GPSLongitudeRef": "E",
+              "FlightPitchDegree": -1.6,
+              "GPSLatitude": 0,
+              "FlightRollDegree": "+0.30",
+              "MIMEType": "image/jpeg",
+              "FileType": "JPEG",
+              "AbsoluteAltitude": "+1740.56",
+              "GimbalPitchDegree": "+0.00"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0003.JPG",
+          "evidence_sha256": "74c94eebe71aa69d3e596e8e22eb338fcd3dae85f913a2ee983727090eb02989",
+          "evidence_category": "images",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "DateTimeOriginal": "2017:06:29 01:35:32",
+              "ImageWidth": 5472,
+              "GPSAltitudeRef": 0,
+              "FlightYawDegree": "+133.30",
+              "Orientation": 1,
+              "GPSLatitudeRef": "N",
+              "GimbalYawDegree": "+132.60",
+              "RelativeAltitude": "+0.00",
+              "GPSLongitude": 0,
+              "CreateDate": "2017:06:29 01:35:32",
+              "Model": "FC6310",
+              "Software": "v01.02.1478",
+              "GPSAltitude": 1740.555,
+              "Make": "DJI",
+              "GimbalRollDegree": "+0.00",
+              "ImageHeight": 3078,
+              "GPSLongitudeRef": "E",
+              "FlightPitchDegree": -1.6,
+              "GPSLatitude": 0,
+              "FlightRollDegree": "+0.30",
+              "MIMEType": "image/jpeg",
+              "FileType": "JPEG",
+              "AbsoluteAltitude": "+1740.56",
+              "GimbalPitchDegree": "+0.00"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0005.JPG",
+          "evidence_sha256": "3ce8fa47fcc3625e08cbd35701da7c6558282854918bc186abc29bb2a3f7e757",
+          "evidence_category": "images",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "DateTimeOriginal": "2017:06:30 01:54:22",
+              "ImageWidth": 3840,
+              "GPSAltitudeRef": 0,
+              "FlightYawDegree": -30.5,
+              "Orientation": 1,
+              "GPSLatitudeRef": "N",
+              "GimbalYawDegree": -30.6,
+              "RelativeAltitude": "+20.00",
+              "GPSLongitude": 106.220130527778,
+              "CreateDate": "2017:06:30 01:54:22",
+              "Model": "FC6310",
+              "Software": "v01.02.1478",
+              "GPSAltitude": 2545.314,
+              "Make": "DJI",
+              "GimbalRollDegree": "+0.00",
+              "ImageHeight": 2160,
+              "GPSLongitudeRef": "W",
+              "FlightPitchDegree": -3.9,
+              "GPSLatitude": 39.9585890277778,
+              "FlightRollDegree": "+1.70",
+              "MIMEType": "image/jpeg",
+              "FileType": "JPEG",
+              "AbsoluteAltitude": "+2545.31",
+              "GimbalPitchDegree": -6.4
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0006.JPG",
+          "evidence_sha256": "6c824d48796fb9a560e071ff69d5f8b96311e2c47ef4211e2c010eecad0557b5",
+          "evidence_category": "images",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "DateTimeOriginal": "2017:06:30 01:56:36",
+              "ImageWidth": 3840,
+              "GPSAltitudeRef": 0,
+              "FlightYawDegree": -11.6,
+              "Orientation": 1,
+              "GPSLatitudeRef": "N",
+              "GimbalYawDegree": -11.7,
+              "RelativeAltitude": "+21.00",
+              "GPSLongitude": 106.220827277778,
+              "CreateDate": "2017:06:30 01:56:36",
+              "Model": "FC6310",
+              "Software": "v01.02.1478",
+              "GPSAltitude": 2546.314,
+              "Make": "DJI",
+              "GimbalRollDegree": "+0.00",
+              "ImageHeight": 2160,
+              "GPSLongitudeRef": "W",
+              "FlightPitchDegree": -4.8,
+              "GPSLatitude": 39.9606881111111,
+              "FlightRollDegree": -7.6,
+              "MIMEType": "image/jpeg",
+              "FileType": "JPEG",
+              "AbsoluteAltitude": "+2546.31",
+              "GimbalPitchDegree": -13.0
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0008.JPG",
+          "evidence_sha256": "206519a0f2d8cad0333b2a8eff35a2385a8b8e983d1a88e3a3928d22284eb739",
+          "evidence_category": "images",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "DateTimeOriginal": "2017:06:30 01:59:09",
+              "ImageWidth": 3840,
+              "GPSAltitudeRef": 0,
+              "FlightYawDegree": -26.0,
+              "Orientation": 1,
+              "GPSLatitudeRef": "N",
+              "GimbalYawDegree": -23.7,
+              "RelativeAltitude": "+42.30",
+              "GPSLongitude": 106.220834833333,
+              "CreateDate": "2017:06:30 01:59:09",
+              "Model": "FC6310",
+              "Software": "v01.02.1478",
+              "GPSAltitude": 2567.614,
+              "Make": "DJI",
+              "GimbalRollDegree": "+0.00",
+              "ImageHeight": 2160,
+              "GPSLongitudeRef": "W",
+              "FlightPitchDegree": "+2.20",
+              "GPSLatitude": 39.9637276388889,
+              "FlightRollDegree": -3.2,
+              "MIMEType": "image/jpeg",
+              "FileType": "JPEG",
+              "AbsoluteAltitude": "+2567.61",
+              "GimbalPitchDegree": -13.0
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0011.JPG",
+          "evidence_sha256": "95f66607d9b44449b30ee6f43b7d3364329c7f6cb80a0df57243e42a7c1d99a1",
+          "evidence_category": "images",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "DateTimeOriginal": "2017:06:30 02:08:47",
+              "ImageWidth": 3840,
+              "GPSAltitudeRef": 0,
+              "FlightYawDegree": -169.7,
+              "Orientation": 1,
+              "GPSLatitudeRef": "N",
+              "GimbalYawDegree": -168.7,
+              "RelativeAltitude": "+29.50",
+              "GPSLongitude": 106.216387972222,
+              "CreateDate": "2017:06:30 02:08:47",
+              "Model": "FC6310",
+              "Software": "v01.02.1478",
+              "GPSAltitude": 2554.814,
+              "Make": "DJI",
+              "GimbalRollDegree": "+0.00",
+              "ImageHeight": 2160,
+              "GPSLongitudeRef": "W",
+              "FlightPitchDegree": -8.6,
+              "GPSLatitude": 39.9617033055556,
+              "FlightRollDegree": "+4.50",
+              "MIMEType": "image/jpeg",
+              "FileType": "JPEG",
+              "AbsoluteAltitude": "+2554.81",
+              "GimbalPitchDegree": -13.0
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0013.JPG",
+          "evidence_sha256": "226873c8755e08727deff874042b3c73242625eac6a1dd00209d2888840db2b5",
+          "evidence_category": "images",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "DateTimeOriginal": "2017:06:30 05:05:57",
+              "ImageWidth": 3840,
+              "GPSAltitudeRef": 0,
+              "FlightYawDegree": "+52.30",
+              "Orientation": 1,
+              "GPSLatitudeRef": "N",
+              "GimbalYawDegree": "+53.60",
+              "RelativeAltitude": "+1.70",
+              "GPSLongitude": 106.216426694444,
+              "CreateDate": "2017:06:30 05:05:57",
+              "Model": "FC6310",
+              "Software": "v01.02.1478",
+              "GPSAltitude": 2533.352,
+              "Make": "DJI",
+              "GimbalRollDegree": "+0.00",
+              "ImageHeight": 2160,
+              "GPSLongitudeRef": "W",
+              "FlightPitchDegree": "+5.10",
+              "GPSLatitude": 39.9611968333333,
+              "FlightRollDegree": -3.1,
+              "MIMEType": "image/jpeg",
+              "FileType": "JPEG",
+              "AbsoluteAltitude": "+2533.35",
+              "GimbalPitchDegree": "+0.00"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0014.JPG",
+          "evidence_sha256": "f1e7490282b83ea1f3cfd54134aa90b123ba09c7b3870b3d56cfb29e73853413",
+          "evidence_category": "images",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "DateTimeOriginal": "2017:06:30 05:06:03",
+              "ImageWidth": 3840,
+              "GPSAltitudeRef": 0,
+              "FlightYawDegree": "+52.50",
+              "Orientation": 1,
+              "GPSLatitudeRef": "N",
+              "GimbalYawDegree": "+52.90",
+              "RelativeAltitude": "+1.70",
+              "GPSLongitude": 106.216429444444,
+              "CreateDate": "2017:06:30 05:06:03",
+              "Model": "FC6310",
+              "Software": "v01.02.1478",
+              "GPSAltitude": 2533.352,
+              "Make": "DJI",
+              "GimbalRollDegree": "+0.00",
+              "ImageHeight": 2160,
+              "GPSLongitudeRef": "W",
+              "FlightPitchDegree": "+2.80",
+              "GPSLatitude": 39.9611959444444,
+              "FlightRollDegree": -1.5,
+              "MIMEType": "image/jpeg",
+              "FileType": "JPEG",
+              "AbsoluteAltitude": "+2533.35",
+              "GimbalPitchDegree": "+0.00"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0004.MOV",
+          "evidence_sha256": "92d4a0b4319aef00336fa5e69c57d4179400044d595fb12b4e9a3bd0148a3e3c",
+          "evidence_category": "videos",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "ImageWidth": 3840,
+              "MediaDuration": 327.460466666667,
+              "Duration": 327.460466666667,
+              "CreateDate": "2017:06:30 01:51:10",
+              "Model": "FC6310",
+              "CompatibleBrands": [
+                "qt  "
+              ],
+              "ImageHeight": 2160,
+              "MIMEType": "video/quicktime",
+              "ModifyDate": "2017:06:30 01:51:10",
+              "FileType": "MOV",
+              "GPSCoordinates": "39.958369 -106.217348 15.4"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0004_1.MOV",
+          "evidence_sha256": "6f5e0225bcddc45d4d1f1a1825b15691c43136fd73184835cfdf30e315cc824e",
+          "evidence_category": "videos",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "ImageWidth": 1280,
+              "MediaDuration": 327.393733333333,
+              "Duration": 327.393733333333,
+              "CreateDate": "2017:06:30 01:51:10",
+              "Model": "FC6310",
+              "CompatibleBrands": [
+                "qt  "
+              ],
+              "ImageHeight": 720,
+              "MIMEType": "video/quicktime",
+              "ModifyDate": "2017:06:30 01:51:10",
+              "FileType": "MOV",
+              "GPSCoordinates": "39.958369 -106.217348 15.4"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0007.MOV",
+          "evidence_sha256": "624d64d934613411c9183252e61ac1647f709f5bd11aefb9cde63e2c69d54bf3",
+          "evidence_category": "videos",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "ImageWidth": 3840,
+              "MediaDuration": 327.493833333333,
+              "Duration": 327.493833333333,
+              "CreateDate": "2017:06:30 01:56:39",
+              "Model": "FC6310",
+              "CompatibleBrands": [
+                "qt  "
+              ],
+              "ImageHeight": 2160,
+              "MIMEType": "video/quicktime",
+              "ModifyDate": "2017:06:30 01:56:39",
+              "FileType": "MOV",
+              "GPSCoordinates": "39.960691 -106.22083 21.1"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0007_1.MOV",
+          "evidence_sha256": "b03282dab74153c4e9557cd0abac6e4a19711e238f370008f8291d87ef09ffdc",
+          "evidence_category": "videos",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "ImageWidth": 1280,
+              "MediaDuration": 327.560566666667,
+              "Duration": 327.560566666667,
+              "CreateDate": "2017:06:30 01:56:39",
+              "Model": "FC6310",
+              "CompatibleBrands": [
+                "qt  "
+              ],
+              "ImageHeight": 720,
+              "MIMEType": "video/quicktime",
+              "ModifyDate": "2017:06:30 01:56:39",
+              "FileType": "MOV",
+              "GPSCoordinates": "39.960691 -106.22083 21.1"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0009.MOV",
+          "evidence_sha256": "3adc13f352f975afd19b63d41cae3df4be39406041ef477efb789bc724fc9ee9",
+          "evidence_category": "videos",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "ImageWidth": 3840,
+              "MediaDuration": 327.593933333333,
+              "Duration": 327.593933333333,
+              "CreateDate": "2017:06:30 02:02:06",
+              "Model": "FC6310",
+              "CompatibleBrands": [
+                "qt  "
+              ],
+              "ImageHeight": 2160,
+              "MIMEType": "video/quicktime",
+              "ModifyDate": "2017:06:30 02:02:06",
+              "FileType": "MOV",
+              "GPSCoordinates": "39.96371 -106.220742 39.3"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0009_1.MOV",
+          "evidence_sha256": "ba16894a9df586a260702dca40066eb5f21595c74fb932f71cc70fa7f6e5b0cf",
+          "evidence_category": "videos",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "ImageWidth": 1280,
+              "MediaDuration": 327.593933333333,
+              "Duration": 327.593933333333,
+              "CreateDate": "2017:06:30 02:02:06",
+              "Model": "FC6310",
+              "CompatibleBrands": [
+                "qt  "
+              ],
+              "ImageHeight": 720,
+              "MIMEType": "video/quicktime",
+              "ModifyDate": "2017:06:30 02:02:06",
+              "FileType": "MOV",
+              "GPSCoordinates": "39.96371 -106.220742 39.3"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0010.MOV",
+          "evidence_sha256": "422be9245352fc77228449ddf05a3d1246f0727a0d1c76085cc05ade1a970ded",
+          "evidence_category": "videos",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "ImageWidth": 3840,
+              "MediaDuration": 125.9258,
+              "Duration": 125.9258,
+              "CreateDate": "2017:06:30 02:07:34",
+              "Model": "FC6310",
+              "CompatibleBrands": [
+                "qt  "
+              ],
+              "ImageHeight": 2160,
+              "MIMEType": "video/quicktime",
+              "ModifyDate": "2017:06:30 02:07:34",
+              "FileType": "MOV",
+              "GPSCoordinates": "39.963872 -106.215856 15.8"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0010_1.MOV",
+          "evidence_sha256": "702a8fc926e2b55d3610056aee0aca0c0731f0237d09a0a9c8892d6a1fa4c00c",
+          "evidence_category": "videos",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "ImageWidth": 1280,
+              "MediaDuration": 125.8257,
+              "Duration": 125.8257,
+              "CreateDate": "2017:06:30 02:07:34",
+              "Model": "FC6310",
+              "CompatibleBrands": [
+                "qt  "
+              ],
+              "ImageHeight": 720,
+              "MIMEType": "video/quicktime",
+              "ModifyDate": "2017:06:30 02:07:34",
+              "FileType": "MOV",
+              "GPSCoordinates": "39.963872 -106.215856 15.8"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0012.MOV",
+          "evidence_sha256": "ae0400645630e66a649d1722d6f64e231ce908be4ad131cc405801aeb70d2c2f",
+          "evidence_category": "videos",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "ImageWidth": 3840,
+              "MediaDuration": 137.704233333333,
+              "Duration": 137.704233333333,
+              "CreateDate": "2017:06:30 05:05:10",
+              "Model": "FC6310",
+              "CompatibleBrands": [
+                "qt  "
+              ],
+              "ImageHeight": 2160,
+              "MIMEType": "video/quicktime",
+              "ModifyDate": "2017:06:30 05:05:10",
+              "FileType": "MOV",
+              "GPSCoordinates": "39.961194 -106.216511 1.4"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0012_1.MOV",
+          "evidence_sha256": "c09f918c60900509ce58ab5002535e8b930a4ed72809ae8b5cb6bdc608f0fb52",
+          "evidence_category": "videos",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "ImageWidth": 1280,
+              "MediaDuration": 137.6375,
+              "Duration": 137.6375,
+              "CreateDate": "2017:06:30 05:05:10",
+              "Model": "FC6310",
+              "CompatibleBrands": [
+                "qt  "
+              ],
+              "ImageHeight": 720,
+              "MIMEType": "video/quicktime",
+              "ModifyDate": "2017:06:30 05:05:10",
+              "FileType": "MOV",
+              "GPSCoordinates": "39.961194 -106.216511 1.4"
+            }
+          ]
+        }
+      ]
+    },
+    "p5_normalisation_and_anomaly_checking": {
+      "completed_at": "2026-06-19T09:06:59.093416+00:00",
+      "normalised_artefacts": [],
+      "derived_anomalies": [
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0001_exif.json",
+          "evidence_sha256": "71cd89a350e9298813dac198d7779e74858026047dabc60032066668e38da37f",
+          "evidence_category": "images",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "exif_contains_no_norm_time": true,
+              "exif_contains_no_gps": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0002_exif.json",
+          "evidence_sha256": "a7498e966827f69fdeee0029b0b175f25af23e21cfc123cbfccfd7bf44e4b765",
+          "evidence_category": "images",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "exif_contains_no_norm_time": true,
+              "exif_contains_no_gps": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0003_exif.json",
+          "evidence_sha256": "74c94eebe71aa69d3e596e8e22eb338fcd3dae85f913a2ee983727090eb02989",
+          "evidence_category": "images",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "exif_contains_no_norm_time": true,
+              "exif_contains_no_gps": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0005_exif.json",
+          "evidence_sha256": "3ce8fa47fcc3625e08cbd35701da7c6558282854918bc186abc29bb2a3f7e757",
+          "evidence_category": "images",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.9585890277778,
+              "gps_longitude": 106.220130527778,
+              "exif_contains_no_norm_time": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0006_exif.json",
+          "evidence_sha256": "6c824d48796fb9a560e071ff69d5f8b96311e2c47ef4211e2c010eecad0557b5",
+          "evidence_category": "images",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.9606881111111,
+              "gps_longitude": 106.220827277778,
+              "exif_contains_no_norm_time": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0008_exif.json",
+          "evidence_sha256": "206519a0f2d8cad0333b2a8eff35a2385a8b8e983d1a88e3a3928d22284eb739",
+          "evidence_category": "images",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.9637276388889,
+              "gps_longitude": 106.220834833333,
+              "exif_contains_no_norm_time": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0011_exif.json",
+          "evidence_sha256": "95f66607d9b44449b30ee6f43b7d3364329c7f6cb80a0df57243e42a7c1d99a1",
+          "evidence_category": "images",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.9617033055556,
+              "gps_longitude": 106.216387972222,
+              "exif_contains_no_norm_time": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0013_exif.json",
+          "evidence_sha256": "226873c8755e08727deff874042b3c73242625eac6a1dd00209d2888840db2b5",
+          "evidence_category": "images",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.9611968333333,
+              "gps_longitude": 106.216426694444,
+              "exif_contains_no_norm_time": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0014_exif.json",
+          "evidence_sha256": "f1e7490282b83ea1f3cfd54134aa90b123ba09c7b3870b3d56cfb29e73853413",
+          "evidence_category": "images",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.9611959444444,
+              "gps_longitude": 106.216429444444,
+              "exif_contains_no_norm_time": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0004_1_exif.json",
+          "evidence_sha256": "6f5e0225bcddc45d4d1f1a1825b15691c43136fd73184835cfdf30e315cc824e",
+          "evidence_category": "videos",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.958369,
+              "gps_longitude": -106.217348,
+              "exif_contains_no_norm_time": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0004_exif.json",
+          "evidence_sha256": "92d4a0b4319aef00336fa5e69c57d4179400044d595fb12b4e9a3bd0148a3e3c",
+          "evidence_category": "videos",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.958369,
+              "gps_longitude": -106.217348,
+              "exif_contains_no_norm_time": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0007_1_exif.json",
+          "evidence_sha256": "b03282dab74153c4e9557cd0abac6e4a19711e238f370008f8291d87ef09ffdc",
+          "evidence_category": "videos",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.960691,
+              "gps_longitude": -106.22083,
+              "exif_contains_no_norm_time": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0007_exif.json",
+          "evidence_sha256": "624d64d934613411c9183252e61ac1647f709f5bd11aefb9cde63e2c69d54bf3",
+          "evidence_category": "videos",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.960691,
+              "gps_longitude": -106.22083,
+              "exif_contains_no_norm_time": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0009_1_exif.json",
+          "evidence_sha256": "ba16894a9df586a260702dca40066eb5f21595c74fb932f71cc70fa7f6e5b0cf",
+          "evidence_category": "videos",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.96371,
+              "gps_longitude": -106.220742,
+              "exif_contains_no_norm_time": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0009_exif.json",
+          "evidence_sha256": "3adc13f352f975afd19b63d41cae3df4be39406041ef477efb789bc724fc9ee9",
+          "evidence_category": "videos",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.96371,
+              "gps_longitude": -106.220742,
+              "exif_contains_no_norm_time": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0010_1_exif.json",
+          "evidence_sha256": "702a8fc926e2b55d3610056aee0aca0c0731f0237d09a0a9c8892d6a1fa4c00c",
+          "evidence_category": "videos",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.963872,
+              "gps_longitude": -106.215856,
+              "exif_contains_no_norm_time": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0010_exif.json",
+          "evidence_sha256": "422be9245352fc77228449ddf05a3d1246f0727a0d1c76085cc05ade1a970ded",
+          "evidence_category": "videos",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.963872,
+              "gps_longitude": -106.215856,
+              "exif_contains_no_norm_time": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0012_1_exif.json",
+          "evidence_sha256": "c09f918c60900509ce58ab5002535e8b930a4ed72809ae8b5cb6bdc608f0fb52",
+          "evidence_category": "videos",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.961194,
+              "gps_longitude": -106.216511,
+              "exif_contains_no_norm_time": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0012_exif.json",
+          "evidence_sha256": "ae0400645630e66a649d1722d6f64e231ce908be4ad131cc405801aeb70d2c2f",
+          "evidence_category": "videos",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "gps_latitude": 39.961194,
+              "gps_longitude": -106.216511,
+              "exif_contains_no_norm_time": true
+            }
+          ]
+        }
+      ]
+    },
+    "p6_multisource_correlation": {
+      "completed_at": "2026-06-19T09:06:59.104178+00:00",
+      "flight_count": 0,
+      "flights": []
+    },
+    "p7_analysis_and_validation": {
+      "completed_at": "2026-06-19T09:06:59.112110+00:00",
+      "flight_count_analysed": 0,
+      "source_coverage": [
+        {
+          "source": "controller_android",
+          "detected": false
+        },
+        {
+          "source": "controller_ios",
+          "detected": false
+        },
+        {
+          "source": "drone_sd",
+          "detected": true
+        },
+        {
+          "source": "drone_flight_storage",
+          "detected": false
+        }
+      ],
+      "artefact_coverage": [
+        {
+          "category": "account_data",
+          "count": 0,
+          "notes": []
+        },
+        {
+          "category": "databases",
+          "count": 0,
+          "notes": []
+        },
+        {
+          "category": "drone_logs",
+          "count": 0,
+          "notes": []
+        },
+        {
+          "category": "flight_logs",
+          "count": 0,
+          "notes": []
+        },
+        {
+          "category": "flight_records",
+          "count": 0,
+          "notes": []
+        },
+        {
+          "category": "images",
+          "count": 9,
+          "notes": [
+            "6 file(s) contain(s) EXIF GPS coordinates",
+            "9 file(s) missing (normalisable) EXIF timestamp",
+            "3 file(s) missing EXIF GPS coordinates"
+          ]
+        },
+        {
+          "category": "videos",
+          "count": 10,
+          "notes": [
+            "10 file(s) contain(s) EXIF GPS coordinates",
+            "10 file(s) missing (normalisable) EXIF timestamp"
+          ]
+        }
+      ],
+      "artefact_coverage_per_source": [
+        {
+          "source": "drone_sd",
+          "artefacts": [
+            {
+              "category": "images",
+              "count": 9
+            },
+            {
+              "category": "videos",
+              "count": 10
+            }
+          ]
+        }
+      ],
+      "tool_status": [
+        {
+          "tool": "exiftool",
+          "invocation_count": 19,
+          "success_count": 19,
+          "status": "ok"
+        },
+        {
+          "tool": "fls",
+          "invocation_count": 1,
+          "success_count": 1,
+          "status": "ok"
+        },
+        {
+          "tool": "icat",
+          "invocation_count": 19,
+          "success_count": 19,
+          "status": "ok"
+        },
+        {
+          "tool": "mmls",
+          "invocation_count": 1,
+          "success_count": 1,
+          "status": "ok"
+        }
+      ],
+      "account_and_drone_analysis": {},
+      "flight_analyses": [],
+      "uncorrelated_artefacts": [
+        {"evidence_sha256": "71cd89a350e9298813dac198d7779e74858026047dabc60032066668e38da37f"},
+        {"evidence_sha256": "a7498e966827f69fdeee0029b0b175f25af23e21cfc123cbfccfd7bf44e4b765"},
+        {"evidence_sha256": "74c94eebe71aa69d3e596e8e22eb338fcd3dae85f913a2ee983727090eb02989"},
+        {"evidence_sha256": "3ce8fa47fcc3625e08cbd35701da7c6558282854918bc186abc29bb2a3f7e757"},
+        {"evidence_sha256": "6c824d48796fb9a560e071ff69d5f8b96311e2c47ef4211e2c010eecad0557b5"},
+        {"evidence_sha256": "206519a0f2d8cad0333b2a8eff35a2385a8b8e983d1a88e3a3928d22284eb739"},
+        {"evidence_sha256": "95f66607d9b44449b30ee6f43b7d3364329c7f6cb80a0df57243e42a7c1d99a1"},
+        {"evidence_sha256": "226873c8755e08727deff874042b3c73242625eac6a1dd00209d2888840db2b5"},
+        {"evidence_sha256": "f1e7490282b83ea1f3cfd54134aa90b123ba09c7b3870b3d56cfb29e73853413"},
+        {"evidence_sha256": "92d4a0b4319aef00336fa5e69c57d4179400044d595fb12b4e9a3bd0148a3e3c"},
+        {"evidence_sha256": "6f5e0225bcddc45d4d1f1a1825b15691c43136fd73184835cfdf30e315cc824e"},
+        {"evidence_sha256": "624d64d934613411c9183252e61ac1647f709f5bd11aefb9cde63e2c69d54bf3"},
+        {"evidence_sha256": "b03282dab74153c4e9557cd0abac6e4a19711e238f370008f8291d87ef09ffdc"},
+        {"evidence_sha256": "3adc13f352f975afd19b63d41cae3df4be39406041ef477efb789bc724fc9ee9"},
+        {"evidence_sha256": "ba16894a9df586a260702dca40066eb5f21595c74fb932f71cc70fa7f6e5b0cf"},
+        {"evidence_sha256": "422be9245352fc77228449ddf05a3d1246f0727a0d1c76085cc05ade1a970ded"},
+        {"evidence_sha256": "702a8fc926e2b55d3610056aee0aca0c0731f0237d09a0a9c8892d6a1fa4c00c"},
+        {"evidence_sha256": "ae0400645630e66a649d1722d6f64e231ce908be4ad131cc405801aeb70d2c2f"},
+        {"evidence_sha256": "c09f918c60900509ce58ab5002535e8b930a4ed72809ae8b5cb6bdc608f0fb52"}
+      ],
+      "coverage_score": {
+        "evidence_sources_detected": {
+          "value": 1,
+          "total": 4
+        },
+        "artefact_categories_with_data": {
+          "value": 2,
+          "total": 7
+        },
+        "flights_with_primary_correlation": {
+          "value": 0,
+          "total": 0
+        },
+        "tools_succeeded": {
+          "value": 4,
+          "total": 4
+        }
+      },
+      "conclusions": {
+        "case_overview": [
+          "1 evidence source(s) detected: drone_sd.",
+          "0 flight(s) identified; 0 with primary GPS+temporal correlation."
+        ],
+        "device_identification": [],
+        "flight_analysis": [],
+        "media_analysis": [
+          "Images: 6 file(s) contain(s) EXIF GPS coordinates. Spatial correlation of these files is possible.",
+          "Images: 9 file(s) missing (normalisable) EXIF timestamp. Temporal correlation of these files is not possible without additional context.",
+          "Images: 3 file(s) missing EXIF GPS coordinates. Spatial correlation of these files is not possible without additional context.",
+          "Videos: 10 file(s) contain(s) EXIF GPS coordinates. Spatial correlation of these files is possible.",
+          "Videos: 10 file(s) missing (normalisable) EXIF timestamp. Temporal correlation of these files is not possible without additional context."
+        ],
+        "database_analysis": [],
+        "data_quality": [],
+        "further_investigation": [
+          "Note: no installed DJI applications found - Device and account information.",
+          "Note: no controller device name found - Device and account information.",
+          "Note: no drone serial number found - Device and account information.",
+          "Note: no drone model found - Device and account information.",
+          "Note: no controller device found - Device and account information.",
+          "Note: no dji application version found - Device and account information.",
+          "Note: no account e-mail found - Device and account information.",
+          "Note: no product type found - Device and account information.",
+          "Note: no firmware version found - Device and account information.",
+          "Note: no last country code found - Device and account information."
+        ]
+      }
+    },
+    "p8_automated_reporting": {
+      "completed_at": "2026-06-19T09:06:59.121708+00:00",
+      "report_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\ft-df004-2017-sd-only_forensic_baseline.pdf",
+      "plots_dir": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p8_automated_reporting"
+    }
+  },
+  "tool_invocation_log": [
+    {
+      "timestamp": "2026-06-19T09:03:59.713472+00:00",
+      "tool_name": "mmls",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\mmls.exe",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: DOS Partition Table\nOffset Sector: 0\nUnits are in 512-byte sectors\n\n      Slot      Start        End          Leng...",
+      "output_paths": null
+    },
+    {
+      "timestamp": "2026-06-19T09:03:59.941179+00:00",
+      "tool_name": "fls",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\fls.exe",
+        "-r",
+        "-p",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: d/d 3:\tDCIM\nd/d 1029:\tDCIM/100MEDIA\nr/r 793605:\tDCIM/100MEDIA/DJI_0001.JPG\nr/r 793606:\tDCIM/100MEDIA/DJI_0002.JPG\n...",
+      "output_paths": null
+    },
+    {
+      "timestamp": "2026-06-19T09:05:01.951815+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+        "793605"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0001.JPG"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:05:02.192718+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+        "793606"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0002.JPG"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:05:02.300734+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+        "793607"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0003.JPG"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:05:15.910128+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+        "793608"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0004.MOV"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:05:29.400004+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+        "793609"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0005.JPG"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:05:29.470404+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+        "793610"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0006.JPG"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:05:42.621089+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+        "793611"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0007.MOV"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:05:56.788297+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+        "793612"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0008.JPG"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:09.640033+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+        "793613"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0009.MOV"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:28.697221+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+        "793614"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0010.MOV"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:34.735969+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+        "793615"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0011.JPG"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:40.239346+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+        "793616"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0012.MOV"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:47.558522+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+        "793617"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0013.JPG"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:47.643316+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+        "793618"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0014.JPG"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:47.886878+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+        "1534981"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0004_1.MOV"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:48.308485+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+        "1534982"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0007_1.MOV"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:48.862467+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+        "1534983"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0009_1.MOV"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:49.275233+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+        "1534984"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0010_1.MOV"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:49.892255+00:00",
+      "tool_name": "icat",
+      "version": "The Sleuth Kit ver 4.15.0",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\sleuthkit\\bin\\icat.exe",
+        "-o",
+        "8192",
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+        "1534985"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0012_1.MOV"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:50.910989+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0001.JPG"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df004-2017-sd-only/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0001_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:51.270824+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0002.JPG"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df004-2017-sd-only/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0002_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:51.652871+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0003.JPG"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df004-2017-sd-only/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0003_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:51.951011+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0005.JPG"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df004-2017-sd-only/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0005_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:52.269562+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0006.JPG"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df004-2017-sd-only/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0006_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:52.611163+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0008.JPG"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df004-2017-sd-only/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0008_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:52.947372+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0011.JPG"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df004-2017-sd-only/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0011_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:53.262763+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0013.JPG"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df004-2017-sd-only/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0013_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:53.545231+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\images\\DJI_0014.JPG"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df004-2017-sd-only/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\images\\DJI_0014_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:54.179493+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0004.MOV"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df004-2017-sd-only/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0004_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:54.692119+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0004_1.MOV"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df004-2017-sd-only/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0004_1_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:55.252633+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0007.MOV"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df004-2017-sd-only/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0007_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:55.796429+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0007_1.MOV"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df004-2017-sd-only/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0007_1_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:56.465136+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0009.MOV"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df004-2017-sd-only/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0009_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:57.000707+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0009_1.MOV"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df004-2017-sd-only/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0009_1_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:57.542742+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0010.MOV"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df004-2017-sd-only/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0010_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:58.036110+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0010_1.MOV"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df004-2017-sd-only/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0010_1_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:58.563488+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0012.MOV"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df004-2017-sd-only/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0012_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-19T09:06:59.061257+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p3_artefact_extraction\\drone_sd_1\\videos\\DJI_0012_1.MOV"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df004-2017-sd-only/p3_artefact_extraction/drone_sd_1...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df004-2017-sd-only\\p4_decision_and_orchestration\\drone_sd_1\\videos\\DJI_0012_1_exif.json"
+      ]
+    }
+  ]
+}

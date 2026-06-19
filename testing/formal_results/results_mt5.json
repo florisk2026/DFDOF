@@ -1,0 +1,452 @@
+{
+  "test": "MT5",
+  "requirement": "R5a",
+  "description": "Source identification: classification and acquisition method per evidence source",
+  "timestamp": "2026-06-19T11:34:38.255255+00:00",
+  "cases": [
+    {
+      "case_id": "ft-df002-2017-android",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df002-2017-android/state.json",
+      "sources": [
+        {
+          "case_id": "ft-df002-2017-android",
+          "source_file": "df002_flight.zip",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df002\\2017\\android\\df002_flight.zip",
+          "extension": ".zip",
+          "identified_as": "controller_android",
+          "acquisition_method": "logical",
+          "flags": "OK"
+        },
+        {
+          "case_id": "ft-df002-2017-android",
+          "source_file": "df002_external.001",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df002\\2017\\android\\df002_external.001",
+          "extension": ".001",
+          "identified_as": "drone_sd",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        }
+      ],
+      "issues": [],
+      "note": "Manual verification required: compare identified_as against ground truth"
+    },
+    {
+      "case_id": "ft-df002-2017-ios",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df002-2017-ios/state.json",
+      "sources": [
+        {
+          "case_id": "ft-df002-2017-ios",
+          "source_file": "df002_flight.zip",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df002\\2017\\ios\\df002_flight.zip",
+          "extension": ".zip",
+          "identified_as": "controller_ios",
+          "acquisition_method": "logical",
+          "flags": "OK"
+        },
+        {
+          "case_id": "ft-df002-2017-ios",
+          "source_file": "df002_external.001",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df002\\2017\\ios\\df002_external.001",
+          "extension": ".001",
+          "identified_as": "drone_sd",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        }
+      ],
+      "issues": [],
+      "note": "Manual verification required: compare identified_as against ground truth"
+    },
+    {
+      "case_id": "ft-df003-2017-ios",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df003-2017-ios/state.json",
+      "sources": [
+        {
+          "case_id": "ft-df003-2017-ios",
+          "source_file": "df003_flight.zip",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df003\\2017\\ios\\df003_flight.zip",
+          "extension": ".zip",
+          "identified_as": "controller_ios",
+          "acquisition_method": "logical",
+          "flags": "OK"
+        },
+        {
+          "case_id": "ft-df003-2017-ios",
+          "source_file": "df003_external.001",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df003\\2017\\ios\\df003_external.001",
+          "extension": ".001",
+          "identified_as": "drone_sd",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        },
+        {
+          "case_id": "ft-df003-2017-ios",
+          "source_file": "df003_internal.001",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_phantom_3\\df003\\2017\\ios\\df003_internal.001",
+          "extension": ".001",
+          "identified_as": "drone_flight_storage",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        }
+      ],
+      "issues": [],
+      "note": "Manual verification required: compare identified_as against ground truth"
+    },
+    {
+      "case_id": "ft-df004-2017-sd-only",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df004-2017-sd-only/state.json",
+      "sources": [
+        {
+          "case_id": "ft-df004-2017-sd-only",
+          "source_file": "df004_external.001",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df004\\2017\\df004_external.001",
+          "extension": ".001",
+          "identified_as": "drone_sd",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        }
+      ],
+      "issues": [],
+      "note": "Manual verification required: compare identified_as against ground truth"
+    },
+    {
+      "case_id": "ft-df006-2017-android",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df006-2017-android/state.json",
+      "sources": [
+        {
+          "case_id": "ft-df006-2017-android",
+          "source_file": "DF006_flight.zip",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df006\\2017\\android\\DF006_flight.zip",
+          "extension": ".zip",
+          "identified_as": "controller_android",
+          "acquisition_method": "logical",
+          "flags": "OK"
+        },
+        {
+          "case_id": "ft-df006-2017-android",
+          "source_file": "df006_external.001",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df006\\2017\\android\\df006_external.001",
+          "extension": ".001",
+          "identified_as": "drone_sd",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        },
+        {
+          "case_id": "ft-df006-2017-android",
+          "source_file": "df006_internal.001",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df006\\2017\\android\\df006_internal.001",
+          "extension": ".001",
+          "identified_as": "drone_flight_storage",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        }
+      ],
+      "issues": [],
+      "note": "Manual verification required: compare identified_as against ground truth"
+    },
+    {
+      "case_id": "ft-df006-2017-ios",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df006-2017-ios/state.json",
+      "sources": [
+        {
+          "case_id": "ft-df006-2017-ios",
+          "source_file": "DF006_flight.zip",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df006\\2017\\ios\\DF006_flight.zip",
+          "extension": ".zip",
+          "identified_as": "controller_ios",
+          "acquisition_method": "logical",
+          "flags": "OK"
+        },
+        {
+          "case_id": "ft-df006-2017-ios",
+          "source_file": "df006_external.001",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df006\\2017\\ios\\df006_external.001",
+          "extension": ".001",
+          "identified_as": "drone_sd",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        },
+        {
+          "case_id": "ft-df006-2017-ios",
+          "source_file": "df006_internal.001",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_phantom_4\\df006\\2017\\ios\\df006_internal.001",
+          "extension": ".001",
+          "identified_as": "drone_flight_storage",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        }
+      ],
+      "issues": [],
+      "note": "Manual verification required: compare identified_as against ground truth"
+    },
+    {
+      "case_id": "ft-df019-2017-android-only",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df019-2017-android-only/state.json",
+      "sources": [
+        {
+          "case_id": "ft-df019-2017-android-only",
+          "source_file": "df019_android.001",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df019\\2017\\controller-only-android\\df019_android.001",
+          "extension": ".001",
+          "identified_as": "controller_android",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        }
+      ],
+      "issues": [],
+      "note": "Manual verification required: compare identified_as against ground truth"
+    },
+    {
+      "case_id": "ft-df019-2017-ios",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df019-2017-ios/state.json",
+      "sources": [
+        {
+          "case_id": "ft-df019-2017-ios",
+          "source_file": "ios_logical.zip",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df019\\2017\\ios\\ios_logical.zip",
+          "extension": ".zip",
+          "identified_as": "controller_ios",
+          "acquisition_method": "logical",
+          "flags": "OK"
+        },
+        {
+          "case_id": "ft-df019-2017-ios",
+          "source_file": "df019_external.001",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df019\\2017\\ios\\df019_external.001",
+          "extension": ".001",
+          "identified_as": "drone_sd",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        }
+      ],
+      "issues": [],
+      "note": "Manual verification required: compare identified_as against ground truth"
+    },
+    {
+      "case_id": "ft-df019-2017-ios-only",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df019-2017-ios-only/state.json",
+      "sources": [
+        {
+          "case_id": "ft-df019-2017-ios-only",
+          "source_file": "ios_logical.zip",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df019\\2017\\controller-only-ios\\ios_logical.zip",
+          "extension": ".zip",
+          "identified_as": "controller_ios",
+          "acquisition_method": "logical",
+          "flags": "OK"
+        }
+      ],
+      "issues": [],
+      "note": "Manual verification required: compare identified_as against ground truth"
+    },
+    {
+      "case_id": "ft-df019-2018-ios",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df019-2018-ios/state.json",
+      "sources": [
+        {
+          "case_id": "ft-df019-2018-ios",
+          "source_file": "ios_logical.zip",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df019\\2018\\ios\\ios_logical.zip",
+          "extension": ".zip",
+          "identified_as": "controller_ios",
+          "acquisition_method": "logical",
+          "flags": "OK"
+        },
+        {
+          "case_id": "ft-df019-2018-ios",
+          "source_file": "df019_internal.001",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df019\\2018\\ios\\df019_internal.001",
+          "extension": ".001",
+          "identified_as": "drone_flight_storage",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        },
+        {
+          "case_id": "ft-df019-2018-ios",
+          "source_file": "internal_dji_export.zip",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df019\\2018\\ios\\internal_dji_export.zip",
+          "extension": ".zip",
+          "identified_as": "drone_flight_storage",
+          "acquisition_method": "logical",
+          "flags": "OK"
+        }
+      ],
+      "issues": [],
+      "note": "Manual verification required: compare identified_as against ground truth"
+    },
+    {
+      "case_id": "ft-df020-2017-android",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df020-2017-android/state.json",
+      "sources": [
+        {
+          "case_id": "ft-df020-2017-android",
+          "source_file": "df020_android.001",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df020\\2017\\android\\df020_android.001",
+          "extension": ".001",
+          "identified_as": "controller_android",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        },
+        {
+          "case_id": "ft-df020-2017-android",
+          "source_file": "df020_external.001",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df020\\2017\\android\\df020_external.001",
+          "extension": ".001",
+          "identified_as": "drone_sd",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        }
+      ],
+      "issues": [],
+      "note": "Manual verification required: compare identified_as against ground truth"
+    },
+    {
+      "case_id": "ft-df020-2017-ios",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df020-2017-ios/state.json",
+      "sources": [
+        {
+          "case_id": "ft-df020-2017-ios",
+          "source_file": "ios_logical.zip",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df020\\2017\\ios\\ios_logical.zip",
+          "extension": ".zip",
+          "identified_as": "controller_ios",
+          "acquisition_method": "logical",
+          "flags": "OK"
+        },
+        {
+          "case_id": "ft-df020-2017-ios",
+          "source_file": "df020_external.001",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df020\\2017\\ios\\df020_external.001",
+          "extension": ".001",
+          "identified_as": "drone_sd",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        }
+      ],
+      "issues": [],
+      "note": "Manual verification required: compare identified_as against ground truth"
+    },
+    {
+      "case_id": "ft-df020-2018-android",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df020-2018-android/state.json",
+      "sources": [
+        {
+          "case_id": "ft-df020-2018-android",
+          "source_file": "android_logical.zip",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df020\\2018\\android\\android_logical.zip",
+          "extension": ".zip",
+          "identified_as": "controller_android",
+          "acquisition_method": "logical",
+          "flags": "OK"
+        },
+        {
+          "case_id": "ft-df020-2018-android",
+          "source_file": "df020_external.001",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df020\\2018\\android\\df020_external.001",
+          "extension": ".001",
+          "identified_as": "drone_sd",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        },
+        {
+          "case_id": "ft-df020-2018-android",
+          "source_file": "df020_internal.001",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df020\\2018\\android\\df020_internal.001",
+          "extension": ".001",
+          "identified_as": "drone_flight_storage",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        }
+      ],
+      "issues": [],
+      "note": "Manual verification required: compare identified_as against ground truth"
+    },
+    {
+      "case_id": "ft-df049-2018-apr-android",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df049-2018-apr-android/state.json",
+      "sources": [
+        {
+          "case_id": "ft-df049-2018-apr-android",
+          "source_file": "df049_internal.E01",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df049\\2018_april\\android\\df049_internal.E01",
+          "extension": ".e01",
+          "identified_as": "drone_sd",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        },
+        {
+          "case_id": "ft-df049-2018-apr-android",
+          "source_file": "android_logical.zip",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df049\\2018_april\\android\\android_logical.zip",
+          "extension": ".zip",
+          "identified_as": "controller_android",
+          "acquisition_method": "logical",
+          "flags": "OK"
+        }
+      ],
+      "issues": [],
+      "note": "Manual verification required: compare identified_as against ground truth"
+    },
+    {
+      "case_id": "ft-df049-2018-apr-ios",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df049-2018-apr-ios/state.json",
+      "sources": [
+        {
+          "case_id": "ft-df049-2018-apr-ios",
+          "source_file": "ios_logical.zip",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df049\\2018_april\\ios\\ios_logical.zip",
+          "extension": ".zip",
+          "identified_as": "controller_ios",
+          "acquisition_method": "logical",
+          "flags": "OK"
+        },
+        {
+          "case_id": "ft-df049-2018-apr-ios",
+          "source_file": "df049_internal.E01",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df049\\2018_april\\ios\\df049_internal.E01",
+          "extension": ".e01",
+          "identified_as": "drone_sd",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        }
+      ],
+      "issues": [],
+      "note": "Manual verification required: compare identified_as against ground truth"
+    },
+    {
+      "case_id": "ft-df050-2018-android",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df050-2018-android/state.json",
+      "sources": [
+        {
+          "case_id": "ft-df050-2018-android",
+          "source_file": "android_logical.zip",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df050\\2018\\android\\android_logical.zip",
+          "extension": ".zip",
+          "identified_as": "controller_android",
+          "acquisition_method": "logical",
+          "flags": "OK"
+        },
+        {
+          "case_id": "ft-df050-2018-android",
+          "source_file": "df047_external.E01",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df050\\2018\\android\\df047_external.E01",
+          "extension": ".e01",
+          "identified_as": "drone_sd",
+          "acquisition_method": "physical",
+          "flags": "OK"
+        },
+        {
+          "case_id": "ft-df050-2018-android",
+          "source_file": "internal_dji_export.zip",
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\train_mavic_air\\df050\\2018\\android\\internal_dji_export.zip",
+          "extension": ".zip",
+          "identified_as": "drone_flight_storage",
+          "acquisition_method": "logical",
+          "flags": "OK"
+        }
+      ],
+      "issues": [],
+      "note": "Manual verification required: compare identified_as against ground truth"
+    }
+  ],
+  "summary": "MANUAL REVIEW REQUIRED: 35 sources across 16 cases"
+}

@@ -1,0 +1,2592 @@
+{
+  "operator": "Floris",
+  "case_id": "ft-df019-2017-ios-only",
+  "start_time": "2026-06-18T15:09:36.008040+00:00",
+  "end_time": "2026-06-18T15:09:49.573236+00:00",
+  "evidence_directory": "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df019\\2017\\controller-only-ios",
+  "completed_phases": [
+    "p1_provenance",
+    "p2_image_parsing",
+    "p3_artefact_extraction",
+    "p4_decision_and_orchestration",
+    "p5_normalisation_and_anomaly_checking",
+    "p6_multisource_correlation",
+    "p7_analysis_and_validation",
+    "p8_automated_reporting"
+  ],
+  "anomaly_flags": [
+    "[p2 - controller android]: source evidence not found",
+    "[p3 - controller android]: source evidence not found",
+    "[p3 - controller ios - drone logs]: no artefacts found",
+    "[p3 - drone sd]: source evidence not found",
+    "[p3 - drone flight storage]: source evidence not found",
+    "[p4 - controller android]: source evidence not found",
+    "[p4 - drone sd]: source evidence not found",
+    "[p4 - drone flight storage]: source evidence not found"
+  ],
+  "input_evidence": [
+    {
+      "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df019\\2017\\controller-only-ios\\ios_logical.zip",
+      "stored_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df019\\2017\\controller-only-ios\\ios_logical.zip",
+      "source_identification": "controller_ios",
+      "parent_sha256": null,
+      "acquisition_method": "logical",
+      "type": "input",
+      "artefact_category": null,
+      "size": 243238443,
+      "sha1": "989aa1be6ac8879c09ac23e11c8ac95dced67985",
+      "sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+      "hash_timestamp": "2026-06-18T15:09:36.739439+00:00"
+    }
+  ],
+  "phase_outputs": {
+    "p1_provenance": {
+      "completed_at": "2026-06-18T15:09:36.008453+00:00",
+      "identified_evidence": [
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df019\\2017\\controller-only-ios\\ios_logical.zip",
+          "identified": true,
+          "identified_as": "controller_ios",
+          "operator_confirmed": true,
+          "identified_by_operator_as": null
+        }
+      ],
+      "operator_final_confirmation": {
+        "accepted": true,
+        "timestamp": "2026-06-18T15:09:36.739575+00:00"
+      },
+      "image_metadata": {}
+    },
+    "p2_image_parsing": {
+      "completed_at": "2026-06-18T15:09:41.938828+00:00",
+      "parsed_evidence": [
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df019\\2017\\controller-only-ios\\ios_logical.zip",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p2_image_parsing\\controller_ios_parsed",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "parser_ios",
+          "type": "parsed",
+          "artefact_category": "device_and_backup_info",
+          "size": 275330548,
+          "sha1": null,
+          "sha256": null,
+          "hash_timestamp": null,
+          "hash_note": "directory - integrity anchored to parent_sha256 of source ZIP"
+        },
+        {
+          "source_path": "DF019 MC04 iOS\\Info.plist",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p2_image_parsing\\controller_ios_parsed\\_metadata\\Info.plist",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "parser_ios",
+          "type": "parsed",
+          "artefact_category": "device_and_backup_info",
+          "size": 35414,
+          "sha1": "aed1db2e45fc447402072a02c911fd59b84e9c70",
+          "sha256": "319e71e40fadf5c79009d167ecd1a3881e7078c818772544c91c38cfeb9a52b9",
+          "hash_timestamp": "2026-06-18T15:09:41.929003+00:00"
+        }
+      ],
+      "derived_observations": [
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p2_image_parsing\\controller_ios_parsed\\_metadata\\Info.plist",
+          "evidence_sha256": "319e71e40fadf5c79009d167ecd1a3881e7078c818772544c91c38cfeb9a52b9",
+          "evidence_category": "device_and_backup_info",
+          "acquisition_method": "parser_ios",
+          "observations": [
+            {
+              "product_name": "iPad mini 4",
+              "product_version": "10.3.2",
+              "device_name": "MC 04 - iOS",
+              "backup_date": "2017-08-29T18:07:21Z",
+              "serial_number": "FNWV304FGHK9",
+              "unique_identifier": "7F05AD1235CEA98920B1112EF14DDD9FDDED744A",
+              "installed_dji_apps": [
+                "com.dji.go"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "p3_artefact_extraction": {
+      "completed_at": "2026-06-18T15:09:43.162783+00:00",
+      "extracted_artefacts": [
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Library\\Preferences\\com.dji.go.plist",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\account_data\\com.dji.go.plist",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "account_data",
+          "size": 8022,
+          "sha1": "a429b3d8cc03b4d8666c4c53d57032518b7483ba",
+          "sha256": "b010ed7f654a4496678722d4e15b07cc74f4892b381c363f6c9eacf2dee1c7be",
+          "hash_timestamp": "2026-06-18T15:09:42.052683+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\airmap_flysafeplaces.db",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\databases\\airmap_flysafeplaces.db",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "databases",
+          "size": 15187968,
+          "sha1": "fdecfca00525fd0f36dc51b5a8709efaf409f908",
+          "sha256": "01472f913caf3ce5d50b146cd37a6fea1a18ca4d9666b2d5dc06189a8ac5c17c",
+          "hash_timestamp": "2026-06-18T15:09:42.132680+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\dbData\\djiFMDB.db",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\databases\\djiFMDB.db",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "databases",
+          "size": 16384,
+          "sha1": "5fbe7f7d19f443b48975f45ee1a0ef6abb3f12f3",
+          "sha256": "c3635c4495369db4324667ff800fa21938ab44d19853d7cf5c462d5795a4eebe",
+          "hash_timestamp": "2026-06-18T15:09:42.149478+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\nfz_flysafeplaces.db",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\databases\\nfz_flysafeplaces.db",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "databases",
+          "size": 1114112,
+          "sha1": "1e1c834784b088adb20de1761785556ab9f0eede",
+          "sha256": "3af048ec88d8e3523fd0a8ef775d708348913ed6ae5ed1feeb93a3d31325334d",
+          "hash_timestamp": "2026-06-18T15:09:42.138886+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\statistics.db",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\databases\\statistics.db",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "databases",
+          "size": 12288,
+          "sha1": "3a8843449db0f78d4502b81d67e0f26584226a80",
+          "sha256": "83bfc672a35016dcdfa168cbc780d6219345ddfe601ad75087ce879503a3058a",
+          "hash_timestamp": "2026-06-18T15:09:42.141574+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\tencent_analysis.db",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\databases\\tencent_analysis.db",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "databases",
+          "size": 8192,
+          "sha1": "204131865d963c85bf6c935234cacc19bb4b9c90",
+          "sha256": "dc5faceb3d5509d4475d80d8559a7bfefed36f1ef1dd30d191701f16568c8e90",
+          "hash_timestamp": "2026-06-18T15:09:42.144040+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\tencent_wxo_analysis.db",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\databases\\tencent_wxo_analysis.db",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "databases",
+          "size": 24576,
+          "sha1": "0da793f6a282760fda369c482d09f68e98ccf907",
+          "sha256": "dc88684c6e1dfc5c7cd07bdefa740e5affeae91cfc1e54bd8cdd2b47984024c9",
+          "hash_timestamp": "2026-06-18T15:09:42.146553+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\FlightLogs\\2017-08-29_11_49_33-08RDD9100100KG.dat",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\flight_logs\\2017-08-29_11_49_33-08RDD9100100KG.dat",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_logs",
+          "size": 1062,
+          "sha1": "87166f604719ed5264bc95c21fc43755cd77bdf2",
+          "sha256": "80d4fb7edfc1815768bbdde8764b1c71e60def03f163691023a34f3a55007790",
+          "hash_timestamp": "2026-06-18T15:09:42.155497+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\FlightLogs\\2017-08-29_11_56_11-08RDD9100100KG.dat",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\flight_logs\\2017-08-29_11_56_11-08RDD9100100KG.dat",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_logs",
+          "size": 1107,
+          "sha1": "32dfd0c5d5eb0b0c628a00b31ea6f98c04379016",
+          "sha256": "831ae86486717274464b0e3d32adffe253d7cb2ae7990e99a248f0af9fc8c146",
+          "hash_timestamp": "2026-06-18T15:09:42.157673+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\Logs\\app_log.txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\flight_logs\\app_log.txt",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_logs",
+          "size": 87884,
+          "sha1": "eff9df436c8485e3e193a6e2bfac861dde986d27",
+          "sha256": "52bf2e2d07cc4e182dc7fd54ffa59393f3273ba94a8885d30466f8731d9d820d",
+          "hash_timestamp": "2026-06-18T15:09:42.168293+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\Logs\\upgradeLog_0.txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\flight_logs\\upgradeLog_0.txt",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_logs",
+          "size": 9192,
+          "sha1": "a0ac599d9d094db0cac9d2b568518c66c4e23015",
+          "sha256": "7886db0f159aa6e6661b308636b94bdb01a555659cb361bf308599b4a1e49abc",
+          "hash_timestamp": "2026-06-18T15:09:42.179633+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\FlightRecords\\DJIFlightRecord_2017-08-29__11-49-33_.txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-49-33_.txt",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_records",
+          "size": 62330,
+          "sha1": "2a111cf8538a4bc0d0df9821c0c6c4048fc8863f",
+          "sha256": "1e6abf634721c823a363a917e06df41c493d812f98a4c89dfef31bd3cc256c22",
+          "hash_timestamp": "2026-06-18T15:09:42.189182+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\FlightRecords\\DJIFlightRecord_2017-08-29__11-50-40_.txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-50-40_.txt",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_records",
+          "size": 366552,
+          "sha1": "77889e2b4a36db65b4fb690f429e1d51de510c6e",
+          "sha256": "a722cffa25823257ad652d2a8e5134923c093897b498c6fef907ee483f1e8937",
+          "hash_timestamp": "2026-06-18T15:09:42.200085+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\FlightRecords\\DJIFlightRecord_2017-08-29__11-56-11_.txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-56-11_.txt",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "flight_records",
+          "size": 657528,
+          "sha1": "5314147f5c4082939c3ba3f226c0dce26c327753",
+          "sha256": "6fb961ac585d91c2daf93500d8a850e4a1006fa56c8185b5fe659ad330d72f80",
+          "hash_timestamp": "2026-06-18T15:09:42.212569+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\videoCache\\2017_08_29_11_49_25.thumbnail",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_49_25.thumbnail",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "images",
+          "size": 133339,
+          "sha1": "461bce7110fd7e82574cca032daf05bbd8aef5e0",
+          "sha256": "a81a737dfbeea19beaa9af889674a0c6acc43dee962d07331344fe209d1c3327",
+          "hash_timestamp": "2026-06-18T15:09:42.226001+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\videoCache\\2017_08_29_11_56_13.thumbnail",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_56_13.thumbnail",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "images",
+          "size": 118565,
+          "sha1": "bbcf52c2a0d747d2970ac40fa43f34d5067f988f",
+          "sha256": "c4bf182b90aa0c4a369c87f4c0f02abd4a097b94ed76d737f00cd242abe6f46f",
+          "hash_timestamp": "2026-06-18T15:09:42.235333+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\videoCache\\2017_08_29_11_56_59.thumbnail",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_56_59.thumbnail",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "images",
+          "size": 106938,
+          "sha1": "c7c0dae3ba9065b57a0a7ac33c5f8348fb6e57be",
+          "sha256": "ea755f7e7620315f9ec7690ad956ecbc30f63cedf606fa20f30ccefa244b292f",
+          "hash_timestamp": "2026-06-18T15:09:42.246258+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\videoCache\\2017_08_29_11_59_15.thumbnail",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_59_15.thumbnail",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "images",
+          "size": 46681,
+          "sha1": "3e6c4b78b66498293714aaa6275f3ef3fcf41e95",
+          "sha256": "122a474f027fda26fc77a79e78aacf474f94ef4713970ab7ff0f1bff79ad7edd",
+          "hash_timestamp": "2026-06-18T15:09:42.254036+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\videoCache\\2017_08_29_11_49_25.mp4",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\videos\\2017_08_29_11_49_25.mp4",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "videos",
+          "size": 120715755,
+          "sha1": "300743cefed4ad74e851a90478ecba42bae10c3b",
+          "sha256": "a43a8d8b7b063df166c64748008f4657f896edcb08cbef452908f38700864a3a",
+          "hash_timestamp": "2026-06-18T15:09:42.762032+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\videoCache\\2017_08_29_11_56_13.mp4",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\videos\\2017_08_29_11_56_13.mp4",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "videos",
+          "size": 12725146,
+          "sha1": "0d56289c003915acac6112f360a9976a3b562b55",
+          "sha256": "0f7c8f62e8f8f01a07f8395fcfe62812387a2897028e2b76d4f6f973de8ccf1a",
+          "hash_timestamp": "2026-06-18T15:09:42.836973+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\videoCache\\2017_08_29_11_56_59.mp4",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\videos\\2017_08_29_11_56_59.mp4",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "videos",
+          "size": 17941838,
+          "sha1": "1cae870b84ac052fa503e8be6975b33e904bd162",
+          "sha256": "fd28f97f7758984e9c7e564128e96aa4aa9084d6d1e3133efae19e1d1eb9b42f",
+          "hash_timestamp": "2026-06-18T15:09:42.934136+00:00"
+        },
+        {
+          "source_path": "domains\\AppDomain-com.dji.go\\Documents\\videoCache\\2017_08_29_11_59_15.mp4",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\videos\\2017_08_29_11_59_15.mp4",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0c5493518e337f87533e957a0e3212d51dcfd4f698bf7da2c935a5e161db9055",
+          "acquisition_method": "extract_logical",
+          "type": "extracted",
+          "artefact_category": "videos",
+          "size": 45728275,
+          "sha1": "1a9bd7165081b14c198851285711788119edcb6f",
+          "sha256": "85ddcba332f537cd2a10041f01ba06f11a14b252577dc2516a33a779cd9d90b5",
+          "hash_timestamp": "2026-06-18T15:09:43.162194+00:00"
+        }
+      ]
+    },
+    "p4_decision_and_orchestration": {
+      "completed_at": "2026-06-18T15:09:47.483982+00:00",
+      "decision_and_orchestration_artefacts": [
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\account_data\\com.dji.go.plist",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\account_data\\com.dji.go.json",
+          "source_identification": "controller_ios",
+          "parent_sha256": "b010ed7f654a4496678722d4e15b07cc74f4892b381c363f6c9eacf2dee1c7be",
+          "acquisition_method": "p4_decision_and_orchestration",
+          "type": "parsed",
+          "artefact_category": "account_data",
+          "size": 13513,
+          "sha1": "760082630adf587a0a0045c080fca8a2d4e57e8d",
+          "sha256": "6a2373d2a78eac790f9ad86076a5dd0ac83ef4b6aebbf35603fb8ee2f66eb542",
+          "hash_timestamp": "2026-06-18T15:09:43.230136+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-49-33_.txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-49-33_.csv",
+          "source_identification": "controller_ios",
+          "parent_sha256": "1e6abf634721c823a363a917e06df41c493d812f98a4c89dfef31bd3cc256c22",
+          "acquisition_method": "txtlogtocsvtool",
+          "type": "decoded",
+          "artefact_category": "flight_records",
+          "size": 522989,
+          "sha1": "af5af869470dece5517441e33bf8d3cfdaf5f0e3",
+          "sha256": "9a3f54ef9008131ceefe09ba223140f456046dc0a909063f28f2dcafd5e962fe",
+          "hash_timestamp": "2026-06-18T15:09:43.408761+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-50-40_.txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-50-40_.csv",
+          "source_identification": "controller_ios",
+          "parent_sha256": "a722cffa25823257ad652d2a8e5134923c093897b498c6fef907ee483f1e8937",
+          "acquisition_method": "txtlogtocsvtool",
+          "type": "decoded",
+          "artefact_category": "flight_records",
+          "size": 3324230,
+          "sha1": "683f20dcd7960c618daef45fb1d347831ef0c809",
+          "sha256": "a41ab91744b24a349f4e789b73f0cae51f0e5e3f63026b46f5ba645f41066166",
+          "hash_timestamp": "2026-06-18T15:09:43.954232+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-56-11_.txt",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-56-11_.csv",
+          "source_identification": "controller_ios",
+          "parent_sha256": "6fb961ac585d91c2daf93500d8a850e4a1006fa56c8185b5fe659ad330d72f80",
+          "acquisition_method": "txtlogtocsvtool",
+          "type": "decoded",
+          "artefact_category": "flight_records",
+          "size": 4743385,
+          "sha1": "0a5a1a9a5e42ea4bb62c462405762c416402a2fe",
+          "sha256": "5eb0c5fb89c5495beaa4bb4f80626f1bac4d0261cbd6bdb6ea08461ace566d4b",
+          "hash_timestamp": "2026-06-18T15:09:44.823644+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_49_25.thumbnail",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\images\\2017_08_29_11_49_25_exif.json",
+          "source_identification": "controller_ios",
+          "parent_sha256": "a81a737dfbeea19beaa9af889674a0c6acc43dee962d07331344fe209d1c3327",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "images",
+          "size": 1083,
+          "sha1": "4c0335f08bf4653b8535af3441d1de114332f79a",
+          "sha256": "25daf226308aabb61bac00d1733fa42cfd8eaf8daf860fc3c661474bfce893d7",
+          "hash_timestamp": "2026-06-18T15:09:45.290347+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_56_13.thumbnail",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\images\\2017_08_29_11_56_13_exif.json",
+          "source_identification": "controller_ios",
+          "parent_sha256": "c4bf182b90aa0c4a369c87f4c0f02abd4a097b94ed76d737f00cd242abe6f46f",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "images",
+          "size": 1083,
+          "sha1": "4185106d409ab2307f47426ad96f9740976fe29e",
+          "sha256": "99c2340e85da7200d91bc150e2aff75a6aae1cf3918740d2a9b748b9f7aaf21b",
+          "hash_timestamp": "2026-06-18T15:09:45.527907+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_56_59.thumbnail",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\images\\2017_08_29_11_56_59_exif.json",
+          "source_identification": "controller_ios",
+          "parent_sha256": "ea755f7e7620315f9ec7690ad956ecbc30f63cedf606fa20f30ccefa244b292f",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "images",
+          "size": 1083,
+          "sha1": "671ef3c3250f7b8792226722426123556b1e4c18",
+          "sha256": "8c59fcbd20ede866bfb60da89e54433becdee7eddabfad0747215f2ba03cd246",
+          "hash_timestamp": "2026-06-18T15:09:45.773033+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_59_15.thumbnail",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\images\\2017_08_29_11_59_15_exif.json",
+          "source_identification": "controller_ios",
+          "parent_sha256": "122a474f027fda26fc77a79e78aacf474f94ef4713970ab7ff0f1bff79ad7edd",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "images",
+          "size": 1082,
+          "sha1": "39f8a0349dda45a4593c1fd34e8e9d3b32ce0f59",
+          "sha256": "004b4df96574a841dd026bac84b2a48d9aac0f44d4013768df8fcc2ea902db47",
+          "hash_timestamp": "2026-06-18T15:09:46.024729+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\videos\\2017_08_29_11_49_25.mp4",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\videos\\2017_08_29_11_49_25_exif.json",
+          "source_identification": "controller_ios",
+          "parent_sha256": "a43a8d8b7b063df166c64748008f4657f896edcb08cbef452908f38700864a3a",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "videos",
+          "size": 4160,
+          "sha1": "fc35469fb7955086d9a831636e33cb56e67a4e96",
+          "sha256": "1b3fa6bc1324cbe17ccbdbf7ee3fb9bac28cbd919f8253cc1f70d509d190429a",
+          "hash_timestamp": "2026-06-18T15:09:46.383326+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\videos\\2017_08_29_11_56_13.mp4",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\videos\\2017_08_29_11_56_13_exif.json",
+          "source_identification": "controller_ios",
+          "parent_sha256": "0f7c8f62e8f8f01a07f8395fcfe62812387a2897028e2b76d4f6f973de8ccf1a",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "videos",
+          "size": 4213,
+          "sha1": "a9b18196b818c44a810567760bf25ec3455c05d2",
+          "sha256": "a574b5544adf948466048bdf08d7cf7c51fd3b930a18da4861010a887937fa1e",
+          "hash_timestamp": "2026-06-18T15:09:46.738423+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\videos\\2017_08_29_11_56_59.mp4",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\videos\\2017_08_29_11_56_59_exif.json",
+          "source_identification": "controller_ios",
+          "parent_sha256": "fd28f97f7758984e9c7e564128e96aa4aa9084d6d1e3133efae19e1d1eb9b42f",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "videos",
+          "size": 4224,
+          "sha1": "72de46794147e73b4c9414a31a2426800d6399d9",
+          "sha256": "3fd46bac35f5ed44d1f38960a07b2928387688ff11cd65c8dffe247a212899e0",
+          "hash_timestamp": "2026-06-18T15:09:47.128558+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\videos\\2017_08_29_11_59_15.mp4",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\videos\\2017_08_29_11_59_15_exif.json",
+          "source_identification": "controller_ios",
+          "parent_sha256": "85ddcba332f537cd2a10041f01ba06f11a14b252577dc2516a33a779cd9d90b5",
+          "acquisition_method": "exiftool",
+          "type": "parsed",
+          "artefact_category": "videos",
+          "size": 4145,
+          "sha1": "a5f717505daa3b93334ca215b4703b9b8066cad7",
+          "sha256": "6d76938d0dcc3fefc9a4fe4eb225dd9ab9355d3fd82b6b16fe97052ae60f7085",
+          "hash_timestamp": "2026-06-18T15:09:47.483186+00:00"
+        }
+      ],
+      "derived_observations": [
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\account_data\\com.dji.go.plist",
+          "evidence_sha256": "b010ed7f654a4496678722d4e15b07cc74f4892b381c363f6c9eacf2dee1c7be",
+          "evidence_category": "account_data",
+          "acquisition_method": "p4_decision_and_orchestration",
+          "observations": [
+            {
+              "account_email": "droneforensics@vtoinc.com",
+              "aircraft_sn": "08RDD9100100KG",
+              "app_version": "4.1.5",
+              "last_launch": "2017-08-26T17:49:56Z",
+              "last_flight_date": "1970-01-01T00:00:00Z",
+              "last_country_code": "US",
+              "device_platform": "iPad5,1__weibosdk__003143000__iphone__os10.3.2",
+              "product_type": "13"
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_49_25.thumbnail",
+          "evidence_sha256": "a81a737dfbeea19beaa9af889674a0c6acc43dee962d07331344fe209d1c3327",
+          "evidence_category": "images",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "MIMEType": "image/png",
+              "FileType": "PNG",
+              "ImageWidth": 320,
+              "ImageHeight": 180
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_56_13.thumbnail",
+          "evidence_sha256": "c4bf182b90aa0c4a369c87f4c0f02abd4a097b94ed76d737f00cd242abe6f46f",
+          "evidence_category": "images",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "MIMEType": "image/png",
+              "FileType": "PNG",
+              "ImageWidth": 320,
+              "ImageHeight": 180
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_56_59.thumbnail",
+          "evidence_sha256": "ea755f7e7620315f9ec7690ad956ecbc30f63cedf606fa20f30ccefa244b292f",
+          "evidence_category": "images",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "MIMEType": "image/png",
+              "FileType": "PNG",
+              "ImageWidth": 320,
+              "ImageHeight": 180
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_59_15.thumbnail",
+          "evidence_sha256": "122a474f027fda26fc77a79e78aacf474f94ef4713970ab7ff0f1bff79ad7edd",
+          "evidence_category": "images",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "MIMEType": "image/png",
+              "FileType": "PNG",
+              "ImageWidth": 320,
+              "ImageHeight": 180
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\videos\\2017_08_29_11_49_25.mp4",
+          "evidence_sha256": "a43a8d8b7b063df166c64748008f4657f896edcb08cbef452908f38700864a3a",
+          "evidence_category": "videos",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "MIMEType": "video/mp4",
+              "FileType": "MP4",
+              "ImageWidth": 1280,
+              "Duration": 342.134,
+              "MediaDuration": 342.133359375,
+              "ImageHeight": 720,
+              "CompatibleBrands": [
+                "isom",
+                "iso2",
+                "avc1",
+                "mp41"
+              ]
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\videos\\2017_08_29_11_56_13.mp4",
+          "evidence_sha256": "0f7c8f62e8f8f01a07f8395fcfe62812387a2897028e2b76d4f6f973de8ccf1a",
+          "evidence_category": "videos",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "MIMEType": "video/mp4",
+              "FileType": "MP4",
+              "ImageWidth": 1280,
+              "Duration": 41.959,
+              "MediaDuration": 41.9,
+              "ImageHeight": 720,
+              "CompatibleBrands": [
+                "isom",
+                "iso2",
+                "avc1",
+                "mp41"
+              ]
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\videos\\2017_08_29_11_56_59.mp4",
+          "evidence_sha256": "fd28f97f7758984e9c7e564128e96aa4aa9084d6d1e3133efae19e1d1eb9b42f",
+          "evidence_category": "videos",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "MIMEType": "video/mp4",
+              "FileType": "MP4",
+              "ImageWidth": 1280,
+              "Duration": 130.868,
+              "MediaDuration": 130.8,
+              "ImageHeight": 720,
+              "CompatibleBrands": [
+                "isom",
+                "iso2",
+                "avc1",
+                "mp41"
+              ]
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\videos\\2017_08_29_11_59_15.mp4",
+          "evidence_sha256": "85ddcba332f537cd2a10041f01ba06f11a14b252577dc2516a33a779cd9d90b5",
+          "evidence_category": "videos",
+          "acquisition_method": "exiftool",
+          "observations": [
+            {
+              "MIMEType": "video/mp4",
+              "FileType": "MP4",
+              "ImageWidth": 1280,
+              "Duration": 170.5,
+              "MediaDuration": 170.5,
+              "ImageHeight": 720,
+              "CompatibleBrands": [
+                "isom",
+                "iso2",
+                "avc1",
+                "mp41"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "p5_normalisation_and_anomaly_checking": {
+      "completed_at": "2026-06-18T15:09:49.004954+00:00",
+      "normalised_artefacts": [
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-49-33_.csv",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p5_normalisation_and_anomaly_checking\\controller_ios\\flight_records\\norm_DJIFlightRecord_2017-08-29__11-49-33_.csv",
+          "source_identification": "controller_ios",
+          "parent_sha256": "9a3f54ef9008131ceefe09ba223140f456046dc0a909063f28f2dcafd5e962fe",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "type": "normalised",
+          "artefact_category": "flight_records",
+          "size": 537938,
+          "sha1": "b7eb31824fac811d234baa2c179d283fdb893110",
+          "sha256": "8c8a62f8299111b0f7f16665c95c1be0129837766b74c03973feb5cbd08526bd",
+          "hash_timestamp": "2026-06-18T15:09:47.673821+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-50-40_.csv",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p5_normalisation_and_anomaly_checking\\controller_ios\\flight_records\\norm_DJIFlightRecord_2017-08-29__11-50-40_.csv",
+          "source_identification": "controller_ios",
+          "parent_sha256": "a41ab91744b24a349f4e789b73f0cae51f0e5e3f63026b46f5ba645f41066166",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "type": "normalised",
+          "artefact_category": "flight_records",
+          "size": 3433810,
+          "sha1": "ee163d71854fefe4aafd12abaeadea9c2bd9b5ff",
+          "sha256": "a1184a01598e32feec6b8eff3105decc191a2ae76c85a88a4df568b3eb457765",
+          "hash_timestamp": "2026-06-18T15:09:48.180838+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-56-11_.csv",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p5_normalisation_and_anomaly_checking\\controller_ios\\flight_records\\norm_DJIFlightRecord_2017-08-29__11-56-11_.csv",
+          "source_identification": "controller_ios",
+          "parent_sha256": "5eb0c5fb89c5495beaa4bb4f80626f1bac4d0261cbd6bdb6ea08461ace566d4b",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "type": "normalised",
+          "artefact_category": "flight_records",
+          "size": 4898991,
+          "sha1": "32501834b96fd41e8146b4a5f6e6e376a8f50b2e",
+          "sha256": "8eabd8c92e3a5b8f98990f073ec6b96ae3c529c31a776a4d771f334a787df359",
+          "hash_timestamp": "2026-06-18T15:09:48.960770+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_49_25.thumbnail",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p5_normalisation_and_anomaly_checking\\controller_ios\\images\\2017_08_29_11_49_25.png",
+          "source_identification": "controller_ios",
+          "parent_sha256": "25daf226308aabb61bac00d1733fa42cfd8eaf8daf860fc3c661474bfce893d7",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "type": "normalised",
+          "artefact_category": "images",
+          "size": 133339,
+          "sha1": "461bce7110fd7e82574cca032daf05bbd8aef5e0",
+          "sha256": "a81a737dfbeea19beaa9af889674a0c6acc43dee962d07331344fe209d1c3327",
+          "hash_timestamp": "2026-06-18T15:09:48.968835+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_56_13.thumbnail",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p5_normalisation_and_anomaly_checking\\controller_ios\\images\\2017_08_29_11_56_13.png",
+          "source_identification": "controller_ios",
+          "parent_sha256": "99c2340e85da7200d91bc150e2aff75a6aae1cf3918740d2a9b748b9f7aaf21b",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "type": "normalised",
+          "artefact_category": "images",
+          "size": 118565,
+          "sha1": "bbcf52c2a0d747d2970ac40fa43f34d5067f988f",
+          "sha256": "c4bf182b90aa0c4a369c87f4c0f02abd4a097b94ed76d737f00cd242abe6f46f",
+          "hash_timestamp": "2026-06-18T15:09:48.977495+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_56_59.thumbnail",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p5_normalisation_and_anomaly_checking\\controller_ios\\images\\2017_08_29_11_56_59.png",
+          "source_identification": "controller_ios",
+          "parent_sha256": "8c59fcbd20ede866bfb60da89e54433becdee7eddabfad0747215f2ba03cd246",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "type": "normalised",
+          "artefact_category": "images",
+          "size": 106938,
+          "sha1": "c7c0dae3ba9065b57a0a7ac33c5f8348fb6e57be",
+          "sha256": "ea755f7e7620315f9ec7690ad956ecbc30f63cedf606fa20f30ccefa244b292f",
+          "hash_timestamp": "2026-06-18T15:09:48.989040+00:00"
+        },
+        {
+          "source_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_59_15.thumbnail",
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p5_normalisation_and_anomaly_checking\\controller_ios\\images\\2017_08_29_11_59_15.png",
+          "source_identification": "controller_ios",
+          "parent_sha256": "004b4df96574a841dd026bac84b2a48d9aac0f44d4013768df8fcc2ea902db47",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "type": "normalised",
+          "artefact_category": "images",
+          "size": 46681,
+          "sha1": "3e6c4b78b66498293714aaa6275f3ef3fcf41e95",
+          "sha256": "122a474f027fda26fc77a79e78aacf474f94ef4713970ab7ff0f1bff79ad7edd",
+          "hash_timestamp": "2026-06-18T15:09:49.001339+00:00"
+        }
+      ],
+      "derived_anomalies": [
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\databases\\djiFMDB.db",
+          "evidence_sha256": "c3635c4495369db4324667ff800fa21938ab44d19853d7cf5c462d5795a4eebe",
+          "evidence_category": "databases",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "database_empty": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\databases\\statistics.db",
+          "evidence_sha256": "83bfc672a35016dcdfa168cbc780d6219345ddfe601ad75087ce879503a3058a",
+          "evidence_category": "databases",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "database_empty": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\flight_logs\\2017-08-29_11_49_33-08RDD9100100KG.dat",
+          "evidence_sha256": "80d4fb7edfc1815768bbdde8764b1c71e60def03f163691023a34f3a55007790",
+          "evidence_category": "flight_logs",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "format": "json_array_log",
+              "entries": [
+                {
+                  "timestamp": "2017-08-29 11:49:33",
+                  "message": "[Tips] Taking Off"
+                },
+                {
+                  "timestamp": "2017-08-29 11:49:34",
+                  "message": "[Tips] Taking Off"
+                },
+                {
+                  "timestamp": "2017-08-29 11:49:35",
+                  "message": "Home Point Recorded. RTH Altitude:\u00a0 30m."
+                },
+                {
+                  "timestamp": "2017-08-29 11:49:52",
+                  "message": "[Tips] Landing"
+                },
+                {
+                  "timestamp": "2017-08-29 11:49:52",
+                  "message": "Obstacle Avoidance will be disabled in landing."
+                },
+                {
+                  "timestamp": "2017-08-29 11:50:08",
+                  "message": "Ground Plain. Safe to Land."
+                },
+                {
+                  "timestamp": "2017-08-29 11:50:40",
+                  "message": "[Tips] Taking Off"
+                },
+                {
+                  "timestamp": "2017-08-29 11:50:41",
+                  "message": "[Tips] Taking Off"
+                },
+                {
+                  "timestamp": "2017-08-29 11:50:43",
+                  "message": "Home Point Recorded. RTH Altitude:\u00a0 30m."
+                },
+                {
+                  "timestamp": "2017-08-29 11:53:00",
+                  "message": "[Tips] Aircraft is returning to the Home Point. Minimum RTH Altitude is 98ft. You can reset the RTH Altitude in Remote Controller Settings after cancelling RTH."
+                },
+                {
+                  "timestamp": "2017-08-29 11:53:27",
+                  "message": "Obstacle Avoidance will be disabled in landing."
+                },
+                {
+                  "timestamp": "2017-08-29 11:53:56",
+                  "message": "[Precision Landing] Locating Landing Point"
+                },
+                {
+                  "timestamp": "2017-08-29 11:54:08",
+                  "message": "[Tips] Landing Canceled"
+                },
+                {
+                  "timestamp": "2017-08-29 11:54:26",
+                  "message": "[TapFly Flight Ended] Forward Obstacle Sensing not Responding"
+                },
+                {
+                  "timestamp": "2017-08-29 11:54:50",
+                  "message": "Obstacle Avoidance will be disabled in landing."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\flight_logs\\2017-08-29_11_56_11-08RDD9100100KG.dat",
+          "evidence_sha256": "831ae86486717274464b0e3d32adffe253d7cb2ae7990e99a248f0af9fc8c146",
+          "evidence_category": "flight_logs",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "format": "json_array_log",
+              "entries": [
+                {
+                  "timestamp": "2017-08-29 11:56:11",
+                  "message": "[Tips] Taking Off"
+                },
+                {
+                  "timestamp": "2017-08-29 11:56:12",
+                  "message": "[Tips] Taking Off"
+                },
+                {
+                  "timestamp": "2017-08-29 11:56:13",
+                  "message": "Home Point Recorded. RTH Altitude:\u00a0 30m."
+                },
+                {
+                  "timestamp": "2017-08-29 11:56:13",
+                  "message": "Tap the screen lightly to focus."
+                },
+                {
+                  "timestamp": "2017-08-29 11:56:45",
+                  "message": "[Cannot enter TapFly Mode.] Max Flight Distance Reached. Adjust in Main Controller Settings if necessary."
+                },
+                {
+                  "timestamp": "2017-08-29 11:57:29",
+                  "message": "[Cannot enter TapFly Mode.] Max Flight Distance Reached. Adjust in Main Controller Settings if necessary."
+                },
+                {
+                  "timestamp": "2017-08-29 11:58:00",
+                  "message": "[Cannot enter TapFly Mode.] Max Flight Distance Reached. Adjust in Main Controller Settings if necessary."
+                },
+                {
+                  "timestamp": "2017-08-29 11:59:07",
+                  "message": "[Warning] Max Flight Distance Reached. Adjust in Main Controller Settings if necessary."
+                },
+                {
+                  "timestamp": "2017-08-29 11:59:20",
+                  "message": "[Tips] Landing"
+                },
+                {
+                  "timestamp": "2017-08-29 11:59:20",
+                  "message": "Obstacle Avoidance will be disabled in landing."
+                },
+                {
+                  "timestamp": "2017-08-29 11:59:34",
+                  "message": "[Tips] Landing Canceled"
+                },
+                {
+                  "timestamp": "2017-08-29 11:59:35",
+                  "message": "[Warning] Max Flight Distance Reached. Adjust in Main Controller Settings if necessary."
+                },
+                {
+                  "timestamp": "2017-08-29 12:02:05",
+                  "message": "Obstacle Avoidance will be disabled in landing."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\flight_logs\\app_log.txt",
+          "evidence_sha256": "52bf2e2d07cc4e182dc7fd54ffa59393f3273ba94a8885d30466f8731d9d820d",
+          "evidence_category": "flight_logs",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "non_readable": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\flight_logs\\upgradeLog_0.txt",
+          "evidence_sha256": "7886db0f159aa6e6661b308636b94bdb01a555659cb361bf308599b4a1e49abc",
+          "evidence_category": "flight_logs",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "format": "bracketed_log",
+              "entries": [
+                {
+                  "timestamp": "2017-08-26 11:51:22.828",
+                  "message": "set progress handler: <__NSMallocBlock__: 0x17185e360>"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:22.829",
+                  "message": "try time: 2"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:22.829",
+                  "message": "request (8, 1) enter upgrade"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.190",
+                  "message": "firmware pack lenght: 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.296",
+                  "message": "get ftp info, ip 192.168.2.1"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.300",
+                  "message": "start transfrer to 192.168.2.1:21"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.336",
+                  "message": "send 8192 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.344",
+                  "message": "send 16384 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.348",
+                  "message": "send 24576 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.351",
+                  "message": "send 32768 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.352",
+                  "message": "send 40960 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.353",
+                  "message": "send 49152 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.356",
+                  "message": "send 57344 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.357",
+                  "message": "send 65536 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.359",
+                  "message": "send 73728 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.360",
+                  "message": "send 81920 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.364",
+                  "message": "send 90112 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.365",
+                  "message": "send 98304 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.366",
+                  "message": "send 106496 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.367",
+                  "message": "send 114688 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.370",
+                  "message": "send 122880 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.371",
+                  "message": "send 131072 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.382",
+                  "message": "send 139264 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.385",
+                  "message": "send 147456 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.385",
+                  "message": "send 155648 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.386",
+                  "message": "send 163840 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.389",
+                  "message": "send 172032 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.391",
+                  "message": "send 180224 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.392",
+                  "message": "send 188416 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.406",
+                  "message": "send 196608 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.407",
+                  "message": "send 204800 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.409",
+                  "message": "send 212992 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.420",
+                  "message": "send 221184 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.421",
+                  "message": "send 229376 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.423",
+                  "message": "send 237568 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.424",
+                  "message": "send 245760 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.424",
+                  "message": "send 253952 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.439",
+                  "message": "send 262144 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.443",
+                  "message": "send 270336 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.443",
+                  "message": "send 278528 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.455",
+                  "message": "send 286720 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.456",
+                  "message": "send 294912 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.457",
+                  "message": "send 303104 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.458",
+                  "message": "send 311296 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.459",
+                  "message": "send 319488 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.460",
+                  "message": "send 327680 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.466",
+                  "message": "send 335872 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.474",
+                  "message": "send 344064 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.480",
+                  "message": "send 352256 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.482",
+                  "message": "send 360448 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.482",
+                  "message": "send 368640 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.490",
+                  "message": "send 376832 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.490",
+                  "message": "send 385024 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.492",
+                  "message": "send 393216 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.502",
+                  "message": "send 401408 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.503",
+                  "message": "send 409600 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.504",
+                  "message": "send 417792 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.506",
+                  "message": "send 425984 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.507",
+                  "message": "send 434176 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.507",
+                  "message": "send 442368 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.510",
+                  "message": "send 450560 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.511",
+                  "message": "send 458752 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.511",
+                  "message": "send 466944 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.511",
+                  "message": "send 475136 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.513",
+                  "message": "send 483328 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.513",
+                  "message": "send 491520 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.514",
+                  "message": "send 499712 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.514",
+                  "message": "send 507904 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.516",
+                  "message": "send 516096 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.516",
+                  "message": "send 524288 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.517",
+                  "message": "send 532480 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.517",
+                  "message": "send 540672 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.521",
+                  "message": "send 548864 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.527",
+                  "message": "send 557056 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.528",
+                  "message": "send 565248 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.540",
+                  "message": "send 573440 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.541",
+                  "message": "send 581632 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.541",
+                  "message": "send 589824 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.542",
+                  "message": "send 598016 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.544",
+                  "message": "send 606208 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.545",
+                  "message": "send 614400 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.546",
+                  "message": "send 622592 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.558",
+                  "message": "send 630784 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.562",
+                  "message": "send 638976 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.563",
+                  "message": "send 647168 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.563",
+                  "message": "send 655360 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.567",
+                  "message": "send 663552 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.567",
+                  "message": "send 671744 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.568",
+                  "message": "send 679936 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.597",
+                  "message": "send 688128 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.600",
+                  "message": "send 696320 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.600",
+                  "message": "send 704512 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.601",
+                  "message": "send 712704 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.601",
+                  "message": "send 720896 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.602",
+                  "message": "send 729088 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.602",
+                  "message": "send 737280 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.603",
+                  "message": "send 745472 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.603",
+                  "message": "send 753664 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.608",
+                  "message": "send 761856 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.609",
+                  "message": "send 770048 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.609",
+                  "message": "send 778240 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.611",
+                  "message": "send 786432 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.614",
+                  "message": "send 794624 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.621",
+                  "message": "send 802816 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.622",
+                  "message": "send 811008 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.624",
+                  "message": "send 819200 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.624",
+                  "message": "send 827392 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.624",
+                  "message": "send 835584 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.625",
+                  "message": "send 843776 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.627",
+                  "message": "send 851968 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.628",
+                  "message": "send 860160 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.628",
+                  "message": "send 868352 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.631",
+                  "message": "send 876544 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.631",
+                  "message": "send 884736 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.631",
+                  "message": "send 892928 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.632",
+                  "message": "send 901120 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.647",
+                  "message": "send 909312 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.648",
+                  "message": "send 917504 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.698",
+                  "message": "send 925696 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.699",
+                  "message": "send 933888 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.701",
+                  "message": "send 942080 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.702",
+                  "message": "send 950272 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.702",
+                  "message": "send 958464 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.702",
+                  "message": "send 966656 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.705",
+                  "message": "send 974848 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.705",
+                  "message": "send 983040 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.706",
+                  "message": "send 991232 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.711",
+                  "message": "send 999424 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.712",
+                  "message": "send 1007616 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.712",
+                  "message": "send 1015808 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.717",
+                  "message": "send 1024000 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.720",
+                  "message": "send 1032192 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.721",
+                  "message": "send 1040384 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.721",
+                  "message": "send 1048576 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.722",
+                  "message": "send 1056768 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.725",
+                  "message": "send 1064960 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.725",
+                  "message": "send 1073152 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.726",
+                  "message": "send 1081344 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.728",
+                  "message": "send 1089536 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.729",
+                  "message": "send 1097728 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.732",
+                  "message": "send 1105920 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.733",
+                  "message": "send 1114112 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.736",
+                  "message": "send 1122304 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.736",
+                  "message": "send 1130496 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.736",
+                  "message": "send 1138688 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.749",
+                  "message": "send 1146880 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.752",
+                  "message": "send 1155072 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.753",
+                  "message": "send 1163264 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.757",
+                  "message": "send 1171456 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.758",
+                  "message": "send 1179648 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.760",
+                  "message": "send 1187840 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.761",
+                  "message": "send 1196032 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.761",
+                  "message": "send 1204224 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.764",
+                  "message": "send 1212416 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.764",
+                  "message": "send 1220608 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.764",
+                  "message": "send 1228800 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.765",
+                  "message": "send 1236992 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.770",
+                  "message": "send 1245184 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.770",
+                  "message": "send 1253376 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.770",
+                  "message": "send 1261568 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.771",
+                  "message": "send 1269760 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.773",
+                  "message": "send 1277952 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.783",
+                  "message": "send 1286144 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.783",
+                  "message": "send 1294336 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.787",
+                  "message": "send 1302528 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.787",
+                  "message": "send 1310720 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.787",
+                  "message": "send 1318912 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.787",
+                  "message": "send 1327104 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.790",
+                  "message": "send 1335296 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.803",
+                  "message": "send 1343488 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.803",
+                  "message": "send 1351680 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.803",
+                  "message": "send 1359872 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.807",
+                  "message": "send 1368064 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.808",
+                  "message": "send 1376256 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.808",
+                  "message": "send 1384448 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.808",
+                  "message": "send 1392640 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.811",
+                  "message": "send 1400832 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.811",
+                  "message": "send 1409024 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.812",
+                  "message": "send 1417216 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.815",
+                  "message": "send 1425408 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.815",
+                  "message": "send 1433600 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.816",
+                  "message": "send 1441792 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.816",
+                  "message": "send 1449984 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.819",
+                  "message": "send 1458176 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:23.827",
+                  "message": "send 1461450 / 1461450"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:24.725",
+                  "message": "start send upgrade finished pack"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:24.726",
+                  "message": "check sum data: <d41d8cd9 8f00b204 e9800998 ecf8427e>"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:25.813",
+                  "message": "push upgrade progress: 1%"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:26.821",
+                  "message": "push upgrade progress: 7%"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:27.217",
+                  "message": "push upgrade progress: 95%"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:29.038",
+                  "message": "push upgrade progress: 95%"
+                },
+                {
+                  "timestamp": "2017-08-26 11:51:30.142",
+                  "message": "push upgrade progress: 100%"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p5_normalisation_and_anomaly_checking\\controller_ios\\flight_records\\norm_DJIFlightRecord_2017-08-29__11-49-33_.csv",
+          "evidence_sha256": "8c8a62f8299111b0f7f16665c95c1be0129837766b74c03973feb5cbd08526bd",
+          "evidence_category": "flight_records",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "altitude_negative": [386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 396, 397, 398, 399, 400, 401, 402, 403, 404, 405],
+              "altitude_spike": [198, 269],
+              "contains_no_value": ["APP_GPS.accuracy", "APP_GPS.latitude", "APP_GPS.longitude", "APP_SER_WARN.warn", "CENTER_BATTERY.connStatus", "CENTER_BATTERY.errorType", "CENTER_BATTERY.isBatteryOnCharge", "CENTER_BATTERY.isNeedStudy", "CENTER_BATTERY.lastStudyCycle", "CENTER_BATTERY.life", "CENTER_BATTERY.loopNum", "CENTER_BATTERY.productDate", "CENTER_BATTERY.serialNo", "CENTER_BATTERY.totalStudyCycle", "CENTER_BATTERY.voltageCell4 [V]", "CENTER_BATTERY.voltageCell5 [V]", "CENTER_BATTERY.voltageCell6 [V]", "CUSTOM.isPhoto", "CUSTOM.isVideo", "DEFORM.deformMode", "DEFORM.deformMode.RAW", "DEFORM.deformStatus", "DEFORM.deformStatus.RAW", "DEFORM.isDeformProtected", "DEFORM.isExceptionState", "DETAILS.area", "DETAILS.city", "DETAILS.citypart", "DETAILS.rcSn", "DETAILS.street", "FIRMWARE.version", "OSD.motorFailReason", "RC.aileron", "RC.bandwidth", "RC.custom1", "RC.custom2", "RC.elevator", "RC.gimbal", "RC.goHome", "RC.isWheelChanged", "RC.mode", "RC.playback", "RC.record", "RC.rudder", "RC.shutter", "RC.throttle", "RC.wheelClick", "RC.wheelOffset", "RC_GPS.accuracy", "RC_GPS.gpsNum", "RC_GPS.gpsStatus", "RC_GPS.latitude", "RC_GPS.longitude", "RC_GPS.startupTime", "RC_GPS.xSpeed [m/s]", "RC_GPS.ySpeed [m/s]", "RECOVER.rcSn"],
+              "contains_constant_value": ["APP_WARN.warn", "CAMERA_INFO.cameraType", "CAMERA_INFO.connectState", "CAMERA_INFO.enabledPhoto", "CAMERA_INFO.encryptStatus", "CAMERA_INFO.firmErrorType", "CAMERA_INFO.firmUpgradeState", "CAMERA_INFO.hotState", "CAMERA_INFO.isStoring", "CAMERA_INFO.isTimePhotoing", "CAMERA_INFO.mode", "CAMERA_INFO.photoState", "CAMERA_INFO.recordState", "CAMERA_INFO.remainedTime", "CAMERA_INFO.sdCardInsertState", "CAMERA_INFO.sdCardState", "CAMERA_INFO.sdCardTotalSize", "CAMERA_INFO.sensorState", "CAMERA_INFO.timeSyncState", "CAMERA_INFO.usbState", "CAMERA_INFO.version", "CENTER_BATTERY.fullCapacity [mAh]", "DETAILS.activeTimestamp", "DETAILS.aircraftName", "DETAILS.aircraftSnBytes", "DETAILS.appType", "DETAILS.appVersion", "DETAILS.batterySn", "DETAILS.cameraSn", "DETAILS.droneType", "DETAILS.isFavorite", "DETAILS.isNew", "DETAILS.latitude", "DETAILS.longitude", "DETAILS.maxHeight [m]", "DETAILS.maxHorizontalSpeed [m/s]", "DETAILS.maxVerticalSpeed [m/s]", "DETAILS.needUpload", "DETAILS.photoNum", "DETAILS.recordLineCount", "DETAILS.takeOffAltitude [m]", "DETAILS.timestamp", "DETAILS.totalDistance [m]", "DETAILS.totalTime [s]", "DETAILS.videoTime [s]", "GIMBAL.autoCalibrationResult", "GIMBAL.isAutoCalibration", "GIMBAL.isDoubleClick", "GIMBAL.isPitchInLimit", "GIMBAL.isRollInLimit", "GIMBAL.isSingleClick", "GIMBAL.isStuck", "GIMBAL.isTopPosition", "GIMBAL.isTripleClick", "GIMBAL.isYawInLimit", "GIMBAL.mode", "GIMBAL.mode.RAW", "GIMBAL.pitch", "GIMBAL.pitchAdjust", "GIMBAL.roll", "GIMBAL.rollAdjust", "GIMBAL.version", "GIMBAL.yawAngle", "HOME.aircraftHeadDirection", "HOME.compassCeleStatus", "HOME.courseLockAngle", "HOME.dataRecorderFileIndex", "HOME.dataRecorderRemainCapacity", "HOME.dataRecorderRemainTime", "HOME.dataRecorderStatus", "HOME.forceLandingHeight [m]", "HOME.goHomeHeight [m]", "HOME.goHomeMode", "HOME.goHomeStatus", "HOME.hasGoHome", "HOME.height [m]", "HOME.heightLimitStatus", "HOME.iocMode", "HOME.isBeginnerMode", "HOME.isBigGale", "HOME.isBigGaleWarning", "HOME.isCompassCeleing", "HOME.isCompassInstallErr", "HOME.isDynamicHomePointEnabled", "HOME.isFanCurrentInAbnormalState", "HOME.isFlycInNavigationMode", "HOME.isFlycInSimulationMode", "HOME.isHomeRecord", "HOME.isIOCEnabled", "HOME.isMultipleModeOpen", "HOME.isReachedLimitDistance", "HOME.isReachedLimitHeight", "HOME.isWingBroken", "HOME.motor1EscmState", "HOME.motor2EscmState", "HOME.motor3EscmState", "HOME.motor4EscmState", "HOME.motor5EscmState", "HOME.motor6EscmState", "HOME.motor7EscmState", "HOME.motor8EscmState", "HOME.paddleState", "HOME.useAbsoluteHeight", "MC_PARAM.OAenabled", "MC_PARAM.VPSenabled", "MC_PARAM.failSafeAction", "MC_PARAM.rthOAenabled", "OSD.battery", "OSD.batteryType", "OSD.canIOCWork", "OSD.compassError", "OSD.ctrlDevice", "OSD.ctrlDevice.RAW", "OSD.droneType", "OSD.flycVersion", "OSD.goHomeStatus", "OSD.goHomeStatus.RAW", "OSD.gpsLevel", "OSD.imuInitFailReason", "OSD.imuInitFailReason.RAW", "OSD.isAcceletorOverRange", "OSD.isBarometerDeadInAir", "OSD.isGPSused", "OSD.isGoHomeHeightModified", "OSD.isImuPreheated", "OSD.isMotorBlocked", "OSD.isMotorUp", "OSD.isNotEnoughForce", "OSD.isOutOfLimit", "OSD.isPropellerCatapult", "OSD.isQuickSpin", "OSD.isSwaveWork", "OSD.isVibrating", "OSD.isVisionUsed", "OSD.modeChannel", "OSD.motorFailReason.RAW", "OSD.motorRevolution", "OSD.motorStartFailedCause", "OSD.motorStartFailedCause.RAW", "OSD.nonGPSCause", "OSD.nonGPSCause.RAW", "OSD.voltageWarning", "OSD.waveError", "RECOVER.activeTimestamp", "RECOVER.aircraftName", "RECOVER.aircraftSnBytes", "RECOVER.appType", "RECOVER.appVersion", "RECOVER.batterySn", "RECOVER.cameraSn", "RECOVER.droneType", "RECOVER.gimbalType", "SMART_BATTERY.goHomeCountdown", "SMART_BATTERY.goHomeStatus", "SMART_BATTERY.goHomeStatus.RAW", "SMART_BATTERY.goHomeTime [s]", "SMART_BATTERY.lowWarning", "SMART_BATTERY.lowWarningGoHome", "SMART_BATTERY.seriousLowWarning", "SMART_BATTERY.seriousLowWarningLanding", "SMART_BATTERY.status", "SMART_BATTERY.status.RAW", "SMART_BATTERY.voltagePercent"]
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p5_normalisation_and_anomaly_checking\\controller_ios\\flight_records\\norm_DJIFlightRecord_2017-08-29__11-50-40_.csv",
+          "evidence_sha256": "a1184a01598e32feec6b8eff3105decc191a2ae76c85a88a4df568b3eb457765",
+          "evidence_category": "flight_records",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "altitude_spike": [1463, 1503, 1505, 1518, 1751, 1758, 1833, 1851],
+              "contains_no_value": ["APP_GPS.accuracy", "APP_GPS.latitude", "APP_GPS.longitude", "APP_SER_WARN.warn", "CENTER_BATTERY.connStatus", "CENTER_BATTERY.errorType", "CENTER_BATTERY.isBatteryOnCharge", "CENTER_BATTERY.isNeedStudy", "CENTER_BATTERY.lastStudyCycle", "CENTER_BATTERY.life", "CENTER_BATTERY.loopNum", "CENTER_BATTERY.productDate", "CENTER_BATTERY.serialNo", "CENTER_BATTERY.totalStudyCycle", "CENTER_BATTERY.voltageCell4 [V]", "CENTER_BATTERY.voltageCell5 [V]", "CENTER_BATTERY.voltageCell6 [V]", "CUSTOM.isPhoto", "CUSTOM.isVideo", "DEFORM.deformMode", "DEFORM.deformMode.RAW", "DEFORM.deformStatus", "DEFORM.deformStatus.RAW", "DEFORM.isDeformProtected", "DEFORM.isExceptionState", "DETAILS.area", "DETAILS.city", "DETAILS.citypart", "DETAILS.rcSn", "DETAILS.street", "FIRMWARE.version", "OSD.motorFailReason", "RC.aileron", "RC.bandwidth", "RC.custom1", "RC.custom2", "RC.elevator", "RC.gimbal", "RC.goHome", "RC.isWheelChanged", "RC.mode", "RC.playback", "RC.record", "RC.rudder", "RC.shutter", "RC.throttle", "RC.wheelClick", "RC.wheelOffset", "RC_GPS.accuracy", "RC_GPS.gpsNum", "RC_GPS.gpsStatus", "RC_GPS.latitude", "RC_GPS.longitude", "RC_GPS.startupTime", "RC_GPS.xSpeed [m/s]", "RC_GPS.ySpeed [m/s]", "RECOVER.rcSn"],
+              "contains_constant_value": ["CAMERA_INFO.cameraType", "CAMERA_INFO.connectState", "CAMERA_INFO.encryptStatus", "CAMERA_INFO.firmErrorType", "CAMERA_INFO.firmUpgradeState", "CAMERA_INFO.hotState", "CAMERA_INFO.isStoring", "CAMERA_INFO.isTimePhotoing", "CAMERA_INFO.mode", "CAMERA_INFO.photoState", "CAMERA_INFO.recordState", "CAMERA_INFO.remainedTime", "CAMERA_INFO.sdCardInsertState", "CAMERA_INFO.sdCardState", "CAMERA_INFO.sdCardTotalSize", "CAMERA_INFO.sensorState", "CAMERA_INFO.timeSyncState", "CAMERA_INFO.usbState", "CAMERA_INFO.version", "DETAILS.activeTimestamp", "DETAILS.aircraftName", "DETAILS.aircraftSnBytes", "DETAILS.appType", "DETAILS.appVersion", "DETAILS.batterySn", "DETAILS.cameraSn", "DETAILS.droneType", "DETAILS.isFavorite", "DETAILS.isNew", "DETAILS.latitude", "DETAILS.longitude", "DETAILS.maxHeight [m]", "DETAILS.maxHorizontalSpeed [m/s]", "DETAILS.maxVerticalSpeed [m/s]", "DETAILS.needUpload", "DETAILS.photoNum", "DETAILS.recordLineCount", "DETAILS.takeOffAltitude [m]", "DETAILS.timestamp", "DETAILS.totalDistance [m]", "DETAILS.totalTime [s]", "DETAILS.videoTime [s]", "GIMBAL.autoCalibrationResult", "GIMBAL.isAutoCalibration", "GIMBAL.isDoubleClick", "GIMBAL.isPitchInLimit", "GIMBAL.isRollInLimit", "GIMBAL.isSingleClick", "GIMBAL.isStuck", "GIMBAL.isTopPosition", "GIMBAL.isTripleClick", "GIMBAL.isYawInLimit", "GIMBAL.mode", "GIMBAL.mode.RAW", "GIMBAL.pitch", "GIMBAL.pitchAdjust", "GIMBAL.roll", "GIMBAL.rollAdjust", "GIMBAL.version", "GIMBAL.yawAngle", "HOME.aircraftHeadDirection", "HOME.compassCeleStatus", "HOME.courseLockAngle", "HOME.dataRecorderFileIndex", "HOME.dataRecorderRemainTime", "HOME.dataRecorderStatus", "HOME.forceLandingHeight [m]", "HOME.goHomeHeight [m]", "HOME.goHomeMode", "HOME.goHomeStatus", "HOME.hasGoHome", "HOME.height [m]", "HOME.heightLimitStatus", "HOME.iocMode", "HOME.isBeginnerMode", "HOME.isBigGale", "HOME.isBigGaleWarning", "HOME.isCompassCeleing", "HOME.isCompassInstallErr", "HOME.isDynamicHomePointEnabled", "HOME.isFanCurrentInAbnormalState", "HOME.isFlycInNavigationMode", "HOME.isFlycInSimulationMode", "HOME.isHomeRecord", "HOME.isIOCEnabled", "HOME.isMultipleModeOpen", "HOME.isReachedLimitDistance", "HOME.isReachedLimitHeight", "HOME.isWingBroken", "HOME.longitude", "HOME.motor1EscmState", "HOME.motor2EscmState", "HOME.motor3EscmState", "HOME.motor4EscmState", "HOME.motor5EscmState", "HOME.motor6EscmState", "HOME.motor7EscmState", "HOME.motor8EscmState", "HOME.paddleState", "HOME.useAbsoluteHeight", "MC_PARAM.OAenabled", "MC_PARAM.VPSenabled", "MC_PARAM.failSafeAction", "MC_PARAM.rthOAenabled", "OSD.battery", "OSD.batteryType", "OSD.canIOCWork", "OSD.compassError", "OSD.droneType", "OSD.flycVersion", "OSD.gpsLevel", "OSD.imuInitFailReason", "OSD.imuInitFailReason.RAW", "OSD.isAcceletorOverRange", "OSD.isBarometerDeadInAir", "OSD.isGPSused", "OSD.isGoHomeHeightModified", "OSD.isImuPreheated", "OSD.isMotorBlocked", "OSD.isMotorUp", "OSD.isNotEnoughForce", "OSD.isOutOfLimit", "OSD.isPropellerCatapult", "OSD.isQuickSpin", "OSD.isVibrating", "OSD.isVisionUsed", "OSD.modeChannel", "OSD.motorFailReason.RAW", "OSD.motorRevolution", "OSD.motorStartFailedCause", "OSD.motorStartFailedCause.RAW", "OSD.nonGPSCause", "OSD.nonGPSCause.RAW", "OSD.voltageWarning", "OSD.waveError", "RECOVER.activeTimestamp", "RECOVER.aircraftName", "RECOVER.aircraftSnBytes", "RECOVER.appType", "RECOVER.appVersion", "RECOVER.batterySn", "RECOVER.cameraSn", "RECOVER.droneType", "RECOVER.gimbalType", "SMART_BATTERY.goHomeCountdown", "SMART_BATTERY.goHomeStatus", "SMART_BATTERY.goHomeStatus.RAW", "SMART_BATTERY.landBattery", "SMART_BATTERY.lowWarning", "SMART_BATTERY.lowWarningGoHome", "SMART_BATTERY.seriousLowWarning", "SMART_BATTERY.seriousLowWarningLanding", "SMART_BATTERY.status", "SMART_BATTERY.status.RAW", "SMART_BATTERY.voltagePercent"]
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p5_normalisation_and_anomaly_checking\\controller_ios\\flight_records\\norm_DJIFlightRecord_2017-08-29__11-56-11_.csv",
+          "evidence_sha256": "8eabd8c92e3a5b8f98990f073ec6b96ae3c529c31a776a4d771f334a787df359",
+          "evidence_category": "flight_records",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "altitude_spike": [51, 333, 1138, 1906, 1940, 1945, 1952, 1955, 1960, 1975, 2118, 3290, 3439],
+              "contains_no_value": ["APP_GPS.accuracy", "APP_GPS.latitude", "APP_GPS.longitude", "APP_SER_WARN.warn", "CENTER_BATTERY.connStatus", "CENTER_BATTERY.errorType", "CENTER_BATTERY.isBatteryOnCharge", "CENTER_BATTERY.isNeedStudy", "CENTER_BATTERY.lastStudyCycle", "CENTER_BATTERY.life", "CENTER_BATTERY.loopNum", "CENTER_BATTERY.productDate", "CENTER_BATTERY.serialNo", "CENTER_BATTERY.totalStudyCycle", "CENTER_BATTERY.voltageCell4 [V]", "CENTER_BATTERY.voltageCell5 [V]", "CENTER_BATTERY.voltageCell6 [V]", "CUSTOM.isPhoto", "DEFORM.deformMode", "DEFORM.deformMode.RAW", "DEFORM.deformStatus", "DEFORM.deformStatus.RAW", "DEFORM.isDeformProtected", "DEFORM.isExceptionState", "DETAILS.area", "DETAILS.city", "DETAILS.citypart", "DETAILS.rcSn", "DETAILS.street", "FIRMWARE.version", "OSD.motorFailReason", "RC.aileron", "RC.bandwidth", "RC.custom1", "RC.custom2", "RC.elevator", "RC.gimbal", "RC.goHome", "RC.isWheelChanged", "RC.mode", "RC.playback", "RC.record", "RC.rudder", "RC.shutter", "RC.throttle", "RC.wheelClick", "RC.wheelOffset", "RC_GPS.accuracy", "RC_GPS.gpsNum", "RC_GPS.gpsStatus", "RC_GPS.latitude", "RC_GPS.longitude", "RC_GPS.startupTime", "RC_GPS.xSpeed [m/s]", "RC_GPS.ySpeed [m/s]", "RECOVER.rcSn"],
+              "contains_constant_value": ["CAMERA_INFO.cameraType", "CAMERA_INFO.connectState", "CAMERA_INFO.enabledPhoto", "CAMERA_INFO.encryptStatus", "CAMERA_INFO.firmErrorType", "CAMERA_INFO.firmUpgradeState", "CAMERA_INFO.hotState", "CAMERA_INFO.isStoring", "CAMERA_INFO.isTimePhotoing", "CAMERA_INFO.mode", "CAMERA_INFO.photoState", "CAMERA_INFO.remainedTime", "CAMERA_INFO.sdCardInsertState", "CAMERA_INFO.sdCardState", "CAMERA_INFO.sdCardTotalSize", "CAMERA_INFO.sensorState", "CAMERA_INFO.timeSyncState", "CAMERA_INFO.usbState", "CAMERA_INFO.version", "CENTER_BATTERY.fullCapacity [mAh]", "CUSTOM.isVideo", "DETAILS.activeTimestamp", "DETAILS.aircraftName", "DETAILS.aircraftSnBytes", "DETAILS.appType", "DETAILS.appVersion", "DETAILS.batterySn", "DETAILS.cameraSn", "DETAILS.droneType", "DETAILS.isFavorite", "DETAILS.isNew", "DETAILS.latitude", "DETAILS.longitude", "DETAILS.maxHeight [m]", "DETAILS.maxHorizontalSpeed [m/s]", "DETAILS.maxVerticalSpeed [m/s]", "DETAILS.needUpload", "DETAILS.photoNum", "DETAILS.recordLineCount", "DETAILS.takeOffAltitude [m]", "DETAILS.timestamp", "DETAILS.totalDistance [m]", "DETAILS.totalTime [s]", "DETAILS.videoTime [s]", "GIMBAL.autoCalibrationResult", "GIMBAL.isAutoCalibration", "GIMBAL.isDoubleClick", "GIMBAL.isPitchInLimit", "GIMBAL.isRollInLimit", "GIMBAL.isSingleClick", "GIMBAL.isStuck", "GIMBAL.isTopPosition", "GIMBAL.isTripleClick", "GIMBAL.isYawInLimit", "GIMBAL.mode", "GIMBAL.mode.RAW", "GIMBAL.pitch", "GIMBAL.pitchAdjust", "GIMBAL.roll", "GIMBAL.rollAdjust", "GIMBAL.version", "GIMBAL.yawAngle", "HOME.aircraftHeadDirection", "HOME.compassCeleStatus", "HOME.courseLockAngle", "HOME.dataRecorderFileIndex", "HOME.dataRecorderRemainTime", "HOME.dataRecorderStatus", "HOME.forceLandingHeight [m]", "HOME.goHomeHeight [m]", "HOME.goHomeMode", "HOME.hasGoHome", "HOME.height [m]", "HOME.heightLimitStatus", "HOME.iocMode", "HOME.isBeginnerMode", "HOME.isBigGale", "HOME.isBigGaleWarning", "HOME.isCompassCeleing", "HOME.isCompassInstallErr", "HOME.isDynamicHomePointEnabled", "HOME.isFanCurrentInAbnormalState", "HOME.isFlycInSimulationMode", "HOME.isHomeRecord", "HOME.isIOCEnabled", "HOME.isMultipleModeOpen", "HOME.isReachedLimitHeight", "HOME.isWingBroken", "HOME.motor1EscmState", "HOME.motor2EscmState", "HOME.motor3EscmState", "HOME.motor4EscmState", "HOME.motor5EscmState", "HOME.motor6EscmState", "HOME.motor7EscmState", "HOME.motor8EscmState", "HOME.paddleState", "HOME.useAbsoluteHeight", "MC_PARAM.OAenabled", "MC_PARAM.VPSenabled", "MC_PARAM.failSafeAction", "MC_PARAM.rthOAenabled", "OSD.battery", "OSD.batteryType", "OSD.canIOCWork", "OSD.compassError", "OSD.droneType", "OSD.flycVersion", "OSD.goHomeStatus", "OSD.goHomeStatus.RAW", "OSD.gpsLevel", "OSD.imuInitFailReason", "OSD.imuInitFailReason.RAW", "OSD.isAcceletorOverRange", "OSD.isBarometerDeadInAir", "OSD.isGPSused", "OSD.isGoHomeHeightModified", "OSD.isImuPreheated", "OSD.isMotorBlocked", "OSD.isMotorUp", "OSD.isNotEnoughForce", "OSD.isOutOfLimit", "OSD.isPropellerCatapult", "OSD.isQuickSpin", "OSD.isVibrating", "OSD.isVisionUsed", "OSD.modeChannel", "OSD.motorFailReason.RAW", "OSD.motorRevolution", "OSD.motorStartFailedCause", "OSD.motorStartFailedCause.RAW", "OSD.nonGPSCause", "OSD.nonGPSCause.RAW", "OSD.voltageWarning", "OSD.waveError", "RECOVER.activeTimestamp", "RECOVER.aircraftName", "RECOVER.aircraftSnBytes", "RECOVER.appType", "RECOVER.appVersion", "RECOVER.batterySn", "RECOVER.cameraSn", "RECOVER.droneType", "RECOVER.gimbalType", "SMART_BATTERY.goHomeCountdown", "SMART_BATTERY.goHomeStatus", "SMART_BATTERY.goHomeStatus.RAW", "SMART_BATTERY.lowWarning", "SMART_BATTERY.lowWarningGoHome", "SMART_BATTERY.seriousLowWarning", "SMART_BATTERY.seriousLowWarningLanding", "SMART_BATTERY.status", "SMART_BATTERY.status.RAW", "SMART_BATTERY.voltagePercent"]
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\images\\2017_08_29_11_49_25_exif.json",
+          "evidence_sha256": "a81a737dfbeea19beaa9af889674a0c6acc43dee962d07331344fe209d1c3327",
+          "evidence_category": "images",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "exif_contains_no_norm_time": true,
+              "exif_contains_no_gps": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\images\\2017_08_29_11_56_13_exif.json",
+          "evidence_sha256": "c4bf182b90aa0c4a369c87f4c0f02abd4a097b94ed76d737f00cd242abe6f46f",
+          "evidence_category": "images",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "exif_contains_no_norm_time": true,
+              "exif_contains_no_gps": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\images\\2017_08_29_11_56_59_exif.json",
+          "evidence_sha256": "ea755f7e7620315f9ec7690ad956ecbc30f63cedf606fa20f30ccefa244b292f",
+          "evidence_category": "images",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "exif_contains_no_norm_time": true,
+              "exif_contains_no_gps": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\images\\2017_08_29_11_59_15_exif.json",
+          "evidence_sha256": "122a474f027fda26fc77a79e78aacf474f94ef4713970ab7ff0f1bff79ad7edd",
+          "evidence_category": "images",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "exif_contains_no_norm_time": true,
+              "exif_contains_no_gps": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\videos\\2017_08_29_11_49_25_exif.json",
+          "evidence_sha256": "a43a8d8b7b063df166c64748008f4657f896edcb08cbef452908f38700864a3a",
+          "evidence_category": "videos",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "exif_contains_no_norm_time": true,
+              "exif_contains_no_gps": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\videos\\2017_08_29_11_56_13_exif.json",
+          "evidence_sha256": "0f7c8f62e8f8f01a07f8395fcfe62812387a2897028e2b76d4f6f973de8ccf1a",
+          "evidence_category": "videos",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "exif_contains_no_norm_time": true,
+              "exif_contains_no_gps": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\videos\\2017_08_29_11_56_59_exif.json",
+          "evidence_sha256": "fd28f97f7758984e9c7e564128e96aa4aa9084d6d1e3133efae19e1d1eb9b42f",
+          "evidence_category": "videos",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "exif_contains_no_norm_time": true,
+              "exif_contains_no_gps": true
+            }
+          ]
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\videos\\2017_08_29_11_59_15_exif.json",
+          "evidence_sha256": "85ddcba332f537cd2a10041f01ba06f11a14b252577dc2516a33a779cd9d90b5",
+          "evidence_category": "videos",
+          "acquisition_method": "p5_normalisation_and_anomaly_checking",
+          "observations": [
+            {
+              "exif_contains_no_norm_time": true,
+              "exif_contains_no_gps": true
+            }
+          ]
+        }
+      ]
+    },
+    "p6_multisource_correlation": {
+      "completed_at": "2026-06-18T15:09:49.446345+00:00",
+      "flight_count": 3,
+      "flights": [
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p6_multisource_correlation\\timeline_flight01.json",
+          "flight_id": "flight_01",
+          "flights_identified": [
+            {
+              "evidence_sha256": "8c8a62f8299111b0f7f16665c95c1be0129837766b74c03973feb5cbd08526bd",
+              "start": "2017-08-29T17:49:33.091000+00:00",
+              "end": "2017-08-29T17:50:13.533000+00:00",
+              "duration_s": 40.4
+            }
+          ],
+          "correlation": {
+            "matched": false
+          },
+          "plausibly_correlated": [],
+          "possibly_correlated": []
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p6_multisource_correlation\\timeline_flight02.json",
+          "flight_id": "flight_02",
+          "flights_identified": [
+            {
+              "evidence_sha256": "a1184a01598e32feec6b8eff3105decc191a2ae76c85a88a4df568b3eb457765",
+              "start": "2017-08-29T17:50:40.861000+00:00",
+              "end": "2017-08-29T17:54:53.260000+00:00",
+              "duration_s": 252.4
+            }
+          ],
+          "correlation": {
+            "matched": false
+          },
+          "plausibly_correlated": [],
+          "possibly_correlated": []
+        },
+        {
+          "stored_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p6_multisource_correlation\\timeline_flight03.json",
+          "flight_id": "flight_03",
+          "flights_identified": [
+            {
+              "evidence_sha256": "8eabd8c92e3a5b8f98990f073ec6b96ae3c529c31a776a4d771f334a787df359",
+              "start": "2017-08-29T17:56:11.305000+00:00",
+              "end": "2017-08-29T18:02:08.320000+00:00",
+              "duration_s": 357.0
+            }
+          ],
+          "correlation": {
+            "matched": false
+          },
+          "plausibly_correlated": [],
+          "possibly_correlated": []
+        }
+      ]
+    },
+    "p7_analysis_and_validation": {
+      "completed_at": "2026-06-18T15:09:49.541619+00:00",
+      "flight_count_analysed": 3,
+      "source_coverage": [
+        {
+          "source": "controller_android",
+          "detected": false
+        },
+        {
+          "source": "controller_ios",
+          "detected": true
+        },
+        {
+          "source": "drone_sd",
+          "detected": false
+        },
+        {
+          "source": "drone_flight_storage",
+          "detected": false
+        }
+      ],
+      "artefact_coverage": [
+        {
+          "category": "account_data",
+          "count": 1,
+          "notes": []
+        },
+        {
+          "category": "databases",
+          "count": 6,
+          "notes": [
+            "2 database(s) empty (controller_ios)"
+          ]
+        },
+        {
+          "category": "drone_logs",
+          "count": 0,
+          "notes": []
+        },
+        {
+          "category": "flight_logs",
+          "count": 4,
+          "notes": [
+            "1 file(s) unreadable (binary)",
+            "formats: 1 bracketed_log, 2 json_array_log"
+          ]
+        },
+        {
+          "category": "flight_records",
+          "count": 3,
+          "notes": [
+            "3 file(s) with row anomalies",
+            "3 file(s) with empty columns",
+            "3 file(s) with constant-value columns"
+          ]
+        },
+        {
+          "category": "images",
+          "count": 4,
+          "notes": [
+            "4 file(s) missing (normalisable) EXIF timestamp",
+            "4 file(s) missing EXIF GPS coordinates"
+          ]
+        },
+        {
+          "category": "videos",
+          "count": 4,
+          "notes": [
+            "4 file(s) missing (normalisable) EXIF timestamp",
+            "4 file(s) missing EXIF GPS coordinates"
+          ]
+        }
+      ],
+      "artefact_coverage_per_source": [
+        {
+          "source": "controller_ios",
+          "artefacts": [
+            {
+              "category": "account_data",
+              "count": 1
+            },
+            {
+              "category": "databases",
+              "count": 6
+            },
+            {
+              "category": "flight_logs",
+              "count": 4
+            },
+            {
+              "category": "flight_records",
+              "count": 3
+            },
+            {
+              "category": "images",
+              "count": 4
+            },
+            {
+              "category": "videos",
+              "count": 4
+            }
+          ]
+        }
+      ],
+      "tool_status": [
+        {
+          "tool": "exiftool",
+          "invocation_count": 8,
+          "success_count": 8,
+          "status": "ok"
+        },
+        {
+          "tool": "parser_ios",
+          "invocation_count": 1,
+          "success_count": 1,
+          "status": "ok"
+        },
+        {
+          "tool": "txtlogtocsvtool",
+          "invocation_count": 3,
+          "success_count": 3,
+          "status": "ok"
+        }
+      ],
+      "account_and_drone_analysis": {
+        "drone_serial": {
+          "value": "08RDD9100100KG",
+          "corroboration_sources": [
+            "p4:b010ed7f654a4496678722d4e15b07cc74f4892b381c363f6c9eacf2dee1c7be",
+            "8c8a62f8299111b0f7f16665c95c1be0129837766b74c03973feb5cbd08526bd:0",
+            "a1184a01598e32feec6b8eff3105decc191a2ae76c85a88a4df568b3eb457765:0",
+            "8eabd8c92e3a5b8f98990f073ec6b96ae3c529c31a776a4d771f334a787df359:0"
+          ],
+          "confidence": "controller-only"
+        },
+        "drone_name": {
+          "value": "Mavic Pro",
+          "corroboration_sources": [
+            "8c8a62f8299111b0f7f16665c95c1be0129837766b74c03973feb5cbd08526bd:0",
+            "a1184a01598e32feec6b8eff3105decc191a2ae76c85a88a4df568b3eb457765:0",
+            "8eabd8c92e3a5b8f98990f073ec6b96ae3c529c31a776a4d771f334a787df359:0"
+          ],
+          "confidence": "controller-only"
+        },
+        "device_platform": {
+          "value": "iPad5,1__weibosdk__003143000__iphone__os10.3.2",
+          "corroboration_sources": [
+            "p4:b010ed7f654a4496678722d4e15b07cc74f4892b381c363f6c9eacf2dee1c7be"
+          ],
+          "confidence": "controller-only"
+        },
+        "dji_app_version": {
+          "value": "4.1.5",
+          "corroboration_sources": [
+            "p4:b010ed7f654a4496678722d4e15b07cc74f4892b381c363f6c9eacf2dee1c7be",
+            "8c8a62f8299111b0f7f16665c95c1be0129837766b74c03973feb5cbd08526bd:0",
+            "a1184a01598e32feec6b8eff3105decc191a2ae76c85a88a4df568b3eb457765:0",
+            "8eabd8c92e3a5b8f98990f073ec6b96ae3c529c31a776a4d771f334a787df359:0"
+          ],
+          "confidence": "controller-only"
+        },
+        "account_email": {
+          "value": "droneforensics@vtoinc.com",
+          "corroboration_sources": [
+            "p4:b010ed7f654a4496678722d4e15b07cc74f4892b381c363f6c9eacf2dee1c7be"
+          ],
+          "confidence": "controller-only"
+        },
+        "product_type": {
+          "value": "13",
+          "corroboration_sources": [
+            "p4:b010ed7f654a4496678722d4e15b07cc74f4892b381c363f6c9eacf2dee1c7be"
+          ],
+          "confidence": "controller-only"
+        },
+        "last_country_code": {
+          "value": "US",
+          "corroboration_sources": [
+            "p4:b010ed7f654a4496678722d4e15b07cc74f4892b381c363f6c9eacf2dee1c7be"
+          ],
+          "confidence": "controller-only"
+        },
+        "last_launch": {
+          "value": "2017-08-26T17:49:56Z",
+          "corroboration_sources": [
+            "p4:b010ed7f654a4496678722d4e15b07cc74f4892b381c363f6c9eacf2dee1c7be"
+          ],
+          "confidence": "controller-only"
+        },
+        "last_flight_date": {
+          "value": "1970-01-01T00:00:00Z",
+          "corroboration_sources": [
+            "p4:b010ed7f654a4496678722d4e15b07cc74f4892b381c363f6c9eacf2dee1c7be"
+          ],
+          "confidence": "controller-only"
+        },
+        "device_name": {
+          "value": "iPad mini 4",
+          "corroboration_sources": [
+            "p2:319e71e40fadf5c79009d167ecd1a3881e7078c818772544c91c38cfeb9a52b9"
+          ],
+          "confidence": "controller-only"
+        },
+        "installed_dji_apps": {
+          "value": [
+            "com.dji.go"
+          ],
+          "corroboration_sources": [
+            "p2:319e71e40fadf5c79009d167ecd1a3881e7078c818772544c91c38cfeb9a52b9"
+          ],
+          "confidence": "controller-only"
+        }
+      },
+      "flight_analyses": [
+        {
+          "flight_id": "flight_01",
+          "matched": false,
+          "correlation_confidence": null,
+          "source_count": 1,
+          "event_count": 15,
+          "high_confidence_event_count": 15,
+          "peak_height_m": 5.7,
+          "distance_travelled": 1.79,
+          "photo_taken": false,
+          "number_photos_taken": 0,
+          "video_taken": true,
+          "duration_recording": 48.0,
+          "flight_record_complete": true,
+          "flight_modes_observed": [
+            "EngineStart",
+            "AutoTakeoff",
+            "GPS_Atti",
+            "AutoLanding"
+          ],
+          "possibly_correlated_count": 0,
+          "plausibly_correlated_count": 0,
+          "corroboration_sources": [
+            "8c8a62f8299111b0f7f16665c95c1be0129837766b74c03973feb5cbd08526bd"
+          ]
+        },
+        {
+          "flight_id": "flight_02",
+          "matched": false,
+          "correlation_confidence": null,
+          "source_count": 1,
+          "event_count": 25,
+          "high_confidence_event_count": 25,
+          "peak_height_m": 29.6,
+          "distance_travelled": 109.51,
+          "photo_taken": false,
+          "number_photos_taken": 0,
+          "video_taken": true,
+          "duration_recording": 327.0,
+          "flight_record_complete": true,
+          "flight_modes_observed": [
+            "EngineStart",
+            "AutoTakeoff",
+            "GPS_Atti",
+            "GoHome",
+            "AutoLanding",
+            "Joystick",
+            "NaviSubMode_Pointing",
+            "ForceLanding"
+          ],
+          "possibly_correlated_count": 0,
+          "plausibly_correlated_count": 0,
+          "corroboration_sources": [
+            "a1184a01598e32feec6b8eff3105decc191a2ae76c85a88a4df568b3eb457765"
+          ]
+        },
+        {
+          "flight_id": "flight_03",
+          "matched": false,
+          "correlation_confidence": null,
+          "source_count": 1,
+          "event_count": 27,
+          "high_confidence_event_count": 27,
+          "peak_height_m": 15.3,
+          "distance_travelled": 216.44,
+          "photo_taken": false,
+          "number_photos_taken": 0,
+          "video_taken": true,
+          "duration_recording": 354.0,
+          "flight_record_complete": true,
+          "flight_modes_observed": [
+            "EngineStart",
+            "AutoTakeoff",
+            "GPS_Atti",
+            "NaviSubMode_Pointing",
+            "AutoLanding",
+            "ForceLanding"
+          ],
+          "possibly_correlated_count": 0,
+          "plausibly_correlated_count": 0,
+          "corroboration_sources": [
+            "8eabd8c92e3a5b8f98990f073ec6b96ae3c529c31a776a4d771f334a787df359"
+          ]
+        }
+      ],
+      "uncorrelated_artefacts": [
+        {"evidence_sha256": "01472f913caf3ce5d50b146cd37a6fea1a18ca4d9666b2d5dc06189a8ac5c17c"},
+        {"evidence_sha256": "c3635c4495369db4324667ff800fa21938ab44d19853d7cf5c462d5795a4eebe"},
+        {"evidence_sha256": "3af048ec88d8e3523fd0a8ef775d708348913ed6ae5ed1feeb93a3d31325334d"},
+        {"evidence_sha256": "83bfc672a35016dcdfa168cbc780d6219345ddfe601ad75087ce879503a3058a"},
+        {"evidence_sha256": "dc5faceb3d5509d4475d80d8559a7bfefed36f1ef1dd30d191701f16568c8e90"},
+        {"evidence_sha256": "dc88684c6e1dfc5c7cd07bdefa740e5affeae91cfc1e54bd8cdd2b47984024c9"},
+        {"evidence_sha256": "80d4fb7edfc1815768bbdde8764b1c71e60def03f163691023a34f3a55007790"},
+        {"evidence_sha256": "831ae86486717274464b0e3d32adffe253d7cb2ae7990e99a248f0af9fc8c146"},
+        {"evidence_sha256": "52bf2e2d07cc4e182dc7fd54ffa59393f3273ba94a8885d30466f8731d9d820d"},
+        {"evidence_sha256": "7886db0f159aa6e6661b308636b94bdb01a555659cb361bf308599b4a1e49abc"},
+        {"evidence_sha256": "a81a737dfbeea19beaa9af889674a0c6acc43dee962d07331344fe209d1c3327"},
+        {"evidence_sha256": "c4bf182b90aa0c4a369c87f4c0f02abd4a097b94ed76d737f00cd242abe6f46f"},
+        {"evidence_sha256": "ea755f7e7620315f9ec7690ad956ecbc30f63cedf606fa20f30ccefa244b292f"},
+        {"evidence_sha256": "122a474f027fda26fc77a79e78aacf474f94ef4713970ab7ff0f1bff79ad7edd"},
+        {"evidence_sha256": "a43a8d8b7b063df166c64748008f4657f896edcb08cbef452908f38700864a3a"},
+        {"evidence_sha256": "0f7c8f62e8f8f01a07f8395fcfe62812387a2897028e2b76d4f6f973de8ccf1a"},
+        {"evidence_sha256": "fd28f97f7758984e9c7e564128e96aa4aa9084d6d1e3133efae19e1d1eb9b42f"},
+        {"evidence_sha256": "85ddcba332f537cd2a10041f01ba06f11a14b252577dc2516a33a779cd9d90b5"}
+      ],
+      "coverage_score": {
+        "evidence_sources_detected": {
+          "value": 1,
+          "total": 4
+        },
+        "artefact_categories_with_data": {
+          "value": 6,
+          "total": 7
+        },
+        "flights_with_primary_correlation": {
+          "value": 0,
+          "total": 3
+        },
+        "tools_succeeded": {
+          "value": 3,
+          "total": 3
+        }
+      },
+      "conclusions": {
+        "case_overview": [
+          "1 evidence source(s) detected: controller_ios.",
+          "3 flight(s) identified; 0 with primary GPS+temporal correlation."
+        ],
+        "device_identification": [
+          "Installed DJI application(s): com.dji.go (confidence: controller-only).",
+          "Controller device: iPad mini 4 (confidence: controller-only).",
+          "Drone Serial Number: 08RDD9100100KG (confidence: controller-only).",
+          "Drone Model: Mavic Pro (confidence: controller-only).",
+          "Controller Device: iPad5,1__weibosdk__003143000__iphone__os10.3.2 (confidence: controller-only).",
+          "DJI Application Version: 4.1.5 (confidence: controller-only).",
+          "Account E-Mail: droneforensics@vtoinc.com (confidence: controller-only).",
+          "Product Type: 13 (confidence: controller-only).",
+          "Last Country Code: US (confidence: controller-only).",
+          "Last App Launch: 2017-08-26T17:49:56Z (confidence: controller-only).",
+          "Last Flight Date: 1970-01-01T00:00:00Z (confidence: controller-only)."
+        ],
+        "flight_analysis": [],
+        "media_analysis": [
+          "Flight record indicates video recording was initiated.",
+          "Images: 4 file(s) missing (normalisable) EXIF timestamp. Temporal correlation of these files is not possible without additional context.",
+          "Images: 4 file(s) missing EXIF GPS coordinates. Spatial correlation of these files is not possible without additional context.",
+          "Videos: 4 file(s) missing (normalisable) EXIF timestamp. Temporal correlation of these files is not possible without additional context.",
+          "Videos: 4 file(s) missing EXIF GPS coordinates. Spatial correlation of these files is not possible without additional context."
+        ],
+        "database_analysis": [
+          "2 database(s) empty (controller_ios)  -  no records available for analysis."
+        ],
+        "data_quality": [
+          "Flight_logs: 1 file(s) unreadable (binary)  -  file content could not be parsed.",
+          "Flight_logs: log files present in the following format(s): 1 bracketed_log, 2 json_array_log.",
+          "Flight_records: 3 file(s) with row anomalies detected in telemetry data.",
+          "Flight_records: 3 file(s) with empty columns  -  some telemetry channels contain no data.",
+          "Flight_records: 3 file(s) with constant-value columns  -  some telemetry channels may be unreliable."
+        ],
+        "further_investigation": [
+          "Note: no firmware version found - Device and account information.",
+          "Note: no last known latitude (find aircraft) found - Device and account information.",
+          "Note: no last known longitude (find aircraft) found - Device and account information.",
+          "Note: no last known altitude (find aircraft) found - Device and account information.",
+          "Note: no last known heading (find aircraft) found - Device and account information.",
+          "Note: no last known horiz. accuracy (find aircraft) found - Device and account information.",
+          "3 flight record(s) could not be correlated to a drone log (flight_01, flight_02, flight_03). Independent corroboration is absent for these flight(s).",
+          "4 database file(s) contain records and should be examined for relevant artefacts."
+        ]
+      }
+    },
+    "p8_automated_reporting": {
+      "completed_at": "2026-06-18T15:09:49.573236+00:00",
+      "report_path": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\ft-df019-2017-ios-only_forensic_baseline.pdf",
+      "plots_dir": "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p8_automated_reporting"
+    }
+  },
+  "tool_invocation_log": [
+    {
+      "timestamp": "2026-06-18T15:09:41.937957+00:00",
+      "tool_name": "parser_ios",
+      "version": null,
+      "args": [
+        "C:\\Users\\Floris\\Documents\\dji_drones\\test_mavic_pro\\df019\\2017\\controller-only-ios\\ios_logical.zip",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p2_image_parsing\\controller_ios_parsed"
+      ],
+      "return_code": null,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p2_image_parsing\\controller_ios_parsed"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T15:09:43.405028+00:00",
+      "tool_name": "txtlogtocsvtool",
+      "version": "2018-06-11",
+      "args": [
+        "C:\\Program Files (x86)\\CsvView\\executables\\TXTlogToCSVtool.exe",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-49-33_.txt",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-49-33_.csv"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-49-33_.csv"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T15:09:43.940651+00:00",
+      "tool_name": "txtlogtocsvtool",
+      "version": "2018-06-11",
+      "args": [
+        "C:\\Program Files (x86)\\CsvView\\executables\\TXTlogToCSVtool.exe",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-50-40_.txt",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-50-40_.csv"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-50-40_.csv"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T15:09:44.805851+00:00",
+      "tool_name": "txtlogtocsvtool",
+      "version": "2018-06-11",
+      "args": [
+        "C:\\Program Files (x86)\\CsvView\\executables\\TXTlogToCSVtool.exe",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-56-11_.txt",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-56-11_.csv"
+      ],
+      "return_code": 0,
+      "std_summary": null,
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\flight_records\\DJIFlightRecord_2017-08-29__11-56-11_.csv"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T15:09:45.282255+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_49_25.thumbnail"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df019-2017-ios-only/p3_artefact_extraction/controlle...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\images\\2017_08_29_11_49_25_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T15:09:45.520652+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_56_13.thumbnail"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df019-2017-ios-only/p3_artefact_extraction/controlle...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\images\\2017_08_29_11_56_13_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T15:09:45.766030+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_56_59.thumbnail"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df019-2017-ios-only/p3_artefact_extraction/controlle...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\images\\2017_08_29_11_56_59_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T15:09:46.014278+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\images\\2017_08_29_11_59_15.thumbnail"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df019-2017-ios-only/p3_artefact_extraction/controlle...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\images\\2017_08_29_11_59_15_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T15:09:46.375407+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\videos\\2017_08_29_11_49_25.mp4"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df019-2017-ios-only/p3_artefact_extraction/controlle...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\videos\\2017_08_29_11_49_25_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T15:09:46.729541+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\videos\\2017_08_29_11_56_13.mp4"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df019-2017-ios-only/p3_artefact_extraction/controlle...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\videos\\2017_08_29_11_56_13_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T15:09:47.112483+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\videos\\2017_08_29_11_56_59.mp4"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df019-2017-ios-only/p3_artefact_extraction/controlle...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\videos\\2017_08_29_11_56_59_exif.json"
+      ]
+    },
+    {
+      "timestamp": "2026-06-18T15:09:47.473387+00:00",
+      "tool_name": "exiftool",
+      "version": "13.57",
+      "args": [
+        "C:\\Users\\Floris\\Documents\\exiftool\\exiftool.exe",
+        "-a",
+        "-u",
+        "-g1",
+        "-s",
+        "-ee",
+        "-json",
+        "-n",
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p3_artefact_extraction\\controller_ios\\videos\\2017_08_29_11_59_15.mp4"
+      ],
+      "return_code": 0,
+      "std_summary": "[INFO]: [{\n  \"SourceFile\": \"C:/Users/Floris/Documents/dfdof_output/ft-df019-2017-ios-only/p3_artefact_extraction/controlle...",
+      "output_paths": [
+        "C:\\Users\\Floris\\Documents\\dfdof_output\\ft-df019-2017-ios-only\\p4_decision_and_orchestration\\controller_ios\\videos\\2017_08_29_11_59_15_exif.json"
+      ]
+    }
+  ]
+}

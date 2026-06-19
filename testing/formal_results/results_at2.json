@@ -1,0 +1,103 @@
+{
+  "test": "AT2",
+  "requirement": "R2a + R2b + R6",
+  "description": "Complete processing documentation: phase outputs, timestamps, artefact fields, tool log",
+  "timestamp": "2026-06-19T11:27:22.146930+00:00",
+  "cases": [
+    {
+      "case_id": "ft-df003-2017-ios",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df003-2017-ios/state.json",
+      "issues": [
+        "1 tool output_paths not linked to any artefact: ['icat: FLY007.DAT']"
+      ],
+      "details": {
+        "completed_phases": [
+          "p1_provenance",
+          "p2_image_parsing",
+          "p3_artefact_extraction",
+          "p4_decision_and_orchestration",
+          "p5_normalisation_and_anomaly_checking",
+          "p6_multisource_correlation",
+          "p7_analysis_and_validation",
+          "p8_automated_reporting"
+        ],
+        "phase_timestamps_ok": true,
+        "total_artefacts_checked": 70,
+        "incomplete_artefacts": 0,
+        "tool_log_entries": 28,
+        "tool_log_issues": [
+          "icat: FLY007.DAT"
+        ]
+      },
+      "passed": false
+    },
+    {
+      "case_id": "ft-df020-2017-android",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df020-2017-android/state.json",
+      "issues": [],
+      "details": {
+        "completed_phases": [
+          "p1_provenance",
+          "p2_image_parsing",
+          "p3_artefact_extraction",
+          "p4_decision_and_orchestration",
+          "p5_normalisation_and_anomaly_checking",
+          "p6_multisource_correlation",
+          "p7_analysis_and_validation",
+          "p8_automated_reporting"
+        ],
+        "phase_timestamps_ok": true,
+        "total_artefacts_checked": 66,
+        "incomplete_artefacts": 0,
+        "tool_log_entries": 66,
+        "tool_log_issues": []
+      },
+      "passed": true
+    },
+    {
+      "case_id": "ft-df050-2018-android",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df050-2018-android/state.json",
+      "issues": [
+        "18 tool output_paths not linked to any artefact: ['extractdji: FLY001.DAT', 'extractdji: FLY002.DAT', 'extractdji: FLY003.DAT', 'extractdji: FLY004.DAT', 'extractdji: FLY005.DAT']"
+      ],
+      "details": {
+        "completed_phases": [
+          "p1_provenance",
+          "p2_image_parsing",
+          "p3_artefact_extraction",
+          "p4_decision_and_orchestration",
+          "p5_normalisation_and_anomaly_checking",
+          "p6_multisource_correlation",
+          "p7_analysis_and_validation",
+          "p8_automated_reporting"
+        ],
+        "phase_timestamps_ok": true,
+        "total_artefacts_checked": 136,
+        "incomplete_artefacts": 0,
+        "tool_log_entries": 63,
+        "tool_log_issues": [
+          "extractdji: FLY001.DAT",
+          "extractdji: FLY002.DAT",
+          "extractdji: FLY003.DAT",
+          "extractdji: FLY004.DAT",
+          "extractdji: FLY005.DAT",
+          "extractdji: FLY006.DAT",
+          "extractdji: FLY007.DAT",
+          "extractdji: FLY008.DAT",
+          "extractdji: FLY009.DAT",
+          "extractdji: FLY010.DAT",
+          "extractdji: FLY011.DAT",
+          "extractdji: FLY012.DAT",
+          "extractdji: FLY013.DAT",
+          "extractdji: FLY014.DAT",
+          "extractdji: FLY015.DAT",
+          "extractdji: FLY016.DAT",
+          "extractdji: FLY017.DAT",
+          "extractdji: FLY018.DAT"
+        ]
+      },
+      "passed": false
+    }
+  ],
+  "summary": "FAIL: see case issues above"
+}

@@ -1,0 +1,47 @@
+{
+  "test": "AT6",
+  "requirement": "R5b",
+  "description": "All artefacts accounted for: every P3 artefact is uncorrelated or linked via descendants to an accounting source",
+  "timestamp": "2026-06-19T11:31:24.042680+00:00",
+  "cases": [
+    {
+      "case_id": "ft-df003-2017-ios",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df003-2017-ios/state.json",
+      "p3_total": 32,
+      "uncorrelated_count": 20,
+      "referenced_count": 29,
+      "truly_unaccounted": 0,
+      "uncorr_duplicates": 0,
+      "unaccounted_details": [],
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "ft-df006-2017-android",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df006-2017-android/state.json",
+      "p3_total": 95,
+      "uncorrelated_count": 55,
+      "referenced_count": 64,
+      "truly_unaccounted": 0,
+      "uncorr_duplicates": 0,
+      "unaccounted_details": [],
+      "issues": [],
+      "passed": true
+    },
+    {
+      "case_id": "ft-df006-2017-ios",
+      "state_path": "C:\\Users\\Floris\\Documents\\dfdof_output/ft-df006-2017-ios/state.json",
+      "p3_total": 71,
+      "uncorrelated_count": 33,
+      "referenced_count": 62,
+      "truly_unaccounted": 0,
+      "uncorr_duplicates": 1,
+      "unaccounted_details": [],
+      "issues": [
+        "uncorrelated_artefacts has 1 duplicate sha256(s)"
+      ],
+      "passed": false
+    }
+  ],
+  "summary": "FAIL: see case issues"
+}
