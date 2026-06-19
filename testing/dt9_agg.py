@@ -64,6 +64,7 @@ _SOURCE_LABELS = {
 
 _SLEUTHKIT_TOOL_NAMES = {"mmls", "fls", "icat"}
 _KNOWN_TOOL_NAMES = {"datcon", "extractdji", "exiftool", "txtlogtocsv"}
+_TOOL_NAME_ALIASES = {"txtlogtocsvtool": "txtlogtocsv"}
 
 _ARTEFACT_CATEGORIES = [
     "account_data", "databases", "device_and_backup_info",
@@ -122,7 +123,7 @@ def _count_tools(tool_log: list[dict]) -> tuple[int, dict[str, int]]:
         "exiftool": 0, "txtlogtocsv": 0, "other": 0,
     }
     for entry in tool_log:
-        name = entry.get("tool_name", "")
+        name = _TOOL_NAME_ALIASES.get(entry.get("tool_name", ""), entry.get("tool_name", ""))
         rc = entry.get("return_code")
         if rc == 0 or rc is None:
             successful += 1
