@@ -204,13 +204,16 @@ _FR_BATTERY_TEMP_COL = "CENTER_BATTERY.temperature [C]"
 
 
 def _build_identification_map(state: State) -> dict[str, str]:
-    """Map each P3-artefact sha256 to its source folder label.
+    """Map each P3-artefact sha256 (and one-level P4 descendants) to its source folder label.
 
     For drone_sd sources the label is drone_sd_1, drone_sd_2, … matching the
     numbered directories produced by P3/P4. All other sources use their
     identified_as string directly.
 
-    Chain: P3-artefact.parent_sha256 → input-evidence sha256 → label.
+    Primary chain: P3-artefact.parent_sha256 → input-evidence sha256 → label.
+    Extended chain: P4-artefact.parent_sha256 → P3-artefact sha256 → label.
+    The extension handles ExtractDJI outputs that sit between a P3 drone_flight_storage
+    DAT and the DatCon CSV — without it the DatCon CSV lookup returns "unknown".
     """
     drone_sd_sources = find_input_evidence_list_by_identification(state, IDENTIFICATION_DRONE_SD)
     drone_sd_sha_to_label: dict[str, str] = {
@@ -233,14 +236,23 @@ def _build_identification_map(state: State) -> dict[str, str]:
     p3_artefacts = state.phase_outputs.get("p3_artefact_extraction", {}).get(
         "extracted_artefacts", []
     )
-    p3_sha_to_label: dict[str, str] = {}
+    sha_to_label: dict[str, str] = {}
     for artefact in p3_artefacts:
         sha = str(artefact.get("sha256") or "")
         parent_sha = str(artefact.get("parent_sha256") or "")
         if sha and parent_sha in input_sha_to_label:
-            p3_sha_to_label[sha] = input_sha_to_label[parent_sha]
+            sha_to_label[sha] = input_sha_to_label[parent_sha]
 
-    return p3_sha_to_label
+    p4_artefacts_all = state.phase_outputs.get("p4_decision_and_orchestration", {}).get(
+        "decision_and_orchestration_artefacts", []
+    )
+    for artefact in p4_artefacts_all:
+        sha = str(artefact.get("sha256") or "")
+        parent_sha = str(artefact.get("parent_sha256") or "")
+        if sha and sha not in sha_to_label and parent_sha in sha_to_label:
+            sha_to_label[sha] = sha_to_label[parent_sha]
+
+    return sha_to_label
 
 
 def _try_float(value: str) -> float | None:

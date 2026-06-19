@@ -907,3 +907,87 @@ def test_run_phase_5_flight_log_bracketed(tmp_path: Path, monkeypatch) -> None:
     assert obs["format"] == "bracketed_log"
     assert len(obs["entries"]) == 2
     assert obs["entries"][0]["timestamp"] == "2018-04-19 17:24:45"
+
+
+# _build_identification_map — ExtractDJI intermediate chain
+
+
+def test_build_identification_map_extractdji_intermediate(tmp_path: Path) -> None:
+    """DatCon CSV whose parent is an ExtractDJI output (P4) resolves to drone_flight_storage,
+    not 'unknown'.  Regression test for the df050 ASSISTANT_EXPORT path where ExtractDJI
+    sits between the P3 DAT and the DatCon CSV."""
+    from phases.p5_normalisation_and_anomaly_checking import _build_identification_map
+
+    state = State(case_id="CASE-P5-IDMAP", operator="Tester")
+
+    # Input evidence — drone_flight_storage ZIP
+    src = tmp_path / "flight_storage.zip"
+    src.write_text("src", encoding="utf-8")
+    input_ev = make_evidence(
+        source_path=str(src),
+        stored_path=src,
+        parent=None,
+        acquisition_method=config.ACQUISITION_LOGICAL,
+        type=config.EVIDENCE_TYPE_INPUT,
+        source_identification=config.IDENTIFICATION_DRONE_FLIGHT_STORAGE,
+    )
+    state.input_evidence.append(input_ev)
+
+    # P3 artefact — raw DAT file extracted from the ZIP
+    dat = tmp_path / "FLY005.DAT"
+    dat.write_text("dat", encoding="utf-8")
+    p3_ev = make_evidence(
+        source_path=dat.name,
+        stored_path=dat,
+        parent=input_ev,
+        acquisition_method=config.ACQUISITION_EXTRACT_LOGICAL,
+        type=config.EVIDENCE_TYPE_EXTRACTED,
+        artefact_category=config.DRONE_LOGS,
+    )
+    state.phase_outputs["p3_artefact_extraction"] = {
+        "extracted_artefacts": [p3_ev.to_dict()]
+    }
+
+    # P4 ExtractDJI output — FLY*.DAT extracted from the raw DAT
+    fly_dat = tmp_path / "FLY001.DAT"
+    fly_dat.write_text("fly", encoding="utf-8")
+    extractdji_ev = make_evidence(
+        source_path=fly_dat.name,
+        stored_path=fly_dat,
+        parent=p3_ev,
+        acquisition_method=config.ACQUISITION_EXTRACT_DJI,
+        type=config.EVIDENCE_TYPE_EXTRACTED,
+        artefact_category=config.DRONE_LOGS,
+    )
+
+    # P4 DatCon CSV — output from DatCon run on the ExtractDJI FLY*.DAT
+    csv_file = tmp_path / "FLY001.csv"
+    csv_file.write_text("csv", encoding="utf-8")
+    datcon_ev = make_evidence(
+        source_path=csv_file.name,
+        stored_path=csv_file,
+        parent=extractdji_ev,
+        acquisition_method=config.ACQUISITION_DATCON,
+        type=config.EVIDENCE_TYPE_DECODED,
+        artefact_category=config.DRONE_LOGS,
+    )
+
+    state.phase_outputs["p4_decision_and_orchestration"] = {
+        "decision_and_orchestration_artefacts": [
+            extractdji_ev.to_dict(),
+            datcon_ev.to_dict(),
+        ]
+    }
+
+    id_map = _build_identification_map(state)
+
+    # P3 DAT should map directly
+    assert id_map[p3_ev.sha256] == config.IDENTIFICATION_DRONE_FLIGHT_STORAGE
+    # ExtractDJI output (P4) should inherit the label from its P3 parent
+    assert id_map[extractdji_ev.sha256] == config.IDENTIFICATION_DRONE_FLIGHT_STORAGE
+    # DatCon CSV's parent_sha256 = extractdji_ev.sha256, so must also resolve correctly
+    assert id_map[extractdji_ev.sha256] == config.IDENTIFICATION_DRONE_FLIGHT_STORAGE
+    # The DatCon CSV's own SHA is not in the map (only its parent is looked up at line 1006)
+    # but the key used for lookup at line 1006 is datcon_ev.parent_sha256 = extractdji_ev.sha256
+    assert datcon_ev.parent_sha256 == extractdji_ev.sha256
+    assert id_map.get(datcon_ev.parent_sha256) == config.IDENTIFICATION_DRONE_FLIGHT_STORAGE
