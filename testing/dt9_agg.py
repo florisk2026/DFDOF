@@ -13,7 +13,7 @@ Usage
 
 Output columns
 --------------
-case_id, operator, start_time,
+case_id, operator, start_time, end_time,
 sources_detected, sources_total,
 artefact_categories_with_data, artefact_categories_total,
 flights_with_primary_correlation, flights_total,
@@ -29,8 +29,22 @@ drone_serial,
 drone_name,
 account_email,
 dji_app_version,
+device_name,
+device_platform,
+firmware_version,
+installed_dji_apps,
 anomaly_flag_count,
-tool_invocation_count
+tool_invocation_count,
+tool_invocations_successful,
+cat_account_data, cat_databases, cat_device_and_backup_info, cat_drone_logs,
+cat_flight_logs, cat_flight_records, cat_images, cat_videos,
+tool_inv_sleuthkit, tool_inv_datcon, tool_inv_extractdji,
+tool_inv_exiftool, tool_inv_txtlogtocsv, tool_inv_other,
+total_artefact_count,
+correlated_artefact_count,
+media_count,
+media_with_gps,
+media_with_norm_time
 """
 
 from __future__ import annotations
@@ -47,6 +61,18 @@ _SOURCE_LABELS = {
     "drone_sd": "drone_sd",
     "drone_flight_storage": "drone_flight",
 }
+
+_SLEUTHKIT_TOOL_NAMES = {"mmls", "fls", "icat"}
+_KNOWN_TOOL_NAMES = {"datcon", "extractdji", "exiftool", "txtlogtocsv"}
+
+_ARTEFACT_CATEGORIES = [
+    "account_data", "databases", "device_and_backup_info",
+    "drone_logs", "flight_logs", "flight_records", "images", "videos",
+]
+
+_EXTRA_IDENTITY_KEYS = [
+    "device_name", "device_platform", "firmware_version", "installed_dji_apps",
+]
 
 
 def _load(path: str) -> dict:
@@ -88,17 +114,78 @@ def _identity_value(ada: dict, key: str) -> str:
     return ""
 
 
+def _count_tools(tool_log: list[dict]) -> tuple[int, dict[str, int]]:
+    """Return (successful_count, per-tool invocation counts)."""
+    successful = 0
+    counts: dict[str, int] = {
+        "sleuthkit": 0, "datcon": 0, "extractdji": 0,
+        "exiftool": 0, "txtlogtocsv": 0, "other": 0,
+    }
+    for entry in tool_log:
+        name = entry.get("tool_name", "")
+        rc = entry.get("return_code")
+        if rc == 0 or rc is None:
+            successful += 1
+        if name in _SLEUTHKIT_TOOL_NAMES:
+            counts["sleuthkit"] += 1
+        elif name in _KNOWN_TOOL_NAMES:
+            counts[name] += 1
+        else:
+            counts["other"] += 1
+    return successful, counts
+
+
+def _cat_counts(artefact_coverage: list[dict]) -> dict[str, int]:
+    """Return per-category artefact counts from the P7 artefact_coverage list."""
+    counts = {c: 0 for c in _ARTEFACT_CATEGORIES}
+    for entry in artefact_coverage:
+        cat = entry.get("category", "")
+        if cat in counts:
+            counts[cat] = entry.get("count", 0)
+    return counts
+
+
+def _media_exif_counts(
+    p3_artefacts: list[dict],
+    p5_anomalies: list[dict],
+) -> tuple[int, int, int]:
+    """Return (media_count, with_gps, with_norm_time) from P3 and P5 data."""
+    media_count = sum(
+        1 for a in p3_artefacts
+        if a.get("artefact_category") in {"images", "videos"}
+    )
+    with_gps = 0
+    with_norm_time = 0
+    for entry in p5_anomalies:
+        if entry.get("evidence_category") not in {"images", "videos"}:
+            continue
+        for obs in entry.get("observations", []):
+            if obs.get("gps_latitude") is not None:
+                with_gps += 1
+            if obs.get("norm_date") is not None:
+                with_norm_time += 1
+    return media_count, with_gps, with_norm_time
+
+
 def _aggregate(state_path: str) -> dict:
     state = _load(state_path)
     case_id = state.get("case_id", Path(state_path).parent.name)
     operator = state.get("operator", "")
     start_time = state.get("start_time", "")
+    end_time = state.get("end_time", "")
     input_ev = state.get("input_evidence", [])
     anomaly_flags = state.get("anomaly_flags", [])
     tool_log = state.get("tool_invocation_log", [])
 
-    p7 = state.get("phase_outputs", {}).get("p7_analysis_and_validation", {})
-    p6 = state.get("phase_outputs", {}).get("p6_multisource_correlation", {})
+    phase_outputs = state.get("phase_outputs", {})
+    p7 = phase_outputs.get("p7_analysis_and_validation", {})
+    p6 = phase_outputs.get("p6_multisource_correlation", {})
+    p3_artefacts: list[dict] = phase_outputs.get(
+        "p3_artefact_extraction", {}
+    ).get("extracted_artefacts", [])
+    p5_anomalies: list[dict] = phase_outputs.get(
+        "p5_normalisation_and_anomaly_checking", {}
+    ).get("derived_anomalies", [])
 
     # Coverage score dimensions
     cs = p7.get("coverage_score", {})
@@ -139,17 +226,37 @@ def _aggregate(state_path: str) -> dict:
         for f in matched
     ]
 
-    # Identity
+    # Identity — existing fields
     ada = p7.get("account_and_drone_analysis", {})
     drone_serial = _identity_value(ada, "drone_serial")
     drone_name = _identity_value(ada, "drone_name")
     account_email = _identity_value(ada, "account_email")
     dji_app_version = _identity_value(ada, "dji_app_version")
 
+    # Identity — additional fields
+    extra_identity = {key: _identity_value(ada, key) for key in _EXTRA_IDENTITY_KEYS}
+
+    # Tool counts
+    tool_successful, tool_inv_counts = _count_tools(tool_log)
+
+    # Per-category artefact counts
+    cats = _cat_counts(p7.get("artefact_coverage", []))
+
+    # Correlated / total artefact counts
+    total_artefact_count = len(p3_artefacts)
+    uncorrelated_count = len(p7.get("uncorrelated_artefacts", []))
+    correlated_artefact_count = total_artefact_count - uncorrelated_count
+
+    # Media EXIF quality counters
+    media_count, media_with_gps, media_with_norm_time = _media_exif_counts(
+        p3_artefacts, p5_anomalies
+    )
+
     return {
         "case_id": case_id,
         "operator": operator,
-        "start_time": start_time[:10] if start_time else "",
+        "start_time": start_time,
+        "end_time": end_time,
         "sources_detected": sources_detected,
         "sources_total": sources_total,
         "artefact_categories_with_data": artefact_cats,
@@ -169,13 +276,34 @@ def _aggregate(state_path: str) -> dict:
         "drone_name": drone_name,
         "account_email": account_email,
         "dji_app_version": dji_app_version,
+        **extra_identity,
         "anomaly_flag_count": len(anomaly_flags),
         "tool_invocation_count": len(tool_log),
+        "tool_invocations_successful": tool_successful,
+        "cat_account_data": cats["account_data"],
+        "cat_databases": cats["databases"],
+        "cat_device_and_backup_info": cats["device_and_backup_info"],
+        "cat_drone_logs": cats["drone_logs"],
+        "cat_flight_logs": cats["flight_logs"],
+        "cat_flight_records": cats["flight_records"],
+        "cat_images": cats["images"],
+        "cat_videos": cats["videos"],
+        "tool_inv_sleuthkit": tool_inv_counts["sleuthkit"],
+        "tool_inv_datcon": tool_inv_counts["datcon"],
+        "tool_inv_extractdji": tool_inv_counts["extractdji"],
+        "tool_inv_exiftool": tool_inv_counts["exiftool"],
+        "tool_inv_txtlogtocsv": tool_inv_counts["txtlogtocsv"],
+        "tool_inv_other": tool_inv_counts["other"],
+        "total_artefact_count": total_artefact_count,
+        "correlated_artefact_count": correlated_artefact_count,
+        "media_count": media_count,
+        "media_with_gps": media_with_gps,
+        "media_with_norm_time": media_with_norm_time,
     }
 
 
 _FIELDNAMES = [
-    "case_id", "operator", "start_time",
+    "case_id", "operator", "start_time", "end_time",
     "sources_detected", "sources_total",
     "artefact_categories_with_data", "artefact_categories_total",
     "flights_with_primary_correlation", "flights_total",
@@ -185,7 +313,14 @@ _FIELDNAMES = [
     "flight_count", "matched_count", "unmatched_count",
     "median_distances", "confidences",
     "drone_serial", "drone_name", "account_email", "dji_app_version",
-    "anomaly_flag_count", "tool_invocation_count",
+    "device_name", "device_platform", "firmware_version", "installed_dji_apps",
+    "anomaly_flag_count", "tool_invocation_count", "tool_invocations_successful",
+    "cat_account_data", "cat_databases", "cat_device_and_backup_info", "cat_drone_logs",
+    "cat_flight_logs", "cat_flight_records", "cat_images", "cat_videos",
+    "tool_inv_sleuthkit", "tool_inv_datcon", "tool_inv_extractdji",
+    "tool_inv_exiftool", "tool_inv_txtlogtocsv", "tool_inv_other",
+    "total_artefact_count", "correlated_artefact_count",
+    "media_count", "media_with_gps", "media_with_norm_time",
 ]
 
 
