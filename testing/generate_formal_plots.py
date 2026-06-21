@@ -41,7 +41,7 @@ ART_COLORS = ['#4C72B0', '#DD8452', '#55A868', '#C44E52',
               '#8172B3', '#937860', '#DA8BC3', '#8C8C8C']
 
 TOOLS_ORDER = ['sleuthkit', 'datcon', 'extractdji', 'exiftool', 'txtlogtocsv']
-TOOL_LABELS = ['Sleuth Kit\n(mmls/fls/icat)', 'DatCon', 'ExtractDJI', 'ExifTool', 'TXTlogToCSV']
+TOOL_LABELS = ['Sleuth Kit', 'DatCon', 'ExtractDJI', 'ExifTool', 'TXTlogToCSV']
 TSK_NAMES   = {'mmls', 'fls', 'icat'}
 KNOWN_TOOLS = {'datcon', 'extractdji', 'exiftool', 'txtlogtocsv'}
 # tool_name values in state.json that differ from the bucket key
@@ -53,22 +53,22 @@ ID_LABELS  = ['Drone\nSerial', 'Drone\nName', 'Device\nName', 'Device\nPlatform'
               'Firmware\nVersion', 'Account\nEmail', 'App\nVersion', 'Installed\nApps']
 
 SHORT = {
-    'ft-df002-2017-android':      'df002-android',
-    'ft-df002-2017-ios':          'df002-ios',
-    'ft-df003-2017-ios':          'df003-ios',
-    'ft-df004-2017-sd-only':      'df004-sd',
-    'ft-df006-2017-android':      'df006-android',
-    'ft-df006-2017-ios':          'df006-ios',
-    'ft-df019-2017-android-only': 'df019-android',
-    'ft-df019-2017-ios':          'df019-ios+sd',
-    'ft-df019-2017-ios-only':     'df019-ios-only',
-    'ft-df019-2018-ios':          'df019-18-ios',
-    'ft-df020-2017-android':      'df020-17-and',
-    'ft-df020-2017-ios':          'df020-17-ios',
-    'ft-df020-2018-android':      'df020-18-and',
-    'ft-df049-2018-apr-android':  'df049-android',
-    'ft-df049-2018-apr-ios':      'df049-ios',
-    'ft-df050-2018-android':      'df050-android',
+    'ft-df002-2017-android':      "df002-'17-android",
+    'ft-df002-2017-ios':          "df002-'17-ios",
+    'ft-df003-2017-ios':          "df003-'17-ios",
+    'ft-df004-2017-sd-only':      "df004-'17-sd-only",
+    'ft-df006-2017-android':      "df006-'17-android",
+    'ft-df006-2017-ios':          "df006-'17-ios",
+    'ft-df019-2017-android-only': "df019-'17-android-only",
+    'ft-df019-2017-ios':          "df019-'17-ios",
+    'ft-df019-2017-ios-only':     "df019-'17-ios-only",
+    'ft-df019-2018-ios':          "df019-'18-ios",
+    'ft-df020-2017-android':      "df020-'17-android",
+    'ft-df020-2017-ios':          "df020-'17-ios",
+    'ft-df020-2018-android':      "df020-'18-android",
+    'ft-df049-2018-apr-android':  'df049-apr-android',
+    'ft-df049-2018-apr-ios':      'df049-apr-ios',
+    'ft-df050-2018-android':      "df050-'18-android",
 }
 
 COMBO_ORDER = {
@@ -80,7 +80,7 @@ COMBO_ORDER = {
 }
 COMBO_COLORS = {
     'Drone SD only':           '#E9724C',
-    'Controller only':         '#C5283D',
+    'Controller only':         '#D4AC0D',
     'Controller + SD':         '#255F85',
     'Controller + Flight':     '#6A0572',
     'Controller + SD + Flight':'#1B998B',
@@ -209,6 +209,13 @@ def load_cases() -> list[dict]:
         mc, mgps, mnorm = media_counts(p3, p5)
         ada      = p7.get('account_and_drone_analysis', {})
         identity = {f: bool(id_val(ada, f)) for f in ID_FIELDS}
+        identity_conf = {}
+        for f in ID_FIELDS:
+            entry = ada.get(f, {})
+            if isinstance(entry, dict) and entry.get('value'):
+                identity_conf[f] = entry.get('confidence', 'controller-only')
+            else:
+                identity_conf[f] = None
 
         total_art = len(p3)
         uncorr    = len(p7.get('uncorrelated_artefacts', []))
@@ -236,8 +243,9 @@ def load_cases() -> list[dict]:
             'flights_by_conf': fbc,
             'flights_total':   ft,
             'media_count': mc,
-            'identity':    identity,
-            'id_count':    sum(identity.values()),
+            'identity':      identity,
+            'identity_conf': identity_conf,
+            'id_count':      sum(identity.values()),
             'total_art':   total_art,
             'corr_art':    corr_art,
             'tool_counts': count_tools(state.get('tool_invocation_log', [])),
@@ -261,7 +269,7 @@ def _combo_strip(ax: plt.Axes, cases: list[dict]) -> None:
 def _combo_legend(fig: plt.Figure) -> None:
     handles = [mpatches.Patch(color=v, label=k) for k, v in COMBO_COLORS.items()]
     fig.legend(handles=handles, title='Source combination', loc='lower center',
-               ncol=3, bbox_to_anchor=(0.5, -0.03), fontsize=8, title_fontsize=8,
+               ncol=3, bbox_to_anchor=(0.5, -0.03), fontsize=12, title_fontsize=12,
                framealpha=0.9)
 
 
@@ -269,39 +277,52 @@ def _combo_legend(fig: plt.Figure) -> None:
 
 def plot_01_phase_heatmap(cases: list[dict]) -> None:
     labels   = [c['short'] for c in cases]
-    data     = np.array([[c['pdur'].get(ph, 0.0) for ph in PHASES] for c in cases])
-    log_data = np.log1p(data)
+    n_phases = len(PHASES)
+
+    phase_data = np.array([[c['pdur'].get(ph, 0.0) for ph in PHASES] for c in cases])
+    totals     = phase_data.sum(axis=1, keepdims=True)
+    data_full  = np.hstack([phase_data, totals])          # (n, 9)
+    log_full   = np.log1p(data_full)
+    phase_vmax = np.log1p(phase_data).max()               # colour scale anchored to phases only
 
     fig, ax = plt.subplots(figsize=(13, 9.5))
-    im = ax.imshow(log_data, aspect='auto', cmap='Blues', vmin=0, vmax=log_data.max())
+    im = ax.imshow(log_full, aspect='auto', cmap='Blues', vmin=0, vmax=phase_vmax)
 
-    ax.set_xticks(range(len(PHASES)))
-    ax.set_xticklabels(P_LABELS, fontsize=11, fontweight='bold')
+    x_labels = P_LABELS + ['Total']
+    ax.set_xticks(range(n_phases + 1))
+    ax.set_xticklabels(x_labels, fontsize=13, fontweight='bold')
     ax.set_yticks(range(len(cases)))
-    ax.set_yticklabels(labels, fontsize=8.5)
+    ax.set_yticklabels(labels, fontsize=10.5)
 
     for i, case in enumerate(cases):
+        # Phase columns
         for j, ph in enumerate(PHASES):
             s = case['pdur'].get(ph, 0.0)
             if s < 0.5:
                 txt, col = '—', '#aaaaaa'
             else:
                 txt = fmt_mmss(s)
-                col = 'white' if log_data[i, j] > log_data.max() * 0.52 else 'black'
+                col = 'white' if log_full[i, j] > phase_vmax * 0.52 else 'black'
             ax.text(j, i, txt, ha='center', va='center', fontsize=7.5, color=col)
+        # Total column — always white text (darkest cell)
+        ax.text(n_phases, i, fmt_mmss(totals[i, 0]),
+                ha='center', va='center', fontsize=7.5, color='white', fontweight='bold')
+
+    # Separator between phases and total
+    ax.axvline(n_phases - 0.5, color='white', lw=2.5)
 
     _combo_strip(ax, cases)
-    ax.set_xlim(-0.5, len(PHASES) - 0.5)
+    ax.set_xlim(-0.5, n_phases + 0.5)
 
     cbar = fig.colorbar(im, ax=ax, fraction=0.025, pad=0.01)
     cbar.set_label('log(seconds + 1)', fontsize=8)
     cbar.ax.tick_params(labelsize=7)
 
     ax.set_title('Pipeline Phase Duration per Case  (mm:ss · log-scaled colour)', fontsize=12, pad=10)
-    ax.set_xlabel('Pipeline Phase', fontsize=10)
+    ax.set_xlabel('Pipeline Phase', fontsize=12)
     _combo_legend(fig)
     fig.tight_layout()
-    fig.subplots_adjust(bottom=0.065)
+    fig.subplots_adjust(bottom=0.175)
     save(fig, '01_phase_timing_heatmap.png')
 
 
@@ -334,16 +355,16 @@ def plot_02_auto_time_by_combo(cases: list[dict]) -> None:
         for i, (t, case) in enumerate(zip(times, grp)):
             global_n += 1
             jitter = (i - (len(times) - 1) / 2) * 0.08
-            ax.scatter(xi + jitter, t, color=color, s=120, zorder=4,
+            ax.scatter(xi + jitter, t, color=color, s=300, zorder=4,
                        edgecolors='white', linewidths=0.9)
             # Number inside the dot
             ax.text(xi + jitter, t, str(global_n), ha='center', va='center',
-                    fontsize=7, fontweight='bold', color='white', zorder=5)
+                    fontsize=10.5, fontweight='bold', color='white', zorder=5)
             legend_entries.append((global_n, case['short'], color, combo))
 
     ax.set_xticks(range(len(combos)))
-    ax.set_xticklabels([c.replace(' + ', '\n+ ') for c in combos], fontsize=9)
-    ax.set_ylabel('Automated pipeline time (minutes, P4 excluded)', fontsize=10)
+    ax.set_xticklabels([c.replace(' + ', '\n+ ') for c in combos], fontsize=11)
+    ax.set_ylabel('Automated pipeline time (minutes, P4 excluded)', fontsize=12)
     ax.set_title('Automated Pipeline Time by Evidence Source Combination', fontsize=12)
     ax.set_ylim(bottom=0)
     ax.grid(axis='y', alpha=0.3)
@@ -363,18 +384,18 @@ def plot_02_auto_time_by_combo(cases: list[dict]) -> None:
             if prev_combo is not None:
                 y -= HEADER_GAP
             # Combo header
-            ax_leg.text(0.03, y, combo, fontsize=7.5, fontweight='bold',
+            ax_leg.text(0.03, y, combo, fontsize=11.5, fontweight='bold',
                         color=color, va='top')
             y -= (STEP + 0.006)
             prev_combo = combo
 
         # Dot with number
-        ax_leg.scatter([0.07], [y], color=color, s=80, zorder=4,
+        ax_leg.scatter([0.07], [y], color=color, s=300, zorder=4,
                        edgecolors='white', linewidths=0.6)
         ax_leg.text(0.07, y, str(n), ha='center', va='center',
-                    fontsize=6.5, fontweight='bold', color='white', zorder=5)
+                    fontsize=10.5, fontweight='bold', color='white', zorder=5)
         # Case name
-        ax_leg.text(0.17, y, short, fontsize=8, va='center', color='#333')
+        ax_leg.text(0.17, y, short, fontsize=12, va='center', color='#333')
         y -= STEP
 
     save(fig, '02_auto_time_by_source_combination.png')
@@ -389,9 +410,9 @@ def plot_03_time_to_insight(cases: list[dict]) -> None:
         return
 
     auto_min   = bench['total_s'] / 60   # full pipeline including P4 (no DatCon here)
-    manual_mid = 360.0                   # 6 h midpoint in minutes
-    manual_lo  = 240.0                   # 4 h lower bound
-    manual_hi  = 480.0                   # 8 h upper bound
+    manual_mid = 180.0                   # 3 h midpoint in minutes
+    manual_lo  = 120.0                   # 2 h lower bound
+    manual_hi  = 240.0                   # 4 h upper bound
     factor     = manual_mid / auto_min
 
     fig, ax = plt.subplots(figsize=(10, 3.5))
@@ -402,7 +423,7 @@ def plot_03_time_to_insight(cases: list[dict]) -> None:
             color='#C44E52', alpha=0.20, height=0.38, zorder=1)
     ax.plot([manual_lo, manual_lo], [0.81, 1.19], color='#C44E52', lw=1.5)
     ax.plot([manual_hi, manual_hi], [0.81, 1.19], color='#C44E52', lw=1.5)
-    ax.annotate(f'~{manual_mid / 60:.0f} h  (range 4–8 h)',
+    ax.annotate(f'~{manual_mid / 60:.0f} h  (range 2–4 h)',
                 xy=(manual_mid, 1), xytext=(8, 0), textcoords='offset points',
                 fontsize=10, va='center', color='#C44E52')
 
@@ -415,15 +436,15 @@ def plot_03_time_to_insight(cases: list[dict]) -> None:
     ax.set_xscale('log')
     ax.set_xlim(0.8, 1200)
     ax.set_yticks([0, 1])
-    ax.set_yticklabels(['DFDOF\n(automated)', 'Manual\n(estimated)'], fontsize=11)
-    ax.set_xlabel('Duration (minutes, log scale)', fontsize=10)
+    ax.set_yticklabels(['DFDOF\n(automated)', 'Manual\n(estimated)'], fontsize=13)
+    ax.set_xlabel('Duration (minutes, log scale)', fontsize=12)
     ax.set_title(
         f'Time-to-Insight: DFDOF vs Manual Investigation  '
         f'(benchmark: df019-2017-ios  ·  ×{factor:.0f} efficiency gain)',
         fontsize=11,
     )
     ax.grid(axis='x', alpha=0.3, which='both')
-    for v, lbl in [(1, '1 min'), (60, '1 h'), (480, '8 h')]:
+    for v, lbl in [(1, '1 min'), (60, '1 h'), (240, '4 h')]:
         ax.axvline(v, color='grey', lw=0.7, linestyle='--', alpha=0.45)
         ax.text(v, -0.62, lbl, fontsize=7.5, ha='center', color='grey')
 
@@ -473,9 +494,9 @@ def plot_04_coverage_heatmap(cases: list[dict]) -> None:
     im = ax.imshow(masked, aspect='auto', cmap=cmap, vmin=0, vmax=1)
 
     ax.set_xticks(range(n_cols))
-    ax.set_xticklabels(DIM_LABELS, fontsize=9)
+    ax.set_xticklabels(DIM_LABELS, fontsize=11)
     ax.set_yticks(range(n_rows))
-    ax.set_yticklabels(labels + ['Mean\n(all cases)'], fontsize=8.5)
+    ax.set_yticklabels(labels + ['Mean\n(all cases)'], fontsize=10.5)
     ax.get_yticklabels()[-1].set_fontweight('bold')
     ax.get_xticklabels()[-1].set_fontweight('bold')
 
@@ -516,7 +537,7 @@ def plot_04_coverage_heatmap(cases: list[dict]) -> None:
                  fontsize=12, pad=10)
     _combo_legend(fig)
     fig.tight_layout()
-    fig.subplots_adjust(bottom=0.1)
+    fig.subplots_adjust(bottom=0.15)
     save(fig, '04_extended_coverage_heatmap.png')
 
 
@@ -545,9 +566,9 @@ def plot_05_combo_outcome_matrix(cases: list[dict]) -> None:
     im = ax.imshow(norm_mat, aspect='auto', cmap='YlGnBu', vmin=0, vmax=1)
 
     ax.set_xticks(range(len(METRICS)))
-    ax.set_xticklabels(M_LABELS, fontsize=9)
+    ax.set_xticklabels(M_LABELS, fontsize=11)
     ax.set_yticks(range(len(combos)))
-    ax.set_yticklabels([f'{c}  (n={counts[i]})' for i, c in enumerate(combos)], fontsize=9)
+    ax.set_yticklabels([f'{c}  (n={counts[i]})' for i, c in enumerate(combos)], fontsize=11)
 
     for i in range(len(combos)):
         for j, m in enumerate(METRICS):
@@ -579,8 +600,8 @@ def plot_06_flight_correlation(cases: list[dict]) -> None:
     unmatch= np.array([c['flights_by_conf']['unmatched'] for c in flight_cases])
 
     x = np.arange(len(flight_cases))
-    w = 0.55
-    fig, ax = plt.subplots(figsize=(max(10, len(flight_cases) * 1.0), 5.5))
+    w = 0.5
+    fig, ax = plt.subplots(figsize=(7, 5))
 
     b1 = ax.bar(x, high,   width=w, color='#2ca02c', label='Matched — High confidence')
     b2 = ax.bar(x, medium, width=w, bottom=high, color='#ff7f0e', label='Matched — Medium confidence')
@@ -601,10 +622,10 @@ def plot_06_flight_correlation(cases: list[dict]) -> None:
                         fontsize=9, fontweight='bold', color='white')
 
     ax.set_xticks(x)
-    ax.set_xticklabels(labels, rotation=35, ha='right', fontsize=9)
-    ax.set_ylabel('Number of Flights', fontsize=10)
+    ax.set_xticklabels(labels, rotation=35, ha='right', fontsize=11)
+    ax.set_ylabel('Number of Flights', fontsize=12)
     ax.set_title('Multi-Source Flight Correlation Results per Case', fontsize=12)
-    ax.legend(fontsize=9, loc='upper right')
+    ax.legend(fontsize=13, loc='upper right')
     ax.yaxis.set_major_locator(plt.MaxNLocator(integer=True))
     ax.grid(axis='y', alpha=0.3)
     fig.tight_layout()
@@ -637,10 +658,10 @@ def plot_07_artefact_bar(cases: list[dict]) -> None:
                 fontsize=7.5, color='#333')
 
     ax.set_xticks(x)
-    ax.set_xticklabels(labels, rotation=38, ha='right', fontsize=8)
-    ax.set_ylabel('Artefact Count (P3 extracted)', fontsize=10)
+    ax.set_xticklabels(labels, rotation=38, ha='right', fontsize=10)
+    ax.set_ylabel('Artefact Count (P3 extracted)', fontsize=12)
     ax.set_title('Extracted Artefacts by Category per Case', fontsize=12)
-    ax.legend(loc='upper right', fontsize=8, ncol=2, framealpha=0.9)
+    ax.legend(loc='upper left', fontsize=12, ncol=2, framealpha=0.9)
     ax.grid(axis='y', alpha=0.25)
     fig.tight_layout()
     save(fig, '07_artefact_stacked_bar.png')
@@ -654,14 +675,14 @@ def plot_08_tool_heatmap(cases: list[dict]) -> None:
                          for c in cases], dtype=float)
     log_data = np.log1p(data)
 
-    fig, ax = plt.subplots(figsize=(11, 10))
+    fig, ax = plt.subplots(figsize=(7.5, 10))
     im = ax.imshow(log_data, aspect='auto', cmap='Blues',
                    vmin=0, vmax=log_data.max())
 
     ax.set_xticks(range(len(TOOLS_ORDER)))
-    ax.set_xticklabels(TOOL_LABELS, fontsize=9)
+    ax.set_xticklabels(TOOL_LABELS, fontsize=11)
     ax.set_yticks(range(len(cases)))
-    ax.set_yticklabels(labels, fontsize=8.5)
+    ax.set_yticklabels(labels, fontsize=10.5)
 
     for i, case in enumerate(cases):
         for j, tool in enumerate(TOOLS_ORDER):
@@ -680,54 +701,55 @@ def plot_08_tool_heatmap(cases: list[dict]) -> None:
     ax.set_title('Forensic Tool Invocation Count per Case  (log-scaled colour)', fontsize=12, pad=10)
     _combo_legend(fig)
     fig.tight_layout()
-    fig.subplots_adjust(bottom=0.065)
+    fig.subplots_adjust(bottom=0.114)
     save(fig, '08_tool_invocation_heatmap.png')
 
 
 # ── Plot 09: Identity field extraction heatmap ────────────────────────────────
 
+_CONF_LEVEL = {None: 0, 'inconsistent': 1, 'controller-only': 2, 'corroborated': 3}
+_CONF_COLORS = ['#cccccc', '#d62728', '#FF9800', '#2ca02c']  # absent/inconsistent/ctrl-only/corroborate
+_CONF_LABELS = ['Absent / N/A', 'Inconsistent', 'Controller-only', 'Corroborated']
+
 def plot_09_identity_heatmap(cases: list[dict]) -> None:
     labels = [c['short'] for c in cases]
-    data   = np.array([[1.0 if c['identity'].get(f, False) else 0.0 for f in ID_FIELDS]
-                       for c in cases])
+    data   = np.array([
+        [_CONF_LEVEL.get(c['identity_conf'].get(f), 0) for f in ID_FIELDS]
+        for c in cases
+    ], dtype=float)
 
-    cmap  = mcolors.ListedColormap(['#e0e0e0', '#2ca02c'])
-    norm  = mcolors.BoundaryNorm([-0.5, 0.5, 1.5], cmap.N)
+    cmap = mcolors.ListedColormap(_CONF_COLORS)
+    norm = mcolors.BoundaryNorm([-0.5, 0.5, 1.5, 2.5, 3.5], cmap.N)
 
-    fig, ax = plt.subplots(figsize=(13, 8.5))
+    fig, ax = plt.subplots(figsize=(9, 8.5))
     ax.imshow(data, aspect='auto', cmap=cmap, norm=norm)
 
     ax.set_xticks(range(len(ID_FIELDS)))
-    ax.set_xticklabels(ID_LABELS, fontsize=9, rotation=20, ha='right')
+    ax.set_xticklabels(ID_LABELS, fontsize=11, rotation=20, ha='right')
     ax.set_yticks(range(len(cases)))
-    ax.set_yticklabels(labels, fontsize=8.5)
+    ax.set_yticklabels(labels, fontsize=10.5)
 
     for i, case in enumerate(cases):
         for j, field in enumerate(ID_FIELDS):
-            found = case['identity'].get(field, False)
-            ax.text(j, i, '✓' if found else '✗',
-                    ha='center', va='center', fontsize=10,
-                    color='white' if found else '#999999')
+            conf = case['identity_conf'].get(field)
+            level = _CONF_LEVEL.get(conf, 0)
+            symbol = '✓' if level > 0 else '✗'
+            col = 'white' if level in (1, 3) else ('#333' if level == 2 else '#999999')
+            ax.text(j, i, symbol, ha='center', va='center', fontsize=10, color=col)
 
-    # Total count column to the right
-    for i, case in enumerate(cases):
-        ax.text(len(ID_FIELDS) + 0.15, i, f'{case["id_count"]}/8',
-                va='center', fontsize=8.5, color='#333')
-    ax.text(len(ID_FIELDS) + 0.15, -0.75, 'Total',
-            va='center', fontsize=8.5, fontweight='bold', color='#333')
-    ax.set_xlim(-0.5, len(ID_FIELDS) + 0.65)
+    ax.set_xlim(-0.5, len(ID_FIELDS) - 0.5)
 
     _combo_strip(ax, cases)
 
-    handles = [
-        mpatches.Patch(color='#2ca02c', label='Field extracted'),
-        mpatches.Patch(color='#e0e0e0', label='Not found / N/A'),
-    ] + [mpatches.Patch(color=v, label=k) for k, v in COMBO_COLORS.items()]
-    fig.legend(handles=handles, loc='lower center', ncol=4,
-               bbox_to_anchor=(0.5, -0.04), fontsize=8, framealpha=0.9)
+    conf_handles = [mpatches.Patch(color=c, label=l)
+                    for c, l in zip(_CONF_COLORS, _CONF_LABELS)]
+    combo_handles = [mpatches.Patch(color=v, label=k) for k, v in COMBO_COLORS.items()]
+    fig.legend(handles=conf_handles + combo_handles, loc='lower center', ncol=3,
+               bbox_to_anchor=(0.5, -0.04), fontsize=12, framealpha=0.9)
 
     ax.set_title('Device and Drone Identity Field Extraction per Case', fontsize=12, pad=10)
     fig.tight_layout()
+    fig.subplots_adjust(bottom=0.15)
     save(fig, '09_identity_field_heatmap.png')
 
 
